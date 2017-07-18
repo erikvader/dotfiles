@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: new_header
+# key: header
+# --
+#ifndef ${1:name}
+#define $1
+
+$0
+
+#endif
