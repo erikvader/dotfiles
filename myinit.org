@@ -613,7 +613,7 @@ All default keybindings have been commented out in the source file 'auto-complet
 * neotree
 #+begin_src emacs-lisp :tangle yes
   ;;When running ‘projectile-switch-project’ (C-c p p), ‘neotree’ will change root automatically.
-  (setq projectile-switch-project-action 'neotree-projectile-action)
+  ;;(setq projectile-switch-project-action 'neotree-projectile-action)
 
   ;;Every time when the neotree window is opened, let it find current file and jump to node.
   ;;(setq neo-smart-open t)
@@ -632,9 +632,16 @@ All default keybindings have been commented out in the source file 'auto-complet
                 (neotree-find file-name)))
         (message "Could not find git project root."))))
 
-  (global-set-key [f8] 'neotree-toggle)
-  (global-set-key (kbd "S-<f8>") 'neotree-find)
-  (global-set-key [f9] 'neotree-project-dir)
+  ;; (global-set-key [f8] 'neotree-toggle)
+  ;; (global-set-key (kbd "S-<f8>") 'neotree-find)
+  ;; (global-set-key [f9] 'neotree-project-dir)
+
+  (defhydra hydra-neotree (:color blue)
+    "neotree"
+    ("<f8>" neotree-toggle "toggle")
+    ("f" neotree-find "file dir")
+    ("p" neotree-project-dir "project dir"))
+  (define-key my-keys-map (kbd "<f8>") 'hydra-neotree/body)
 #+end_src
 * multiple cursors
 #+begin_src emacs-lisp :tangle yes
@@ -650,7 +657,8 @@ All default keybindings have been commented out in the source file 'auto-complet
   (defhydra hydra-zoom ()
     "zoom"
     ("g" text-scale-increase "in")
-    ("l" text-scale-decrease "out"))
+    ("l" text-scale-decrease "out")
+    ("q" nil "quit" :color blue))
   (define-key eriks-map (kbd "z") 'hydra-zoom/body)
 
   (defhydra hydra-windows ()
@@ -744,7 +752,7 @@ All default keybindings have been commented out in the source file 'auto-complet
 ------------------------------------------------------
  [h] : grej  [g] : sasd  [<right>] : hej!  [a] : asd! 
                          [F]       : :)               
-
+                         
 * paredit
 #+begin_src emacs-lisp :tangle yes
   ;; (define-key paredit-mode-map (kbd "C-S-<left>") 'paredit-backward-slurp-sexp)
