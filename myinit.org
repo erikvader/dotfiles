@@ -99,6 +99,7 @@ reflected in the local value.
   (global-set-key (kbd "M-s r") 'isearch-query-replace-regexp)
   (global-set-key (kbd "M-s s") 'isearch-forward-regexp)
   (global-set-key (kbd "M-s S") 'isearch-backward-regexp)
+
 #+end_src
 * Eriks map / prefix key
 ** random
@@ -166,7 +167,7 @@ reflected in the local value.
         (interactive)
         (find-file (expand-file-name "~/.emacs.d/myinit.org"))))
 
-
+  (define-key eriks-map (kbd "g") 'magit-status)
 #+end_src
 ** M-f, M-b, M-n, M-p
 #+begin_src emacs-lisp :tangle yes
@@ -443,6 +444,7 @@ All default keybindings have been commented out in the source file 'auto-complet
 #+begin_src emacs-lisp :tangle yes
   (add-hook 'emacs-lisp-mode-hook
             (lambda ()
+              (smartparens-strict-mode t)
               ;;(make-local-variable 'newline-without-break-tab)
               ;;(setq newline-without-break-tab t)
               ;;(autopair-mode)
@@ -515,36 +517,50 @@ All default keybindings have been commented out in the source file 'auto-complet
 
 #+end_src
 * move lines from internet
-transpose istället???
 #+begin_src emacs-lisp :tangle yes
-  (defun move-line (n)
-    "Move the current line up or down by N lines. Buggar for second last line i buffern"
-    (interactive "p")
-    (setq col (current-column))
-    (beginning-of-line)
-    (setq start (point))
-    (end-of-line)
-    (if (eobp)
-        (newline)
-      (forward-char))
-    (setq end (point))
-    (let ((line-text (delete-and-extract-region start end)))
-      (forward-line n)
-      (if (eobp) (newline))
-      (insert line-text)
-      ;; restore point to original column in moved line
-      (forward-line -1)
+  ;; (defun move-line (n)
+  ;;   "Move the current line up or down by N lines. Buggar for second last line i buffern"
+  ;;   (interactive "p")
+  ;;   (setq col (current-column))
+  ;;   (beginning-of-line)
+  ;;   (setq start (point))
+  ;;   (end-of-line)
+  ;;   (if (eobp)
+  ;;       (newline)
+  ;;     (forward-char))
+  ;;   (setq end (point))
+  ;;   (let ((line-text (delete-and-extract-region start end)))
+  ;;     (forward-line n)
+  ;;     (if (eobp) (newline))
+  ;;     (insert line-text)
+  ;;     ;; restore point to original column in moved line
+  ;;     (forward-line -1)
+  ;;     (move-to-column col)))
+
+  ;; (defun move-line-up (n)
+  ;;   "Move the current line up by N lines."
+  ;;   (interactive "p")
+  ;;   (move-line (if (null n) -1 (- n))))
+
+  ;; (defun move-line-down (n)
+  ;;   "Move the current line down by N lines."
+  ;;   (interactive "p")
+  ;;   (move-line (if (null n) 1 n)))
+
+  (defun move-line-up ()
+    (interactive)
+    (let ((col (current-column)))
+      (transpose-lines 1)
+      (previous-line 2)
       (move-to-column col)))
 
-  (defun move-line-up (n)
-    "Move the current line up by N lines."
-    (interactive "p")
-    (move-line (if (null n) -1 (- n))))
-
-  (defun move-line-down (n)
-    "Move the current line down by N lines."
-    (interactive "p")
-    (move-line (if (null n) 1 n)))
+  (defun move-line-down ()
+    (interactive)
+    (let ((col (current-column)))
+      (next-line 1)
+      (transpose-lines 1)
+      (previous-line 1)
+      (move-to-column col)))
 
   (define-key my-keys-map (kbd "M-<up>") 'move-line-up)
   (define-key my-keys-map (kbd "M-<down>") 'move-line-down)
