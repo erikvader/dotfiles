@@ -5,7 +5,7 @@
 #+begin_src emacs-lisp :tangle yes
   ;;(defvar my-keys-minor-mode-map
   ;;  (let ((map (make-sparse-keymap)))
-      
+
   ;;    map)
   ;;  "my-keys-minor-mode keymap.")
 
@@ -45,8 +45,8 @@
         (add-to-list 'minor-mode-map-alist mykeys))))
 #+end_src
 ** locally override
-If you want to "always use the keybinds in the map, unless I explicitly 
-override them for a specific mode-map", and assuming you are using 
+If you want to "always use the keybinds in the map, unless I explicitly
+override them for a specific mode-map", and assuming you are using
 scottfrazier's approach, you want:
 
 So
@@ -55,16 +55,16 @@ So
     (unless (local-variable-p 'my-keys-minor-mode-map)
       (set (make-variable-buffer-local 'my-keys-minor-mode-map)
            (make-sparse-keymap))
-      (set-keymap-parent my-keys-minor-mode-map 
+      (set-keymap-parent my-keys-minor-mode-map
                          (default-value 'my-keys-minor-mode-map)))
     (define-key my-keys-minor-mode-map key cmd))
 #+end_src
 (locally-override "\C-i" nil)
 
-should remove the "\C-i" binding from the minor mode in the current buffer only. 
-Warning: this is completely untested, but seems like the right approach. 
-The point of setting the parent rather than just coping the global value of 
-my-keys-minor-mode-map is so any later changes to the global value are automatically 
+should remove the "\C-i" binding from the minor mode in the current buffer only.
+Warning: this is completely untested, but seems like the right approach.
+The point of setting the parent rather than just coping the global value of
+my-keys-minor-mode-map is so any later changes to the global value are automatically
 reflected in the local value.
 * misc
 #+begin_src emacs-lisp :tangle yes
@@ -420,19 +420,19 @@ All default keybindings have been commented out in the source file 'auto-complet
             (lambda ()
               (flycheck-mode 1)
               (run-hooks 'abbrev-mode-hook) ;;för att den inte verkar göra det själv
-                            
+
               ;;(add-to-list 'ac-sources 'ac-source-c-headers)
               ;;(add-to-list 'ac-sources 'ac-source-c-header-symbols t)
               ;; (define-key c-mode-base-map (kbd "<C-S-return>")
               ;;   (lambda ()
               ;;     (interactive)
               ;;     (newline-without-break-up t)))
-              
+
               ;; (define-key c-mode-base-map (kbd "<C-return>")
               ;;   (lambda ()
               ;;     (interactive)
               ;;     (newline-without-break-down t)))
-              
+
               ;;(electric-pair-mode 1)
               ;;(make-local-variable 'newline-without-break-tab)
               ;;(setq newline-without-break-tab t)
@@ -460,12 +460,12 @@ All default keybindings have been commented out in the source file 'auto-complet
               ;;   (lambda ()
               ;;     (interactive)
               ;;     (newline-without-break-up t)))
-              
+
               ;; (define-key perl-mode-map (kbd "<C-return>")
               ;;   (lambda ()
               ;;     (interactive)
               ;;     (newline-without-break-down t)))
-              
+
               ;; (electric-pair-mode 1)
               ))
 #+end_src
@@ -741,18 +741,18 @@ All default keybindings have been commented out in the source file 'auto-complet
 
 ==> formated as raw string
 
- ^head1^       ^head2^       ^head3^             ^head4^      
+ ^head1^       ^head2^       ^head3^             ^head4^
 ^^-----------^^------------^^------------------^^-------------
- [_h_] : grej  [_g_] : sasd  [_<right>_] : hej!  [_a_] : asd! 
- ^^            ^^            [_F_]       : :)    ^^           
+ [_h_] : grej  [_g_] : sasd  [_<right>_] : hej!  [_a_] : asd!
+ ^^            ^^            [_F_]       : :)    ^^
 
 ==> end result in hydra
 
- head1       head2       head3             head4      
+ head1       head2       head3             head4
 ------------------------------------------------------
- [h] : grej  [g] : sasd  [<right>] : hej!  [a] : asd! 
-                         [F]       : :)               
-                         
+ [h] : grej  [g] : sasd  [<right>] : hej!  [a] : asd!
+                         [F]       : :)
+
 * paredit
 #+begin_src emacs-lisp :tangle yes
   ;; (define-key paredit-mode-map (kbd "C-S-<left>") 'paredit-backward-slurp-sexp)

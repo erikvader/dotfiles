@@ -28,6 +28,9 @@
    [default default default italic underline success warning error])
  '(ansi-color-names-vector
    ["#212526" "#ff4b4b" "#b4fa70" "#fce94f" "#729fcf" "#e090d7" "#8cc4ff" "#eeeeec"])
+ '(avy-background t)
+ '(avy-highlight-first nil)
+ '(avy-style (quote at-full))
  '(backup-directory-alist (quote (("" . "~/.emacs_backups"))))
  '(c-basic-offset 3)
  '(c-hanging-braces-alist (quote set-from-style))
