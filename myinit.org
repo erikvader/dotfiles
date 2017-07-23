@@ -823,3 +823,73 @@ All default keybindings have been commented out in the source file 'auto-complet
   ;;(sp-local-pair 'java-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 
 #+end_src
+* rectangles
+#+begin_src emacs-lisp :tangle yes
+  (require 'picture)
+
+  (defun pic-move (x y)
+    "Uses picture-mode movement commands"
+    ;;(interactive "P\nP")
+    (cond
+     ((> x 0) (picture-forward-column x))
+     ((< x 0) (picture-backward-column (- x))))
+    (cond
+     ((> y 0) (picture-move-down y))
+     ((< y 0) (picture-move-up (- y)))))
+
+  ;; (defun mark-column ()
+  ;;   (exchange-point-and-mark)
+  ;;   (let ((col (current-column)))
+  ;;     (exchange-point-and-mark)
+  ;;     col))
+
+  ;; (defun put-point-top-left-corner ()
+  ;;   (line-number-at-pos (point))
+  ;;   (let )
+  ;;   (if (> (point) (mark))
+  ;;       (exchange-point-and-mark)))
+
+  ;; (defun move-rect (x y)
+  ;;   (interactive "P\nP")
+  ;;   (put-point-top-left-corner)
+  ;;   (kill-rectangle)
+  ;;   (pic-move x y)
+  ;;   (let ((oldp (point)))
+  ;;     )
+
+
+  ;;   )
+  ;; ;;(setq kill-ring (cdr kill-ring)) ;;pop kill-ring
+
+  ;; (move-rect 0 -1)
+
+
+  (defhydra hydra-rectangle (:body-pre (rectangle-mark-mode 1)
+                                       :color pink
+                                       :hint nil
+                                       :post (progn (deactivate-mark) (whitespace-cleanup)))
+    "
+    ^_k_^       _w_ copy      _o_pen       _N_umber-lines            |\\     -,,,--,,_
+  _h_   _l_     _y_ank        _t_ype       _e_xchange-point          /,`.-'`'   ..  \-;;,_
+    ^_j_^       _d_ kill      _c_lear      _r_eset-region-mark      |,4-  ) )_   .;.(  `'-'
+  ^^^^          _u_ndo        _q_ quit     ^ ^                     '---''(./..)-'(_\_)
+  "
+    ("k" (pic-move 0 -1))
+    ("j" (pic-move 0 1))
+    ("h" (pic-move -1 0))
+    ("l" (pic-move 1 0))
+    ("d" kill-rectangle)                    ;; C-x r k
+    ("y" yank-rectangle)                    ;; C-x r y
+    ("w" copy-rectangle-as-kill)            ;; C-x r M-w
+    ("o" open-rectangle)                    ;; C-x r o
+    ("t" string-rectangle)                  ;; C-x r t
+    ("c" clear-rectangle)                   ;; C-x r c
+    ("e" exchange-point-and-mark)           ;; C-x C-x
+    ("N" rectangle-number-lines)            ;; C-x r N
+    ("r" (if (region-active-p)
+             (deactivate-mark)
+           (rectangle-mark-mode 1)))
+    ("u" undo nil)
+    ("q" nil nil))
+  (define-key my-keys-map (kbd "C-x SPC") 'hydra-rectangle/body)
+#+end_src
