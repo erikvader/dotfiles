@@ -100,6 +100,8 @@ reflected in the local value.
   (global-set-key (kbd "M-s s") 'isearch-forward-regexp)
   (global-set-key (kbd "M-s S") 'isearch-backward-regexp)
 
+  (global-auto-revert-mode t)
+
   (define-key input-decode-map [?\C-i] [C-i])
   ;;(global-set-key (kbd "<C-i>") 'indent-region)
   (define-key input-decode-map [?\C-m] [C-m])
@@ -167,13 +169,16 @@ reflected in the local value.
 
   (define-key eriks-map (kbd "c") 'whitespace-cleanup)
 
-  (defun edit-myinit-org ()
-    (interactive)
-    (find-file (expand-file-name "~/.emacs.d/myinit.org")))
+  ;; (defun edit-myinit-org ()
+  ;;   (interactive)
+  ;;   (find-file (expand-file-name "~/.emacs.d/myinit.org")))
 
-  (define-key eriks-map (kbd "i") 'edit-myinit-org)
+  ;;(define-key eriks-map (kbd "i") 'edit-myinit-org)
 
   (define-key eriks-map (kbd "g") 'magit-status)
+  (define-key eriks-map (kbd "u") 'counsel-unicode-char)
+
+
 #+end_src
 * M-f, M-b, M-n, M-p
 #+begin_src emacs-lisp :tangle yes
@@ -671,35 +676,37 @@ All default keybindings have been commented out in the source file 'auto-complet
     ("q" nil "quit" :color blue))
   (define-key eriks-map (kbd "z") 'hydra-zoom/body)
 
-  (defhydra hydra-windows ()
+  (defhydra hydra-windows (:hint nil)
     "
-   ^Resize^               ^Move^               ^Transpose^    ^Buffer^                        ^Split^
-  ------------------------------------------------------------------------------------------------------------
-   [_d_] : shrink hori    [_<left>_]  : left   [_t_] : up     [_C-<right>_] : forward tab     [_3_] : horizontal
-   [_a_] : enlarge hori   [_<right>_] : right  [_g_] : down   [_C-<left>_]  : backward tab    [_2_] : vertical
-   [_s_] : shrink verti   [_<up>_]    : up     [_f_] : left   [_C-<up>_]    : forward group   [_0_] : close
-   [_w_] : enlarge verti  [_<down>_]  : down   [_h_] : right  [_C-<down>_]  : backward group  [_1_] : close other
-   ^ ^                     ^      ^             ^ ^           [_b_]         : switch buffer   [_+_] : balance
-   ^ ^                     ^      ^             ^ ^           [_k_]         : kill            [_4_] : kill and close
-   ^ ^                     ^      ^             ^ ^           [_f_]         : find file        ^ ^
-   ^ ^                     ^      ^             ^ ^           [_x_]         : run command
+   ^Resize^         ^Transpose^    ^Buffer/tabbar^       ^^^^   ^Split^
+  -----------------------------------------------------------------------------------
+    ^Horizontal^        ^_W_^           ^_w_^                   [_3_] : horizontal
+   [_o_] : shrink     _A_   _D_       _a_   _d_                 [_2_] : vertical
+   [_p_] : enlarge      ^_S_^           ^_s_^                   [_0_] : close
+    ^ ^                                               ^^^^^^^^  [_1_] : close other
+    ^Vertical^         ^^          [_b_] : switch buffer  ^^^^  [_+_] : balance
+   [_u_] : shrink      ^^          [_k_] : kill           ^^^^  [_4_] : kill and close
+   [_i_] : enlarge     ^^          [_f_] : find file        ^ ^
+   ^ ^                 ^^          [_x_] : run command
+   [arrows] : switch window
+   _q_uit
   "
     ("<left>" windmove-left nil)
     ("<right>" windmove-right nil)
     ("<up>" windmove-up nil)
     ("<down>" windmove-down nil)
-    ("d" shrink-window-horizontally nil)
-    ("a" enlarge-window-horizontally nil)
-    ("s" shrink-window nil)
-    ("w" enlarge-window nil)
-    ("t" buf-move-up nil)
-    ("g" buf-move-down nil)
-    ("f" buf-move-left nil)
-    ("h" buf-move-right nil)
-    ("C-<right>" tabbar-forward-tab nil)
-    ("C-<left>" tabbar-backward-tab nil)
-    ("C-<up>" tabbar-forward-group nil)
-    ("C-<down>" tabbar-backward-group nil)
+    ("o" shrink-window-horizontally nil)
+    ("p" enlarge-window-horizontally nil)
+    ("u" shrink-window nil)
+    ("i" enlarge-window nil)
+    ("W" buf-move-up nil)
+    ("S" buf-move-down nil)
+    ("A" buf-move-left nil)
+    ("D" buf-move-right nil)
+    ("d" tabbar-forward-tab nil)
+    ("a" tabbar-backward-tab nil)
+    ("w" tabbar-forward-group nil)
+    ("s" tabbar-backward-group nil)
     ("b" ivy-switch-buffer nil)
     ("k" kill-this-buffer nil)
     ("3" split-window-horizontally nil)
@@ -709,8 +716,8 @@ All default keybindings have been commented out in the source file 'auto-complet
     ("+" balance-windows nil)
     ("4" kill-buffer-and-window nil)
     ("x" execute-extended-command nil)
-    ("f" find-file nil)
-    ("q" nil "quit ":color blue))
+    ("f" counsel-find-file nil)
+    ("q" nil nil :color blue))
   (define-key 'eriks-map (kbd "w") 'hydra-windows/body)
 
 
@@ -902,4 +909,13 @@ All default keybindings have been commented out in the source file 'auto-complet
     ("u" undo nil)
     ("q" nil nil))
   (define-key my-keys-map (kbd "C-x SPC") 'hydra-rectangle/body)
+#+end_src
+* dashboard
+#+begin_src emacs-lisp :tangle yes
+  (require 'dashboard)
+  (dashboard-setup-startup-hook)
+
+  (setq dashboard-items '((recents  . 5)
+                          (bookmarks . 5)
+                          (projects . 5)))
 #+end_src
