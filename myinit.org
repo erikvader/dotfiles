@@ -9,7 +9,7 @@
   ;;    map)
   ;;  "my-keys-minor-mode keymap.")
 
-  (setq my-keys-map (make-sparse-keymap))
+  (setq my-keys-map (make-sparse-keymap)) ;;varför gör jag såhär?
 
   (define-minor-mode my-keys-minor-mode
     "my keymode to activate my keybindings"
@@ -100,13 +100,18 @@ reflected in the local value.
   (global-set-key (kbd "M-s s") 'isearch-forward-regexp)
   (global-set-key (kbd "M-s S") 'isearch-backward-regexp)
 
+  (define-key input-decode-map [?\C-i] [C-i])
+  ;;(global-set-key (kbd "<C-i>") 'indent-region)
+  (define-key input-decode-map [?\C-m] [C-m])
+  ;;(global-set-key (kbd "<C-i>") 'indent-region)
 #+end_src
 * Eriks map / prefix key
 ** random
 #+begin_src emacs-lisp :tangle yes
   (define-prefix-command 'eriks-map)
   ;;(global-set-key (kbd "C-ö") 'eriks-map)
-  (define-key my-keys-map (kbd "C-r") 'eriks-map)
+  (define-key my-keys-map (kbd "C-SPC") 'eriks-map)
+  (define-key my-keys-map (kbd "<C-m>") 'set-mark-command)
 
   (defun eriks-kill-line ()
     "Kills (cuts) the whole current line"
@@ -153,23 +158,24 @@ reflected in the local value.
     (indent-for-tab-command)
     )
 
-  (define-key eriks-map (kbd "{") ;;TODO flytta till c-map
-    (lambda ()
-      (interactive)
-      (eriks-insert-paren "{}")))
+  ;; (define-key eriks-map (kbd "{") ;;TODO flytta till c-map
+  ;;   (lambda ()
+  ;;     (interactive)
+  ;;     (eriks-insert-paren "{}")))
 
   (define-key eriks-map (kbd "t") 'ansi-term)
 
   (define-key eriks-map (kbd "c") 'whitespace-cleanup)
 
-  (define-key eriks-map (kbd "i")
-      (lambda ()
-        (interactive)
-        (find-file (expand-file-name "~/.emacs.d/myinit.org"))))
+  (defun edit-myinit-org ()
+    (interactive)
+    (find-file (expand-file-name "~/.emacs.d/myinit.org")))
+
+  (define-key eriks-map (kbd "i") 'edit-myinit-org)
 
   (define-key eriks-map (kbd "g") 'magit-status)
 #+end_src
-** M-f, M-b, M-n, M-p
+* M-f, M-b, M-n, M-p
 #+begin_src emacs-lisp :tangle yes
   (defun lxor (a b)
     "logical xor"
@@ -349,8 +355,8 @@ All default keybindings have been commented out in the source file 'auto-complet
   ;;(define-prefix-command 'eriks-avy-map)
   ;;(define-key my-keys-map (kbd "M-s") 'eriks-avy-map)
   ;;(global-set-key (kbd "M-s") 'avy-goto-char)
-  (define-key eriks-map (kbd "r") 'avy-goto-char)
-  (define-key eriks-map (kbd "C-r") 'avy-goto-char-2)
+  (define-key eriks-map (kbd "SPC") 'avy-goto-char)
+  (define-key eriks-map (kbd "C-SPC") 'avy-goto-char-2)
 
   ;;dired
   ;;(add-hook 'dired-mode-hook
@@ -604,8 +610,12 @@ All default keybindings have been commented out in the source file 'auto-complet
 #+begin_src emacs-lisp :tangle yes
   ;;(dumb-jump-mode)
 
-  (define-key eriks-map (kbd "j j") 'dumb-jump-go)
-  (define-key eriks-map (kbd "j b") 'dumb-jump-back)
+  ;;(fset 'eriks-dumb-jump-keymap (make-sparse-keymap))
+  (define-prefix-command 'eriks-dumb-jump-keymap)
+  (define-key eriks-map (kbd "j") 'eriks-dumb-jump-keymap)
+
+  (define-key 'eriks-dumb-jump-keymap (kbd "j") 'dumb-jump-go)
+  (define-key 'eriks-dumb-jump-keymap (kbd "b") 'dumb-jump-back)
 
   (setq dumb-jump-selector 'ivy)
 
