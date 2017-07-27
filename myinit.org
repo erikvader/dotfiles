@@ -219,8 +219,8 @@ reflected in the local value.
       )
     )
 
-  (define-key my-keys-map (kbd "M-f") 'erik-forward-word)
-  (define-key my-keys-map (kbd "M-b") 'erik-backward-word)
+  ;;(define-key my-keys-map (kbd "M-f") 'erik-forward-word)
+  ;;(define-key my-keys-map (kbd "M-b") 'erik-backward-word)
 
   ;; experimental versions. skips quotes
   ;; (defun erik-backward-word ()
@@ -273,7 +273,7 @@ reflected in the local value.
   (define-key my-keys-map (kbd "M-n")
     (lambda ()
       (interactive)
-      (forward-line 3)))
+      (next-line 3)))
 #+end_src
 * yasnippet
 #+begin_src emacs-lisp :tangle yes
