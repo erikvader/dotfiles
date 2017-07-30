@@ -95,7 +95,7 @@ reflected in the local value.
 
   (global-disable-mouse-mode)
 
-  (define-key my-keys-map (kbd "C-=") 'er/expand-region)
+  (define-key my-keys-map (kbd "C-+") 'er/expand-region)
   (global-set-key (kbd "M-s r") 'isearch-query-replace-regexp)
   (global-set-key (kbd "M-s s") 'isearch-forward-regexp)
   (global-set-key (kbd "M-s S") 'isearch-backward-regexp)
@@ -106,6 +106,7 @@ reflected in the local value.
   ;;(global-set-key (kbd "<C-i>") 'indent-region)
   (define-key input-decode-map [?\C-m] [C-m])
   ;;(global-set-key (kbd "<C-i>") 'indent-region)
+
 #+end_src
 * Eriks map / prefix key
 ** random
@@ -596,6 +597,7 @@ All default keybindings have been commented out in the source file 'auto-complet
   (diminish 'auto-complete-mode)
   (diminish 'yas-minor-mode)
   (diminish 'global-disable-mouse-mode)
+  (diminish 'modalka-mode)
 
   (add-hook 'smartparens-mode-hook
             (lambda ()
@@ -793,8 +795,12 @@ All default keybindings have been commented out in the source file 'auto-complet
 
     (define-key smartparens-mode-map (kbd "C-M-f") 'sp-forward-sexp)
     (define-key smartparens-mode-map (kbd "C-M-b") 'sp-backward-sexp)
+    
+    (define-key smartparens-mode-map (kbd "C-M-k") 'sp-kill-sexp)
 
-    (define-key eriks-map (kbd "p") 'start-hydra-smartparens-if-activated)
+    ;;(define-key smartparens-mode-map (kbd "M-f") 'sp-forward-symbol)
+    ;;(define-key smartparens-mode-map (kbd "M-b") 'sp-backward-symbol)
+    
     )
 
   (defun start-hydra-smartparens-if-activated ()
@@ -803,7 +809,9 @@ All default keybindings have been commented out in the source file 'auto-complet
         (hydra-smartparens/body)
       (message "smartparens not activated!")))
 
-  (defhydra hydra-smartparens (:color pink)
+  (define-key eriks-map (kbd "p") 'hydra-smartparens/body) ;;'start-hydra-smartparens-if-activated
+
+  (defhydra hydra-smartparens (:color blue)
     "
    ^forward^      ^backward^     ^Sexp^          ^Hybrid^
   ^^^^^^^^-----------------------------------------------------
@@ -823,7 +831,8 @@ All default keybindings have been commented out in the source file 'auto-complet
     ("a" sp-kill-hybrid-sexp nil)
     ("w" sp-slurp-hybrid-sexp nil)
     ("e" sp-dedent-adjust-sexp nil)
-    ("q" nil "Quit" :color blue))
+    )
+  ;;("q" nil "Quit" :color blue)
 
 #+end_src
 ** parenthesis
@@ -918,4 +927,91 @@ All default keybindings have been commented out in the source file 'auto-complet
   (setq dashboard-items '((recents  . 5)
                           (bookmarks . 5)
                           (projects . 5)))
+#+end_src
+* eriks smart delete stuff
+#+begin_src emacs-lisp :tangle yes
+  (defun eriks-delete-backward ()
+    (interactive)
+    (let ((c (preceding-char)))
+      (if (or
+           (= 32 c)
+           (= 9 c)
+           (= 10 c))
+          (hungry-delete-backward 1)
+        (sp-backward-delete-word 1))))
+
+  (defun eriks-delete-forward ()
+    (interactive)
+    (let ((c (following-char)))
+      (if (or
+           (= 32 c)
+           (= 9 c)
+           (= 10 c))
+          (hungry-delete-forward 1)
+        (sp-delete-word 1))))
+
+  (define-key my-keys-map (kbd "C-<backspace>") 'eriks-delete-backward)
+  (define-key my-keys-map (kbd "C-<delete>") 'eriks-delete-forward)
+#+end_src
+* modalka
+#+begin_src emacs-lisp :tangle yes
+  (require 'modalka)
+
+  (defun toggle-modalka ()
+    (interactive)
+    (modalka-mode 'toggle)
+    (if (bound-and-true-p modalka-mode)
+        (face-remap-add-relative
+         'mode-line '((:background "#d2691e") mode-line))
+      (face-remap-add-relative
+       'mode-line '((:background "hot pink") mode-line)))
+    (powerline-reset))
+
+  (define-key my-keys-map (kbd "§") 'toggle-modalka)
+
+
+  (modalka-define-kbd "W" "M-w")
+  (modalka-define-kbd "w" "C-w")
+  (modalka-define-kbd "Y" "M-y")
+  (modalka-define-kbd "a" "C-a")
+  (modalka-define-kbd "e" "C-e")
+  (modalka-define-kbd "g" "C-g")
+  (modalka-define-kbd "y" "C-y")
+  (modalka-define-kbd "m" "<C-m>")
+
+  ;;vim
+  (modalka-define-kbd "h" "C-b")
+  (modalka-define-kbd "k" "C-p")
+  (modalka-define-kbd "j" "C-n")
+  (modalka-define-kbd "l" "C-f")
+
+  (modalka-define-kbd "H" "C-M-b")
+  (modalka-define-kbd "K" "C-M-u")
+  (modalka-define-kbd "J" "C-M-d")
+  (modalka-define-kbd "L" "C-M-f")
+
+  (modalka-define-kbd "f" "M-f")
+  (modalka-define-kbd "b" "M-b")
+
+  (modalka-define-kbd               "d d" "C-k")
+  (modalka-define-kbd               "d D" "C-M-k")
+  (modalka-define-kbd               "d f" "C-<delete>")
+  (modalka-define-kbd               "d b" "C-<backspace>")
+  (define-key modalka-mode-map (kbd "d l") 'eriks-kill-line)
+  (define-key modalka-mode-map (kbd "d r") 'delete-region)
+
+  (define-key modalka-mode-map (kbd ".") 'repeat)
+  (define-key modalka-mode-map (kbd "SPC") 'eriks-map)
+  (define-key modalka-mode-map (kbd "i") 'toggle-modalka)
+
+  (modalka-define-kbd "o" "C-<return>")
+  (modalka-define-kbd "O" "C-S-<return>")
+  (modalka-define-kbd "+" "C-+")
+  (define-key modalka-mode-map (kbd "p") 'hydra-smartparens/body)
+  (modalka-define-kbd "s" "C-s")
+
+  (modalka-define-kbd "v" "C-v")
+  (modalka-define-kbd "V" "M-v")
+
+
 #+end_src
