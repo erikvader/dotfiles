@@ -107,6 +107,15 @@ reflected in the local value.
   (define-key input-decode-map [?\C-m] [C-m])
   ;;(global-set-key (kbd "<C-i>") 'indent-region)
 
+  (defun replace-char (c)
+    "Replaces current char with a prompted one"
+    (interactive "cReplacement: ")
+    (delete-char 1)
+    (insert-char c)
+    (backward-char)
+    )
+
+  (define-key my-keys-map (kbd "C-r") 'replace-char)
 #+end_src
 * Eriks map / prefix key
 ** random
@@ -424,7 +433,8 @@ All default keybindings have been commented out in the source file 'auto-complet
               ;;(paredit-mode t)
               (start-smartparens)
               (setq show-trailing-whitespace t)
-              (rainbow-delimiters-mode t)))
+              (rainbow-delimiters-mode t)
+              (modalka-mode 1)))
 #+end_src
 ** C-mode hook
 #+begin_src emacs-lisp :tangle yes
@@ -582,31 +592,6 @@ All default keybindings have been commented out in the source file 'auto-complet
 #+begin_src emacs-lisp :tangle yes
   (global-set-key [remap scroll-down-command] 'golden-ratio-scroll-screen-down)
   (global-set-key [remap scroll-up-command] 'golden-ratio-scroll-screen-up)
-#+end_src
-* hide minor mode lighters in modeline
-#+begin_src emacs-lisp :tangle yes
-  ;;shorten minor mode
-
-  (add-hook 'autopair-mode-hook
-            (lambda ()
-              (diminish 'autopair-mode)))
-
-  (diminish 'which-key-mode)
-  (diminish 'ivy-mode)
-  (diminish 'undo-tree-mode)
-  (diminish 'auto-complete-mode)
-  (diminish 'yas-minor-mode)
-  (diminish 'global-disable-mouse-mode)
-  (diminish 'modalka-mode)
-
-  (add-hook 'smartparens-mode-hook
-            (lambda ()
-              (diminish 'smartparens-mode)))
-
-  ;;doesnt run :(
-  (add-hook 'abbrev-mode-hook
-            (lambda ()
-              (diminish 'abbrev-mode)))
 #+end_src
 * projectile
 #+begin_src emacs-lisp :tangle yes
@@ -771,7 +756,6 @@ All default keybindings have been commented out in the source file 'auto-complet
 ------------------------------------------------------
  [h] : grej  [g] : sasd  [<right>] : hej!  [a] : asd!
                          [F]       : :)
-
 * paredit
 #+begin_src emacs-lisp :tangle yes
   ;; (define-key paredit-mode-map (kbd "C-S-<left>") 'paredit-backward-slurp-sexp)
@@ -815,8 +799,8 @@ All default keybindings have been commented out in the source file 'auto-complet
     "
    ^forward^      ^backward^     ^Sexp^          ^Hybrid^
   ^^^^^^^^-----------------------------------------------------
-   [_k_] : barf   [_i_] : slurp  [_K_] : kill    [_a_] : kill
-   [_l_] : slurp  [_o_] : barf   [_s_] : splice  [_w_] : slurp
+   [_m_] : barf   [_i_] : slurp  [_K_] : kill    [_k_] : kill
+   [_n_] : slurp  [_o_] : barf   [_s_] : splice  [_w_] : slurp
     ^ ^            ^ ^           [_S_] : split   [_e_] : barf
     ^ ^            ^ ^           [_J_] : join     ^ ^
   "
@@ -824,11 +808,11 @@ All default keybindings have been commented out in the source file 'auto-complet
     ("s" sp-splice-sexp nil)
     ("S" sp-split-sexp nil)
     ("J" sp-join-sexp nil)
-    ("k" sp-forward-barf-sexp nil)
-    ("l" sp-forward-slurp-sexp nil)
+    ("m" sp-forward-barf-sexp nil)
+    ("n" sp-forward-slurp-sexp nil)
     ("i" sp-backward-slurp-sexp nil)
     ("o" sp-backward-barf-sexp nil)
-    ("a" sp-kill-hybrid-sexp nil)
+    ("k" sp-kill-hybrid-sexp nil)
     ("w" sp-slurp-hybrid-sexp nil)
     ("e" sp-dedent-adjust-sexp nil)
     )
@@ -957,27 +941,37 @@ All default keybindings have been commented out in the source file 'auto-complet
 #+begin_src emacs-lisp :tangle yes
   (require 'modalka)
 
+  ;;(defvar-local mode-line-cookie nil)
+
+  (add-hook 'modalka-mode-hook
+            (lambda ()
+              (if (bound-and-true-p modalka-mode)
+                  (setq-local mode-line-cookie
+                              (face-remap-add-relative
+                               'mode-line '((:background "#d2691e") mode-line)))
+                (face-remap-remove-relative mode-line-cookie))
+              ;;(powerline-reset)
+              ))
+
   (defun toggle-modalka ()
     (interactive)
-    (modalka-mode 'toggle)
-    (if (bound-and-true-p modalka-mode)
-        (face-remap-add-relative
-         'mode-line '((:background "#d2691e") mode-line))
-      (face-remap-add-relative
-       'mode-line '((:background "hot pink") mode-line)))
-    (powerline-reset))
+    (modalka-mode 'toggle))
 
   (define-key my-keys-map (kbd "§") 'toggle-modalka)
 
+  ;; (modalka-global-mode)
 
-  (modalka-define-kbd "W" "M-w")
   (modalka-define-kbd "w" "C-w")
-  (modalka-define-kbd "Y" "M-y")
+  (modalka-define-kbd "W" "M-w")
   (modalka-define-kbd "a" "C-a")
   (modalka-define-kbd "e" "C-e")
   (modalka-define-kbd "g" "C-g")
   (modalka-define-kbd "y" "C-y")
+  (modalka-define-kbd "Y" "M-y")
   (modalka-define-kbd "m" "<C-m>")
+  (modalka-define-kbd "M" "C-M-SPC")
+
+  (modalka-define-kbd "c" "M-;")
 
   ;;vim
   (modalka-define-kbd "h" "C-b")
@@ -993,10 +987,10 @@ All default keybindings have been commented out in the source file 'auto-complet
   (modalka-define-kbd "f" "M-f")
   (modalka-define-kbd "b" "M-b")
 
-  (modalka-define-kbd               "d d" "C-k")
-  (modalka-define-kbd               "d D" "C-M-k")
-  (modalka-define-kbd               "d f" "C-<delete>")
-  (modalka-define-kbd               "d b" "C-<backspace>")
+  (modalka-define-kbd "d d" "C-k")
+  (modalka-define-kbd "d D" "C-M-k")
+  (modalka-define-kbd "d f" "C-<delete>")
+  (modalka-define-kbd "d b" "C-<backspace>")
   (define-key modalka-mode-map (kbd "d l") 'eriks-kill-line)
   (define-key modalka-mode-map (kbd "d r") 'delete-region)
 
@@ -1013,5 +1007,52 @@ All default keybindings have been commented out in the source file 'auto-complet
   (modalka-define-kbd "v" "C-v")
   (modalka-define-kbd "V" "M-v")
 
+  (modalka-define-kbd "r" "C-r")
+  (modalka-define-kbd "x" "M-x")
 
+  ;;avy
+  (define-prefix-command 'modalka-avy-map)
+  (define-key modalka-mode-map (kbd ",") 'modalka-avy-map)
+  (define-key modalka-avy-map (kbd ",") 'avy-goto-char)
+  (define-key modalka-avy-map (kbd ".") 'avy-goto-char-2)
+  (define-key modalka-avy-map (kbd "-") 'avy-goto-line)
+
+  ;;altgr
+  (define-key modalka-mode-map (kbd "7")
+    (lambda ()
+      (interactive)
+      (insert-char 123) ;;{}
+      (run-hooks 'post-self-insert-hook)))
+
+  (define-key modalka-mode-map (kbd "8")
+    (lambda ()
+      (interactive)
+      (insert-char 91) ;;[]
+      (run-hooks 'post-self-insert-hook)))
+
+#+end_src
+* hide minor mode lighters in modeline
+#+begin_src emacs-lisp :tangle yes
+  ;;shorten minor mode
+
+  (add-hook 'autopair-mode-hook
+            (lambda ()
+              (diminish 'autopair-mode)))
+
+  (diminish 'which-key-mode)
+  (diminish 'ivy-mode)
+  (diminish 'undo-tree-mode)
+  (diminish 'auto-complete-mode)
+  (diminish 'yas-minor-mode)
+  (diminish 'global-disable-mouse-mode)
+  (diminish 'modalka-mode)
+
+  (add-hook 'smartparens-mode-hook
+            (lambda ()
+              (diminish 'smartparens-mode)))
+
+  ;;doesnt run :(
+  (add-hook 'abbrev-mode-hook
+            (lambda ()
+              (diminish 'abbrev-mode)))
 #+end_src
