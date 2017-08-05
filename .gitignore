@@ -1,0 +1,11 @@
+elpa/**
+non_elpa/**
+session.*
+.emacs.desktop
+myinit.el
+recentf
+projectile.cache
+projectile-bookmarks.eld
+auto-save-list/**
+ac-comphist.dat
+.mc-lists.el
