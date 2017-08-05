@@ -11,6 +11,8 @@
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (add-to-list 'load-path "~/.emacs.d/themes/")
 
+;;(add-to-list 'load-path "~/.emacs.d/non_elpa/i3-emacs")
+
 ;;(add-to-list 'load-path "~/.emacs.d/small-libs")
 
 (custom-set-variables
