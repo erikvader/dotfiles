@@ -116,6 +116,9 @@ reflected in the local value.
     )
 
   (define-key my-keys-map (kbd "C-r") 'replace-char)
+
+  ;;support för font awesome
+  (set-fontset-font "fontset-default" '(#xf000 . #xffff) "Font Awesome")
 #+end_src
 * Eriks map / prefix key
 ** random
@@ -995,7 +998,8 @@ All default keybindings have been commented out in the source file 'auto-complet
   (define-key modalka-mode-map (kbd "d r") 'delete-region)
 
   (define-key modalka-mode-map (kbd ".") 'repeat)
-  (define-key modalka-mode-map (kbd "SPC") 'eriks-map)
+  ;;(define-key modalka-mode-map (kbd "SPC") 'eriks-map)
+  (define-key modalka-mode-map (kbd "SPC") 'self-insert-command)
   (define-key modalka-mode-map (kbd "i") 'toggle-modalka)
 
   (modalka-define-kbd "o" "C-<return>")
@@ -1017,19 +1021,26 @@ All default keybindings have been commented out in the source file 'auto-complet
   (define-key modalka-avy-map (kbd ".") 'avy-goto-char-2)
   (define-key modalka-avy-map (kbd "-") 'avy-goto-line)
 
+
   ;;altgr
-  (define-key modalka-mode-map (kbd "7")
-    (lambda ()
-      (interactive)
-      (insert-char 123) ;;{}
-      (run-hooks 'post-self-insert-hook)))
+  ;; (define-key modalka-mode-map (kbd "7")
+  ;;   (lambda ()
+  ;;     (interactive)
+  ;;     (insert-char 123) ;;{}
+  ;;     (run-hooks 'post-self-insert-hook)))
 
-  (define-key modalka-mode-map (kbd "8")
-    (lambda ()
-      (interactive)
-      (insert-char 91) ;;[]
-      (run-hooks 'post-self-insert-hook)))
+  ;; (define-key modalka-mode-map (kbd "8")
+  ;;   (lambda ()
+  ;;     (interactive)
+  ;;     (insert-char 91) ;;[]
+  ;;     (run-hooks 'post-self-insert-hook)))
 
+  ;;copy above line
+  ;;forward symbol
+  ;;siffror
+  ;;begging/end of buffer
+  ;;kanske byta ut sp-funktionerna i eriks smart delete
+  ;;search with selection
 #+end_src
 * hide minor mode lighters in modeline
 #+begin_src emacs-lisp :tangle yes
