@@ -1,0 +1,27 @@
+"*":
+  "autocomplete-plus":
+    confirmCompletion: "tab always, enter when suggestion explicitly selected"
+  core:
+    disabledPackages: [
+      "spell-check"
+      "ide-haskell"
+      "haskell-ghc-mod"
+    ]
+    telemetryConsent: "no"
+  editor:
+    scrollPastEnd: true
+    showIndentGuide: true
+    tabLength: 3
+    tabType: "soft"
+  "exception-reporting":
+    userId: "dd9f727b-7620-45cf-3afb-2b755a8e7813"
+  "haskell-ghc-mod":
+    additionalPathDirectories: [
+      "/home/erik/.cabal"
+    ]
+    ghcModPath: "/home/erik/.cabal/bin/ghc-mod"
+  "ide-haskell":
+    cabalPath: "/home/erik/.cabal"
+    stylishHaskellPath: "/home/erik/.cabal/bin/stylish-haskell"
+  welcome:
+    showOnStartup: false
