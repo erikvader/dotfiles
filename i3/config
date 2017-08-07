@@ -187,7 +187,7 @@ bindsym $mod+Control+k resize shrink height 5 px or 5 ppt
 bindsym $mod+Control+l resize grow width 5 px or 5 ppt
 
 #set $lockcommand i3lock -i ~/Pictures/PFUDOR_2.png
-set $lockcommand ~/.config/i3/lock.sh ~/.config/i3/lock.png
+set $lockcommand ~/.config/i3/lock.sh # ~/.config/i3/lock.png
 bindsym XF86Sleep       exec --no-startup-id $lockcommand && systemctl suspend
 bindsym XF86ScreenSaver exec --no-startup-id $lockcommand
 bindsym Print exec gnome-screenshot
@@ -247,7 +247,7 @@ bindsym $mod+i $func_center
 #auto start programs
 exec --no-startup-id setxkbmap se nodeadkeys
 #background picture
-exec_always --no-startup-id feh --bg-center /home/erik/Pictures/PFUDOR_0.jpg
+#exec_always --no-startup-id feh --bg-center /home/erik/Pictures/PFUDOR_0.jpg
 #compositor
 exec --no-startup-id compton
 #chrome
@@ -255,10 +255,11 @@ exec google-chrome
 exec emacs
 #exec i3-msg workspace $ws3
 #make laptopscreen primary display (for tray icons)
-exec --no-startup-id xrandr --output LVDS1 --primary
+#exec --no-startup-id xrandr --output LVDS1 --primary
+exec --no-startup-id display-visor -f -l LID0
 #dropbox
 exec dropbox start
-exec_always --no-startup-id ~/.config/polybar/run_polybar.sh
+#exec_always --no-startup-id ~/.config/polybar/run_polybar.sh
 
 #popup terminal
 exec gnome-terminal --role=ERIKS_POPUP_TERMINAL --window-with-profile=i3-popup -e ~/.i3_popup_term.sh
