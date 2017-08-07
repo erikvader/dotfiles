@@ -247,11 +247,12 @@ bindsym $mod+i $func_center
 #auto start programs
 exec --no-startup-id setxkbmap se nodeadkeys
 #background picture
-#exec --no-startup-id feh --bg-scale /home/erik/Pictures/PFUDOR_0.jpg
+exec_always --no-startup-id feh --bg-center /home/erik/Pictures/PFUDOR_0.jpg
 #compositor
 exec --no-startup-id compton
 #chrome
 exec google-chrome
+exec emacs
 #exec i3-msg workspace $ws3
 #make laptopscreen primary display (for tray icons)
 exec --no-startup-id xrandr --output LVDS1 --primary

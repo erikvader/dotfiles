@@ -126,6 +126,9 @@ fi
 #starta screenfetch
 #screenfetch
 
+export VISUAL=vim
+export EDITOR="$VISUAL"
+
 #-------aliases--------
 alias xopen='xdg-open'
 alias perlgrep='grep -P'
