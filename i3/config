@@ -246,6 +246,8 @@ bindsym $mod+i $func_center
 
 #auto start programs
 exec --no-startup-id setxkbmap se nodeadkeys
+#disable caps lock. Makes it insert another key with .xbindkeysrc
+exec --no-startup-id xmodmap -e 'clear Lock'
 #background picture
 #exec_always --no-startup-id feh --bg-center /home/erik/Pictures/PFUDOR_0.jpg
 #compositor
