@@ -240,14 +240,11 @@ bindsym XF86Launch1 [window_role=ERIKS_POPUP_TERMINAL] scratchpad show, $func_ce
 set $func_center floating enable, resize set 900 500, move position center
 bindsym $mod+i $func_center
 
-# Keys
-#exec_always xmodmap -e "clear lock" #disable caps lock switch
-#exec_always xmodmap -e "keysym Caps_Lock = Control_L" #set caps_lock as escape
-
 #auto start programs
 exec --no-startup-id setxkbmap se nodeadkeys
+exec sleep 2 && xmodmap -e 'clear Lock' -e 'keycode 66 = section'
 #disable caps lock. Makes it insert another key with .xbindkeysrc
-exec --no-startup-id xmodmap -e 'clear Lock'
+#exec --no-startup-id xmodmap -e 'clear Lock'
 #background picture
 #exec_always --no-startup-id feh --bg-center /home/erik/Pictures/PFUDOR_0.jpg
 #compositor
