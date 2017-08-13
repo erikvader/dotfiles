@@ -234,8 +234,8 @@ bindsym $mod+p [workspace=__focused__] border toggle
 bindsym $mod+o move scratchpad
 bindsym $mod+Shift+o scratchpad show
 
-bindsym $mod+F12   [window_role=ERIKS_POPUP_TERMINAL] scratchpad show, $func_center
-bindsym XF86Launch1 [window_role=ERIKS_POPUP_TERMINAL] scratchpad show, $func_center
+bindsym $mod+F12   [window_role=ERIKS_POPUP_TERMINAL] scratchpad show
+bindsym XF86Launch1 [window_role=ERIKS_POPUP_TERMINAL] scratchpad show
 
 set $func_center floating enable, resize set 900 500, move position center
 bindsym $mod+i $func_center
