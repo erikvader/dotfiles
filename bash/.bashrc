@@ -126,7 +126,7 @@ fi
 #starta screenfetch
 #screenfetch
 
-export VISUAL=vim
+export VISUAL=emacsclient
 export EDITOR="$VISUAL"
 
 #-------aliases--------
