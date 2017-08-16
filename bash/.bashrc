@@ -47,24 +47,46 @@ force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-	# We have color support; assume it's compliant with Ecma-48
-	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-	# a case would tend to support setf rather than setaf.)
-	color_prompt=yes
+    # We have color support; assume it's compliant with Ecma-48
+    # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+    # a case would tend to support setf rather than setaf.)
+    color_prompt=yes
     else
-	color_prompt=
+    color_prompt=
     fi
 fi
 
+# 4 ist för 3 för background
+C_NC='\e[0m' # No Color
+C_WHITE='\e[1;37m'
+C_BLACK='\e[0;30m'
+C_BLUE='\e[0;34m'
+C_LIGHT_BLUE='\e[1;34m'
+C_GREEN='\e[0;32m'
+C_LIGHT_GREEN='\e[1;32m'
+C_CYAN='\e[0;36m'
+C_LIGHT_CYAN='\e[1;36m'
+C_RED='\e[0;31m'
+C_LIGHT_RED='\e[1;31m'
+C_PURPLE='\e[0;35m'
+C_LIGHT_PURPLE='\e[1;35m'
+C_BROWN='\e[0;33m'
+C_YELLOW='\e[1;33m'
+C_GRAY='\e[0;30m'
+C_LIGHT_GRAY='\e[0;37m'
+
 if [ "$color_prompt" = yes ]; then
     #PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
-    # If id command returns zero, youâ€™ve root access.
+    # If id command returns zero, youve root access.
+    C_NAME=
     if [ $(id -u) -eq 0 ]; then # you are root, set red colour prompt
-        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;31m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\W\[\033[00m\]\$ '
+        C_NAME=$C_LIGHT_RED
     else # normal
-        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\W\[\033[00m\]\$ '
+        C_NAME=$C_LIGHT_GREEN
     fi
 
+    PS1="${debian_chroot:+($debian_chroot)}$C_BLUE┏━━$C_LIGHT_BLUE($C_NAME\u@\H$C_LIGHT_BLUE)$C_BLUE━━━$C_LIGHT_BLUE($C_LIGHT_PURPLE\w$C_LIGHT_BLUE)$C_BLUE\n┗━$C_NC\$ "
+    
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -149,12 +171,12 @@ alias nemon='nemo --no-desktop'
 #  xrandr --newmode "1280x1024_old"   108.00   1280 1328 1440 1688   1024 1025 1028 1066 +hsync +vsync
 #  xrandr --addmode VGA1 "1280x1024_old"
 #  #xrandr --output VGA1 --mode "1280x1024_old"
-#  
+#
 #}
 
 #c-saker
 function gcco {
-   gcc -o $1 "$1.c" 
+   gcc -o $1 "$1.c"
 }
 
 function gccor {
