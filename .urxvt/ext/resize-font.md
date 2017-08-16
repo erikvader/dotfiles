@@ -1,0 +1,4 @@
+- Ctrl++ (or Ctrl+Shift+=) to increase size
+- Ctrl+- to decrease size
+- Ctrl+= to reset size
+- Ctrl+? to see current size

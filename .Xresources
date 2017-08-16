@@ -1,0 +1,90 @@
+!RXVT
+URxvt.background:   [80]#000000
+URxvt.foreground:	#DEDEDE
+URxvt.font:			xft:Ubuntu mono:pixelsize=16:antialias=true:hinting=true
+!URxvt.boldFont:		xft:DejaVu Sans Mono:bold:pixelsize=12:antialias=true:hinting=true
+URxvt.scrollBar:	false
+
+Xft*dpi:       96
+Xft*antialias: True
+Xft*hinting:   Full
+
+URxvt.saveLines:	65535
+
+URxvt.cursorBlink: 1
+
+URxvt*depth: 32
+
+! do not scroll with output
+URxvt*scrollTtyOutput: false
+
+! scroll in relation to buffer (with mouse scroll or Shift+Page Up)
+URxvt*scrollWithBuffer: true
+
+! scroll back to the bottom on keypress
+URxvt*scrollTtyKeypress: true
+
+!samma colors som i xterm
+URxvt.color12: rgb:5c/5c/ff
+
+!disable jobbig keybind
+URxvt.iso14755: false
+URxvt.iso14755_52: false
+
+URxvt.clipboard.autocopy: true
+!URxvt.clipboard.copycmd:  xclip -i -selection clipboard
+!URxvt.clipboard.pastecmd: xclip -o -selection clipboard
+
+!perl!
+URxvt.perl-ext-common: default,resize-font,keyboard-select,clipboard
+
+URxvt.keysym.M-Escape: perl:keyboard-select:activate
+URxvt.keysym.M-s: perl:keyboard-select:search
+URxvt.keysym.M-c:   perl:clipboard:copy
+URxvt.keysym.M-v:   perl:clipboard:paste
+URxvt.keysym.M-C-v: perl:clipboard:paste_escaped
+
+!XTERM
+xterm.termName: xterm-256color
+xterm.vt100.locale: true
+xterm.vt100.metaSendsEscape: true
+
+! Use a nice truetype font and size by default... 
+xterm*faceName: Ubuntu mono
+xterm*faceSize: 12
+
+! Every shell is a login shell by default (for inclusion of all necessary environment variables)
+xterm*loginshell: true
+
+! I like a LOT of scrollback...
+xterm*savelines: 16384
+
+! double-click to select whole URLs :D
+xterm*charClass: 33:48,36-47:48,58-59:48,61:48,63-64:48,95:48,126:48
+
+! DOS-box colours...
+xterm*foreground: rgb:ff/ff/ff
+xterm*background: rgb:00/00/00
+xterm*color0: rgb:00/00/00
+xterm*color1: rgb:a8/00/00
+xterm*color2: rgb:00/a8/00
+xterm*color3: rgb:a8/54/00
+xterm*color4: rgb:00/00/a8
+xterm*color5: rgb:a8/00/a8
+xterm*color6: rgb:00/a8/a8
+xterm*color7: rgb:a8/a8/a8
+xterm*color8: rgb:54/54/54
+xterm*color9: rgb:fc/54/54
+xterm*color10: rgb:54/fc/54
+xterm*color11: rgb:fc/fc/54
+xterm*color12: rgb:54/54/fc
+xterm*color13: rgb:fc/54/fc
+xterm*color14: rgb:54/fc/fc
+xterm*color15: rgb:fc/fc/fc
+
+! right hand side scrollbar...
+xterm*rightScrollBar: false
+xterm*ScrollBar: false
+
+! stop output to terminal from jumping down to bottom of scroll again
+xterm*scrollTtyOutput: false
