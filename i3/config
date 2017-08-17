@@ -201,6 +201,8 @@ bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute 0 toggle
 bindsym $mod+Mod1+l move workspace to output right
 bindsym $mod+Mod1+h move workspace to output left
 
+bindsym $mod+u [urgent=latest] focus
+
 #window              colors
 #                        border              background          text                  indicator
 client.focused           $bg-color           $border-active      $text-color           $border-active
