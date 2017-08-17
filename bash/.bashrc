@@ -85,8 +85,18 @@ if [ "$color_prompt" = yes ]; then
         C_NAME=$C_LIGHT_GREEN
     fi
 
-    PS1="${debian_chroot:+($debian_chroot)}$C_BLUE┏━━$C_LIGHT_BLUE($C_NAME\u@\H$C_LIGHT_BLUE)$C_BLUE━━━$C_LIGHT_BLUE($C_LIGHT_PURPLE\w$C_LIGHT_BLUE)$C_BLUE\n┗━$C_NC\$ "
-    
+    PS1="${debian_chroot:+($debian_chroot)}";
+    PS1+="$C_BLUE┏━━";
+    PS1+="$C_LIGHT_BLUE(";
+    PS1+="$C_NAME\u@\H";
+    PS1+="$C_LIGHT_BLUE)";
+    PS1+="$C_BLUE━━━";
+    PS1+="$C_LIGHT_BLUE(";
+    PS1+="$C_LIGHT_PURPLE\w";
+    PS1+="$C_LIGHT_BLUE)";
+    PS1+="$C_BLUE\n┗━";
+    PS1+="$C_NC\$ ";
+
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
