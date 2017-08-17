@@ -1,0 +1,8 @@
+
+#inte klicka tab så många gånger
+set show-all-if-unmodified on
+
+set completion-ignore-case on
+
+Tab: complete
+"\e[Z": menu-complete

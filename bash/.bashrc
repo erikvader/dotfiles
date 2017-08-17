@@ -75,6 +75,46 @@ C_YELLOW='\e[1;33m'
 C_GRAY='\e[0;30m'
 C_LIGHT_GRAY='\e[0;37m'
 
+# function git_color {
+#     local git_status="$(git status 2> /dev/null)"
+
+#     if [[ ! $git_status =~ "working directory clean" ]]; then
+#         echo -e $C_RED
+#     elif [[ $git_status =~ "Your branch is ahead of" ]]; then
+#         echo -e $C_YELLOW
+#     elif [[ $git_status =~ "nothing to commit" ]]; then
+#         echo -e $C_GREEN
+#     else
+#         echo -e $C_LIGHT_GRAY
+#     fi
+# }
+
+# function git_branch {
+#     local git_status="$(git status 2> /dev/null)"
+#     local on_branch="On branch ([^${IFS}]*)"
+#     local on_commit="HEAD detached at ([^${IFS}]*)"
+
+#     if [[ $git_status =~ $on_branch ]]; then
+#         local branch=${BASH_REMATCH[1]}
+#         echo "$branch"
+#     elif [[ $git_status =~ $on_commit ]]; then
+#         local commit=${BASH_REMATCH[1]}
+#         echo "$commit"
+#     fi
+# }
+
+function git_prompt {
+    local PRO=
+    local STATUS=$(~/.bash_plugins/vcprompt -f "%m%a%u%b::%P")
+    if [[ -n $STATUS ]]; then
+        PRO+="$C_BLUE━━━"
+        PRO+="$C_LIGHT_BLUE("
+        PRO+="$(git_color)$STATUS"
+        PRO+="$C_LIGHT_BLUE)"
+    fi
+    echo -e "$PRO"
+}
+
 if [ "$color_prompt" = yes ]; then
     #PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
     # If id command returns zero, youve root access.
@@ -85,22 +125,23 @@ if [ "$color_prompt" = yes ]; then
         C_NAME=$C_LIGHT_GREEN
     fi
 
-    PS1="${debian_chroot:+($debian_chroot)}";
-    PS1+="$C_BLUE┏━━";
-    PS1+="$C_LIGHT_BLUE(";
-    PS1+="$C_NAME\u@\H";
-    PS1+="$C_LIGHT_BLUE)";
-    PS1+="$C_BLUE━━━";
-    PS1+="$C_LIGHT_BLUE(";
-    PS1+="$C_LIGHT_PURPLE\w";
-    PS1+="$C_LIGHT_BLUE)";
-    PS1+="$C_BLUE\n┗━";
-    PS1+="$C_NC\$ ";
+    PS1="${debian_chroot:+($debian_chroot)}"
+    PS1+="$C_BLUE┏━━"
+    PS1+="$C_LIGHT_BLUE("
+    PS1+="$C_NAME\u@\H"
+    PS1+="$C_LIGHT_BLUE)"
+    PS1+="$C_BLUE━━━"
+    PS1+="$C_LIGHT_BLUE("
+    PS1+="$C_LIGHT_PURPLE\w"
+    PS1+="$C_LIGHT_BLUE)"
+    PS1+="\$(git_prompt)"
+    PS1+="\[$C_BLUE\]\n┗━"
+    PS1+="\[$C_NC\]\$ "
 
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
-unset color_prompt force_color_prompt
+unset color_prompt force_color_prompt C_NAME
 
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
@@ -203,4 +244,10 @@ function gcca {
 
 set_term_title(){
    echo -en "\033]0;$1\a"
+}
+
+#mv_n_link .inputrc Dropbox/
+function mv_n_link {
+    mv "$1" "$2"
+    ln -s "$2$1" "$1"
 }
