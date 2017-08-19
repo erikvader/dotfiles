@@ -75,19 +75,19 @@ C_YELLOW='\e[1;33m'
 C_GRAY='\e[0;30m'
 C_LIGHT_GRAY='\e[0;37m'
 
-# function git_color {
-#     local git_status="$(git status 2> /dev/null)"
+function git_color {
+    local git_status="$(git status 2> /dev/null)"
 
-#     if [[ ! $git_status =~ "working directory clean" ]]; then
-#         echo -e $C_RED
-#     elif [[ $git_status =~ "Your branch is ahead of" ]]; then
-#         echo -e $C_YELLOW
-#     elif [[ $git_status =~ "nothing to commit" ]]; then
-#         echo -e $C_GREEN
-#     else
-#         echo -e $C_LIGHT_GRAY
-#     fi
-# }
+    if [[ ! $git_status =~ "working directory clean" ]]; then
+        echo -e $C_RED
+    elif [[ $git_status =~ "Your branch is ahead of" ]]; then
+        echo -e $C_YELLOW
+    elif [[ $git_status =~ "nothing to commit" ]]; then
+        echo -e $C_GREEN
+    else
+        echo -e $C_LIGHT_GRAY
+    fi
+}
 
 # function git_branch {
 #     local git_status="$(git status 2> /dev/null)"
