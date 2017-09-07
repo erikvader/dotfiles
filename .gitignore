@@ -1,3 +1,5 @@
+.emacs.d/elpa/**
+.emacs.d/non_elpa/**
 .emacs.d/session.*
 .emacs.d/.emacs.desktop
 .emacs.d/myinit.el
