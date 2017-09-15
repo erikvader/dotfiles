@@ -1,0 +1,21 @@
+# sudo find . -name "*.c" | sed -r "s/.*\/(.*?)$/\1/" | xargs
+CC = gcc
+exe = cprog
+sources = $(wildcard *.c)
+objects=$(patsubst %.c,%.o,$(sources))
+dep=$(patsubst %.o,%.d,$(objects))
+flags=-MMD -Wall -g
+bflags=
+
+all: $(exe)
+
+$(exe): $(objects)
+	$(CC) $(flags) -o $@ $^ $(bflags)
+
+-include $(dep)
+
+.c.o:
+	$(CC) $(flags) -o $@ -c $< $(bflags)
+
+clean:
+	-rm -fr $(objects) $(exe) $(dep)
