@@ -1,5 +1,5 @@
 # to find source files in nested directories
-# sudo find . -name "*.c" | sed -r "s/.*\/(.*?)$/\1/" | xargs
+# find . -name "*.c" | cut -c3- | xargs
 CC = gcc
 exe = cprog
 sources = $(wildcard *.c)
