@@ -41,9 +41,8 @@ xkb_symbols "nodeadkeys" {
 
     name[Group1]="Swedish (eliminate dead keys)";
 
-    key <AE12>	{ [     acute,      grave,    plusminus,      notsign ]	};
-
     //min egna
+    key <AE12>	{ [ backslash, grave, acute, notsign ]	};
     key <AD12> { [ asciicircum, asciitilde, diaeresis, asciicircum	]	};
 };
 
