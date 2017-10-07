@@ -105,12 +105,12 @@ function git_color {
 
 function git_prompt {
     local PRO=
-    local STATUS=$(~/.bash_plugins/vcprompt -f "%m%a%u%b::%P")
+    local STATUS=$(~/.bash_plugins/vcprompt -f "%m%a%u%b")
     if [[ -n $STATUS ]]; then
-        PRO+="$C_BLUE━━━"
-        PRO+="$C_LIGHT_BLUE("
+        PRO+="$C_WHITE───"
+        PRO+="$C_WHITE("
         PRO+="$(git_color)$STATUS"
-        PRO+="$C_LIGHT_BLUE)"
+        PRO+="$C_WHITE)"
     fi
     echo -e "$PRO"
 }
@@ -126,16 +126,16 @@ if [ "$color_prompt" = yes ]; then
     fi
 
     PS1="${debian_chroot:+($debian_chroot)}"
-    PS1+="$C_BLUE┏━━"
-    PS1+="$C_LIGHT_BLUE("
+    PS1+="$C_WHITE╭─"
+    PS1+="$C_WHITE("
     PS1+="$C_NAME\u@\H"
-    PS1+="$C_LIGHT_BLUE)"
-    PS1+="$C_BLUE━━━"
-    PS1+="$C_LIGHT_BLUE("
+    PS1+="$C_WHITE)"
+    PS1+="$C_WHITE──"
+    PS1+="$C_WHITE("
     PS1+="$C_LIGHT_PURPLE\w"
-    PS1+="$C_LIGHT_BLUE)"
+    PS1+="$C_WHITE)"
     PS1+="\$(git_prompt)"
-    PS1+="\[$C_BLUE\]\n┗━"
+    PS1+="\[$C_WHITE\]\n╰─"
     PS1+="\[$C_NC\]\$ "
 
 else
