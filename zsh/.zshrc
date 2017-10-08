@@ -85,3 +85,5 @@ export EDITOR=vim
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 source $ZSH_CUSTOM/aliases.sh
+
+source /usr/share/autojump/autojump.sh
