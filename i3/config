@@ -244,7 +244,8 @@ bindsym $mod+i $func_center
 
 #auto start programs
 exec --no-startup-id setxkbmap se nodeadkeys
-exec sleep 2 && xmodmap -e 'clear Lock' -e 'keycode 66 = section'
+exec sleep 2 && xmodmap -e 'clear Lock' -e 'keycode 66 = Escape'
+exec --no-startup-id xset r rate 300 35 # Set initial delay 300ms, repeat 35ms
 #disable caps lock. Makes it insert another key with .xbindkeysrc
 #exec --no-startup-id xmodmap -e 'clear Lock'
 #background picture
