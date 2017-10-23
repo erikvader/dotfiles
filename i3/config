@@ -242,9 +242,14 @@ bindsym XF86Launch1 [window_role=ERIKS_POPUP_TERMINAL] scratchpad show
 set $func_center floating enable, resize set 900 500, move position center
 bindsym $mod+i $func_center
 
+set $program-mode exec --no-startup-id setxkbmap se nodeadkeys && sleep 1 && xmodmap -e 'clear Lock' -e 'keycode 66 = Escape'
+set $normal-mode exec --no-startup-id setxkbmap se
+
+bindsym $mod+m $normal-mode
+bindsym $mod+Shift+m $program-mode
+
 #auto start programs
-exec --no-startup-id setxkbmap se nodeadkeys
-exec sleep 2 && xmodmap -e 'clear Lock' -e 'keycode 66 = Escape'
+$program-mode
 exec --no-startup-id xset r rate 300 35 # Set initial delay 300ms, repeat 35ms
 #disable caps lock. Makes it insert another key with .xbindkeysrc
 #exec --no-startup-id xmodmap -e 'clear Lock'

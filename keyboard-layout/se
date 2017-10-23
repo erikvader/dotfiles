@@ -45,6 +45,9 @@ xkb_symbols "nodeadkeys" {
     key <AE12>	{ [ backslash, grave, acute, notsign ] };
     key <AD12> { [ asciicircum, asciitilde, diaeresis, asciicircum ] };
     key <AE04> { [ 4, dollar, currency, cent ] };
+    key <AD11> { [ slash, at, none, none ] };
+    key <AC11> { [ bracketright, braceright, none, none ] };
+    key <AC10> { [ bracketleft, braceleft, none, none ] };
 };
 
 // Swedish Dvorak
