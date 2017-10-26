@@ -260,6 +260,7 @@ exec emacs
 exec --no-startup-id display-visor -f -l LID0
 #dropbox
 exec dropbox start
+exec fluxgui
 #exec_always --no-startup-id ~/.config/polybar/run_polybar.sh
 
 #popup terminal
