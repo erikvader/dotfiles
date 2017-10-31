@@ -1,0 +1,14 @@
+main-java =
+main-class =
+src = src/
+bin = bin/
+
+.PHONY: all
+all: $(main-class)
+
+$(main-class):
+	javac -cp $(src) -d $(bin) $(main-java)
+
+.PHONY: run
+run: $(main-class)
+	java -cp $(bin) $(main-class)
