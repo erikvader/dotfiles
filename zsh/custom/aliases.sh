@@ -5,6 +5,6 @@ alias gotoschool="cd /home/erik/Dropbox/skol-grejer/Universitet/åk\ 2"
 #mvlink .inputrc Dropbox/
 function mvlink {
     mv "$1" "$2"
-    ln -s "$2$1" "$1"
+    ln -s "$2" "$1"
 }
 
