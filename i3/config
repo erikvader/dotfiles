@@ -40,6 +40,7 @@ floating_modifier $mod
 
 # start a terminal
 bindsym $mod+Return exec termite
+bindsym $mod+Control+Return exec termite -d "$(xcwd)"
 
 # kill focused window
 bindsym $mod+Delete kill
@@ -68,16 +69,16 @@ bindsym $mod+l focus right
 # bindsym $mod+Right focus right
 
 # move focused window
-# bindsym $mod+Shift+h move left
-# bindsym $mod+Shift+j move down
-# bindsym $mod+Shift+k move up
-# bindsym $mod+Shift+l move right
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+bindsym $mod+Shift+l move right
 
 # alternatively, you can use the cursor keys:
-bindsym $mod+Shift+Left move left
-bindsym $mod+Shift+Down move down
-bindsym $mod+Shift+Up move up
-bindsym $mod+Shift+Right move right
+# bindsym $mod+Shift+Left move left
+# bindsym $mod+Shift+Down move down
+# bindsym $mod+Shift+Up move up
+# bindsym $mod+Shift+Right move right
 
 # split in horizontal orientation
 bindsym $mod+b split h
@@ -236,11 +237,14 @@ bindsym $mod+p [workspace=__focused__] border toggle
 bindsym $mod+o move scratchpad
 bindsym $mod+Shift+o scratchpad show
 
-bindsym $mod+F12   [window_role=ERIKS_POPUP_TERMINAL] scratchpad show
-bindsym XF86Launch1 [window_role=ERIKS_POPUP_TERMINAL] scratchpad show
+set $func_popup floating enable, resize set 1366 450, move position 0 0
+
+bindsym $mod+F12   [window_role=ERIKS_POPUP_TERMINAL] scratchpad show, $func_popup
+bindsym XF86Launch1 [window_role=ERIKS_POPUP_TERMINAL] scratchpad show, $func_popup
 
 set $func_center floating enable, resize set 900 500, move position center
 bindsym $mod+i $func_center
+
 
 set $program-mode exec --no-startup-id setxkbmap se nodeadkeys && sleep 1 && xmodmap -e 'clear Lock' -e 'keycode 66 = Escape'
 set $normal-mode exec --no-startup-id setxkbmap se
@@ -266,10 +270,11 @@ exec emacs
 exec --no-startup-id display-visor -f -l LID0
 #dropbox
 exec dropbox start
-exec fluxgui
+# exec fluxgui
 exec xbindkeys
+exec redshift-gtk -l 59.9:17.6 -t 6500:2800
 #exec_always --no-startup-id ~/.config/polybar/run_polybar.sh
 
 #popup terminal
-exec gnome-terminal --role=ERIKS_POPUP_TERMINAL --window-with-profile=i3-popup -e ~/.i3_popup_term.sh
-for_window [window_role=ERIKS_POPUP_TERMINAL] sticky enable, border normal, $func_center, move scratchpad
+exec termite --role=ERIKS_POPUP_TERMINAL -e ~/.i3_popup_term.sh
+for_window [window_role=ERIKS_POPUP_TERMINAL] sticky enable, border none, $func_popup, move scratchpad
