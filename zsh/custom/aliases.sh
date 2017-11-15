@@ -1,7 +1,9 @@
 alias ec="emacsclient"
 alias copycmakefile="cp /home/erik/Dropbox/program\ settings/makefiles/c-makefile makefile"
-alias gotoschool="cd /home/erik/Dropbox/skol-grejer/Universitet/åk\ 2"
+alias gotoschool="cd /home/erik/Dropbox/skol-grejer/Universitet"
 alias nemo="nemo --no-desktop"
+alias e="exit"
+alias r="ranger"
 
 #mvlink .inputrc Dropbox/
 function mvlink {
