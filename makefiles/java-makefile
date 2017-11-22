@@ -6,9 +6,17 @@ bin = bin/
 .PHONY: all
 all: $(main-class)
 
-$(main-class):
-	javac -cp $(src) -d $(bin) $(main-java)
+$(main-class): $(bin)
+	javac -Xlint -cp $(src) -d $(bin) $(main-java)
+
+$(bin):
+	mkdir $@
 
 .PHONY: run
 run: $(main-class)
 	java -cp $(bin) $(main-class)
+
+.PHONY: clean
+clean:
+	rm -rf $(bin)
+
