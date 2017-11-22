@@ -1,4 +1,4 @@
-alias ec="emacsclient"
+alias ec="emacsclient -n"
 alias copycmakefile="cp /home/erik/Dropbox/program\ settings/makefiles/c-makefile makefile"
 alias gotoschool="cd /home/erik/Dropbox/skol-grejer/Universitet"
 alias nemo="nemo --no-desktop"
