@@ -246,8 +246,8 @@ set $func_center floating enable, resize set 900 500, move position center
 bindsym $mod+i $func_center
 
 
-set $program-mode exec --no-startup-id setxkbmap se nodeadkeys && sleep 1 && xmodmap -e 'clear Lock' -e 'keycode 66 = Escape'
-set $normal-mode exec --no-startup-id setxkbmap se
+set $program-mode exec --no-startup-id setxkbmap se nodeadkeys && sleep 1 && xmodmap ~/.xmodmap_prog && sleep 1 && xcape -e "Control_L=Escape"
+set $normal-mode exec --no-startup-id setxkbmap se && killall xcape
 
 bindsym $mod+m $normal-mode
 bindsym $mod+Shift+m $program-mode

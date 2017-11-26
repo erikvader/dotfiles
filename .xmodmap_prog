@@ -1,0 +1,8 @@
+!Escape    = Caps_lock
+!Caps_Lock = Control_L
+clear lock
+clear control
+keycode 66 = Control_L
+keycode 9 = Caps_Lock
+keycode any = Escape
+add control = Control_L Control_R
