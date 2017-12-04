@@ -87,3 +87,6 @@ export EDITOR=vim
 source $ZSH_CUSTOM/aliases.sh
 
 source /usr/share/autojump/autojump.sh
+
+# to make C-S-t work in termite
+source /etc/profile.d/vte*.sh
