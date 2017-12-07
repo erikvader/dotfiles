@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [ "$(cat ~/.program_mode)" == "on" ]; then
+    echo "P"
+else
+    echo ""
+fi
