@@ -1,0 +1,24 @@
+name=
+
+.PHONY: all
+all: $(name).pdf
+
+$(name).pdf: $(name).tex
+	pdflatex -interaction=nonstopmode $<
+	pdflatex -interaction=nonstopmode $<
+
+.PHONY: show
+show: $(name).pdf
+	xreader $< &> /dev/null &
+
+.PHONY: auto
+auto:
+	echo "$(name).tex" | entr sh -c 'make show'
+
+.PHONY: clean
+clean:
+	-rm -f $(name).aux
+	-rm -f $(name).log
+	-rm -f $(name).out
+	-rm -f $(name).toc
+	-rm -f $(name).pdf
