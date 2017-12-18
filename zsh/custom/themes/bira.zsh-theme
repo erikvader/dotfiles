@@ -19,9 +19,17 @@ else
     rvm_ruby='%{$fg[red]%}‹$(rbenv version | sed -e "s/ (set.*$//")›%{$reset_color%}'
   fi
 fi
-local git_branch='$(git_prompt_info)%{$reset_color%}'
 
-PROMPT="╭─[${user_host}]──[${current_dir}]${git_branch}
+MODE_INDICATOR="──[%{$fg_bold[yellow]%}NORMAL%{$reset_color%}]"
+
+function vi_mode_prompt_info() {
+  echo "${${KEYMAP/vicmd/$MODE_INDICATOR}/(main|viins)/}"
+}
+
+local git_branch='$(git_prompt_info)%{$reset_color%}'
+local vi_prompt='$(vi_mode_prompt_info)%{$reset_color%}'
+
+PROMPT="╭─[${user_host}]──[${current_dir}]${git_branch}${vi_prompt}
 ╰─%B${user_symbol}%b "
 #RPS1="%B${return_code}%b"
 
