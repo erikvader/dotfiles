@@ -131,6 +131,7 @@ export KEYTIMEOUT=1
 # allow ctrl-a and ctrl-e to move to beginning/end of line
 bindkey '^a' beginning-of-line
 bindkey '^e' end-of-line
+bindkey '^k' kill-line
 
 # # if mode indicator wasn't setup by theme, define default
 # if [[ "$MODE_INDICATOR" == "" ]]; then
