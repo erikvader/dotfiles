@@ -1,3 +1,4 @@
+alias open="xdg-open"
 alias ec="emacsclient -n"
 alias gotoschool="cd /home/erik/Dropbox/skol-grejer/Universitet"
 alias nemo="nemo --no-desktop"
