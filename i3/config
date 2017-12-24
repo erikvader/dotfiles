@@ -273,8 +273,9 @@ exec --no-startup-id display-visor -f -l LID0
 exec dropbox start
 # exec fluxgui
 exec xbindkeys
-exec redshift-gtk -l 59.9:17.6 -t 6500:2800
+exec redshift-gtk -l 59.9:17.6 -t 6500:3200
 #exec_always --no-startup-id ~/.config/polybar/run_polybar.sh
+exec sleep 5; mintupdate-launcher
 
 #popup terminal
 exec termite --role=ERIKS_POPUP_TERMINAL -e ~/.i3_popup_term.sh
