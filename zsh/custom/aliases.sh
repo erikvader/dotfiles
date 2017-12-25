@@ -1,9 +1,15 @@
 alias open="xdg-open"
-alias ec="emacsclient -n"
 alias gotoschool="cd /home/erik/Dropbox/skol-grejer/Universitet"
 alias nemo="nemo --no-desktop"
 alias e="exit"
 alias r="ranger"
+
+alias ecb="emacsclient -n"
+
+function ec {
+    i3-msg -q workspace "2"
+    emacsclient -n "$1"
+}
 
 #mvlink .inputrc Dropbox/
 function mvlink {
