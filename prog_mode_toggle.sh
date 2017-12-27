@@ -4,7 +4,7 @@ status_file=~/.program_mode
 file_contents="$(cat $status_file)"
 
 function on {
-    setxkbmap se nodeadkeys && sleep 0.5 && xmodmap ~/.xmodmap_prog && sleep 0.5 && xcape -e "Control_L=Escape" && echo "on" > "$status_file"
+    setxkbmap er nodeadkeys && sleep 0.5 && xmodmap ~/.xmodmap_prog && sleep 0.5 && xcape -e "Control_L=Escape" && echo "on" > "$status_file"
 }
 
 function off {
