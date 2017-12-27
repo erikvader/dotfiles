@@ -17,7 +17,7 @@ function mvlink {
     ln -s "$2" "$1"
 }
 
-# alias copycmakefile="cp /home/erik/Dropbox/program\ settings/makefiles/c-makefile makefile"
+# alias copycmakefile="cp /home/erik/dotfiles/makefiles/c-makefile makefile"
 function copymake {
-    cp -L "/home/erik/Dropbox/program settings/makefiles/$1-makefile" ./makefile
+    cp -L "/home/erik/dotfiles/makefiles/$1-makefile" ./makefile
 }
