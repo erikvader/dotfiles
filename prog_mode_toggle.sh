@@ -4,11 +4,20 @@ status_file=~/.program_mode
 file_contents="$(cat $status_file)"
 
 function on {
-    setxkbmap er nodeadkeys && sleep 0.5 && xmodmap ~/.xmodmap_prog && sleep 0.5 && xcape -e "Control_L=Escape" && echo "on" > "$status_file"
+    setxkbmap er nodeadkeys &&
+    sleep 0.5 &&
+    xmodmap ~/.xmodmap_prog &&
+    sleep 0.5 &&
+    xcape -e "Control_L=Escape" &&
+    echo "on" > "$status_file" &&
+    notify-send 'Programming keyboard mode' 'on'
 }
 
 function off {
-    setxkbmap se && killall xcape && echo "off" > "$status_file"
+    setxkbmap se &&
+    killall xcape &&
+    echo "off" > "$status_file" &&
+    notify-send 'Programming keyboard mode' 'off'
 }
 
 if [[ $1 == "off" ]]; then
