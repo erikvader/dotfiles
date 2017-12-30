@@ -4,6 +4,9 @@ alias nemo="nemo --no-desktop"
 alias e="exit"
 alias r="ranger"
 
+alias l='ls -a'
+alias ll='ls -la'
+
 alias ecb="emacsclient -n"
 
 function ec {
