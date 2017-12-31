@@ -21,15 +21,25 @@ else
 fi
 
 MODE_INDICATOR="──[%{$fg_bold[yellow]%}NORMAL%{$reset_color%}]"
+RANGER_INDICATOR="──[%{$fg_bold[magenta]%}RANGER%{$reset_color%}]"
 
 function vi_mode_prompt_info() {
   echo "${${KEYMAP/vicmd/$MODE_INDICATOR}/(main|viins)/}"
 }
 
+function ranger_prompt_info {
+  if [[ "$IS_INSIDE_RANGER" == '1' ]]; then
+    echo "${RANGER_INDICATOR}"
+  else
+    echo ""
+  fi
+}
+
 local git_branch='$(git_prompt_info)%{$reset_color%}'
 local vi_prompt='$(vi_mode_prompt_info)%{$reset_color%}'
+local ranger_prompt='$(ranger_prompt_info)%{$reset_color%}'
 
-PROMPT="╭─[${user_host}]──[${current_dir}]${git_branch}${vi_prompt}
+PROMPT="╭─[${user_host}]──[${current_dir}]${git_branch}${vi_prompt}${ranger_prompt}
 ╰─%B${user_symbol}%b "
 #RPS1="%B${return_code}%b"
 

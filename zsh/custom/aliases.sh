@@ -1,7 +1,7 @@
 alias open="xdg-open"
 alias gotoschool="cd /home/erik/Dropbox/skol-grejer/Universitet"
 alias nemo="nemo --no-desktop"
-alias e="exit"
+alias q="exit"
 alias r="ranger"
 
 alias l='ls -a'
