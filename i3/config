@@ -76,6 +76,8 @@ bindsym $mod+Ctrl+x --release exec --no-startup-id xkill
 
 # focus_follows_mouse no
 
+bindsym $mod+minus exec --no-startup-id "~/.i3/flasher.sh"
+
 # change focus
 bindsym $mod+h focus left
 bindsym $mod+j focus down
