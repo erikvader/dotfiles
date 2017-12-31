@@ -295,7 +295,7 @@ label = %date% %time%
 [module/volume]
 type = internal/volume
 
-mapped = true
+; mapped = true
 
 format-volume = <label-volume>
 ; <bar-volume>
