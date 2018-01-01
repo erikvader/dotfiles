@@ -146,3 +146,18 @@ bindkey '^k' kill-line
 # if [[ "$RPS1" == "" && "$RPROMPT" == "" ]]; then
 #   RPS1='$(vi_mode_prompt_info)'
 # fi
+
+function ranger-cd {
+    temp="$(mktemp)"
+
+    ranger --choosedir "$temp"
+
+    content="$(cat $temp 2>/dev/null)" &&
+    if [[ "$content" ]]; then
+        cd "$content"
+    fi
+
+    rm -f "$temp"
+}
+
+bindkey -s '^o' "ranger-cd"
