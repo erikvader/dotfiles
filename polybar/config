@@ -335,7 +335,7 @@ bar-volume-empty-foreground = ${colors.foreground-alt}
 [module/battery]
 type = internal/battery
 battery = BAT0
-adapter = ADP1
+adapter = AC0
 full-at = 100
 
 time-format = %H:%M
@@ -350,6 +350,7 @@ format-discharging-underline = ${self.format-charging-underline}
 
 label-full = %{A1:bash -e "/home/erik/.config/polybar/display_bat.sh":}%percentage%%%{A}
 format-full-prefix = " "
+format-full = <label-full>
 format-full-prefix-foreground = ${colors.foreground}
 format-full-underline = ${self.format-charging-underline}
 
