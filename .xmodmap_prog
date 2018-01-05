@@ -4,11 +4,12 @@
 clear lock
 clear control
 remove mod4 = Hyper_L
+remove shift = Shift_R
 keycode 66 = Control_L
 keycode 9 = Escape Caps_Lock
-keycode 105 = Hyper_L
+keycode 62 = Hyper_L
 !keycode any = Escape
-keycode any = Control_R
+keycode any = Shift_R
 add control = Control_L Control_R
 add mod3 = Hyper_L
 
