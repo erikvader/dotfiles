@@ -323,7 +323,7 @@ exec emacs
 exec dropbox start
 exec polybar example
 # exec xbindkeys
-# exec redshift-gtk -l 59.9:17.6 -t 6500:3200
+exec redshift-gtk -l 59.9:17.6 -t 6500:3200
 exec conky
 
 
