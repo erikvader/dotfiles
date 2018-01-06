@@ -24,3 +24,7 @@ function mvlink {
 function copymake {
     cp -L "/home/erik/dotfiles/makefiles/$1-makefile" ./makefile
 }
+
+function mounterik {
+    sudo mount -t cifs "//192.168.1.46/$1" "$2" -o user='erik rimskog'
+}
