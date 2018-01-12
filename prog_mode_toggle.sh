@@ -8,15 +8,15 @@ function on {
     sleep 0.5 &&
     xmodmap ~/.xmodmap_prog &&
     sleep 0.5 &&
-    xcape -e "Control_L=Escape" &&
+    xcape -e 'Control_L=Escape' &&
     echo "on" > "$status_file" &&
     notify-send 'Programming keyboard mode' 'on'
 }
 
 function off {
-    setxkbmap se &&
-    killall xcape &&
-    echo "off" > "$status_file" &&
+    setxkbmap se
+    killall xcape 2>/dev/null
+    echo "off" > "$status_file"
     notify-send 'Programming keyboard mode' 'off'
 }
 
