@@ -49,6 +49,17 @@ xkb_symbols "nodeadkeys" {
     key <AC11> { [ bracketright, braceright, adiaeresis, Adiaeresis  ] };
     key <AC10> { [ bracketleft,  braceleft,  odiaeresis, Odiaeresis  ] };
     key <TLDE> { [ at,           bar,        section,    paragraph   ] };
+
+    key <AC01> { [ a, A, at,         AE]};
+    key <AC02> { [ s, S, dollar,     section]};
+    key <AD01> { [ q, Q, quotedbl,   Greek_OMEGA]};
+    key <AD03> { [ e, E, exclam,     E]};
+    key <AD02> { [ w, W, numbersign, Lstroke]};
+    key <AC03> { [ d, D, percent,    ETH]};
+    key <AD04> { [ r, R, ampersand,  registered]};
+    key <AC04> { [ f, F, bar,        ordfeminine]};
+    key <AB01> { [ z, Z, less, less ] };
+    key <AB02> { [ x, X, greater, greater ] };
 };
 
 // Swedish Dvorak
