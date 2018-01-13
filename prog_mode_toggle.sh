@@ -11,6 +11,10 @@ function on {
     xcape -e 'Control_L=Escape;Shift_R=Tab' &&
     echo "on" > "$status_file" &&
     notify-send 'Programming keyboard mode' 'on'
+
+    if [[ "$?" -ne 0 ]]; then
+        notify-send 'Programming keyboard mode' 'error :('
+    fi
 }
 
 function off {
