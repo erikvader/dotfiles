@@ -42,13 +42,13 @@ xkb_symbols "nodeadkeys" {
     name[Group1]="Swedish (eliminate dead keys)";
 
     //min egna
-    key <AE12> { [ grave,        acute,      notsign,    none        ] };
+    key <AE12> { [ grave,        acute,      dead_grave, dead_acute  ] };
     key <AD12> { [ asciicircum,  asciitilde, diaeresis,  asciicircum ] };
     key <AE04> { [ 4,            dollar,     currency,   cent        ] };
-    key <AD11> { [ slash,        backslash,  aring,      Aring       ] };
+    key <AD11> { [ at,           backslash,  aring,      Aring       ] };
     key <AC11> { [ bracketright, braceright, adiaeresis, Adiaeresis  ] };
     key <AC10> { [ bracketleft,  braceleft,  odiaeresis, Odiaeresis  ] };
-    key <TLDE> { [ at,           bar,        section,    paragraph   ] };
+    key <TLDE> { [ bar,          section,    at,         paragraph   ] };
 };
 
 // Swedish Dvorak
