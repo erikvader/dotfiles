@@ -16,5 +16,8 @@ add control = Control_L
 add mod3 = Hyper_L
 add shift = Shift_R
 
-keycode 112 = NoSymbol Home
-keycode 117 = NoSymbol End
+keycode 112 = Home
+keycode 117 = End
+keycode 110 = Prior
+keycode 115 = Next
+
