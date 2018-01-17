@@ -28,3 +28,7 @@ function copymake {
 function mounterik {
     sudo mount -t cifs "//192.168.1.46/$1" "$2" -o user='erik rimskog'
 }
+
+function mkdircd {
+    mkdir $1 && cd $1
+}
