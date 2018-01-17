@@ -1,12 +1,13 @@
 clear lock
 clear control
 remove mod4 = Hyper_L
-remove shift = Shift_R
+clear shift
 
 keycode 66 = Control_L
 keycode 9 = Escape Caps_Lock
 keycode 62 = Hyper_L
 keycode 23 = Shift_R
+keycode 105 = Shift_L
 
 keycode any = Tab
 ! keycode any = Escape
@@ -14,8 +15,9 @@ keycode any = Tab
 
 add control = Control_L
 add mod3 = Hyper_L
-add shift = Shift_R
+add shift = Shift_R Shift_L
 
+! switch places of buttons on acer swift 3 laptop
 keycode 112 = Home
 keycode 117 = End
 keycode 110 = Prior
