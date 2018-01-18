@@ -3,7 +3,7 @@ clear control
 remove mod4 = Hyper_L
 clear shift
 
-keycode 66 = Control_L
+keycode 66 = Control_R
 keycode 9 = Escape Caps_Lock
 keycode 62 = Hyper_L
 keycode 23 = Shift_R
@@ -13,7 +13,7 @@ keycode any = Tab
 ! keycode any = Escape
 ! keycode any = Shift_R
 
-add control = Control_L
+add control = Control_L Control_R
 add mod3 = Hyper_L
 add shift = Shift_R Shift_L
 
