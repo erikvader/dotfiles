@@ -223,7 +223,7 @@ for_window [class="Lxappearance"] floating enable sticky enable border normal
 for_window [class="Manjaro-hello"] floating enable
 for_window [class="Manjaro Settings Manager"] floating enable border normal
 for_window [title="MuseScore: Play Panel"] floating enable
-for_window [class="Nitrogen"] floating enable sticky enable border normal
+# for_window [class="Nitrogen"] floating enable sticky enable border normal
 for_window [class="Oblogout"] fullscreen enable
 for_window [class="octopi"] floating enable
 for_window [title="About Pale Moon"] floating enable
@@ -241,6 +241,8 @@ for_window [class="Xfburn"] floating enable
 
 # switch to workspace with urgent window automatically
 # for_window [urgent=latest] focus
+
+bindsym $mod+plus exec --no-startup-id ~/.i3/display_updater.sh
 
 # reload the configuration file
 bindsym $mod+Shift+c reload
@@ -299,7 +301,7 @@ bindsym $mod+m exec --no-startup-id ~/prog_mode_toggle.sh
 
 # Autostart applications
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-exec --no-startup-id nitrogen --restore; sleep 1; compton -b
+exec --no-startup-id ~/.fehbg sleep 1; compton -b
 #exec --no-startup-id manjaro-hello
 exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
@@ -325,7 +327,6 @@ exec polybar example
 # exec xbindkeys
 exec redshift-gtk -l 59.9:17.6 -t 6500:3200
 exec conky
-
 
 # Color palette used for the terminal ( ~/.extend.Xresources file )
 # Colors are gathered based on the documentation:

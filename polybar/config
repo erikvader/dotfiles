@@ -87,7 +87,7 @@ tray-position =
 
 i3-focused-underline = #008b8b
 
-modules-left = i3 xwindow
+modules-left = i3
 modules-center =
 modules-right = date
 
