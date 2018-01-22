@@ -108,7 +108,7 @@ TRAPWINCH() {
 zle -N zle-keymap-select
 zle -N edit-command-line
 
-bindkey -v
+# bindkey -v
 
 export KEYTIMEOUT=1
 
@@ -129,9 +129,9 @@ export KEYTIMEOUT=1
 # bindkey '^r' history-incremental-search-backward
 
 # allow ctrl-a and ctrl-e to move to beginning/end of line
-bindkey '^a' beginning-of-line
-bindkey '^e' end-of-line
-bindkey '^k' kill-line
+# bindkey '^a' beginning-of-line
+# bindkey '^e' end-of-line
+# bindkey '^k' kill-line
 
 # # if mode indicator wasn't setup by theme, define default
 # if [[ "$MODE_INDICATOR" == "" ]]; then
