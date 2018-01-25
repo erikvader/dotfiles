@@ -244,6 +244,8 @@ for_window [class="Xfburn"] floating enable
 
 bindsym $mod+plus exec --no-startup-id ~/.i3/display_updater.sh
 
+bindsym $mod+grave exec --no-startup-id pkill -USR1 '^redshift$'
+
 # reload the configuration file
 bindsym $mod+Shift+c reload
 
