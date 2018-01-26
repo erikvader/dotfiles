@@ -244,7 +244,11 @@ for_window [class="Xfburn"] floating enable
 
 bindsym $mod+plus exec --no-startup-id ~/.i3/display_updater.sh
 
+# toggle redshift
 bindsym $mod+grave exec --no-startup-id pkill -USR1 '^redshift$'
+
+# toggle color inversion
+bindsym $mod+apostrophe exec --no-startup-id xcalib -i -a
 
 # reload the configuration file
 bindsym $mod+Shift+c reload
@@ -327,7 +331,7 @@ exec emacs
 exec dropbox start
 exec polybar example
 # exec xbindkeys
-exec redshift-gtk -l 59.9:17.6 -t 6500:3200
+exec redshift-gtk
 exec conky
 
 # Color palette used for the terminal ( ~/.extend.Xresources file )
