@@ -16,7 +16,7 @@ own_window yes
 own_window_class conky
 own_window_type override
 own_window_transparent yes
-own_window_hints undecorate,below,sticky,skip_taskbar,skip_pager
+own_window_hints undecorated,below,sticky,skip_taskbar,skip_pager
 
 border_inner_margin 0
 border_outer_margin 0
@@ -40,7 +40,9 @@ uppercase no
 
 default_color 030303
 
+top_cpu_separate no
+
 TEXT
 ${alignr}${voffset 10}${font Open Sans Light:size=50}${time %A}${font}${voffset -10}
 ${alignr}${voffset 10}${font Open Sans Light:size=50}${time %e} ${time %B}${font}${voffset -10}
-${alignr}${voffset 10}${offset 40}${font Open Sans Light:size=100}${time %H:%M %p}${font}${voffset -10}
+${alignr}${voffset 10}${font Open Sans Light:size=100}${time %H:%M}${font}${voffset -10}
