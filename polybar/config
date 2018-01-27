@@ -8,8 +8,8 @@
 ;=====================================================
 
 [colors]
-background = #f0222222
-background-alt = #444444
+background = #333333
+background-alt = #505050
 foreground = #dfdfdf
 foreground-alt = #555555
 ;foreground-icons = #cccccc
@@ -47,7 +47,7 @@ border-bottom-color = #333
 ; border-top-color = ${colors.background}
 
 padding-left = 0
-padding-right = 2
+padding-right = 3
 module-margin-left = 1
 module-margin-right = 2
 
@@ -60,10 +60,11 @@ modules-left = i3 xwindow
 modules-center =
 modules-right = volume progmode xkeyboard temperature memory cpu wlan battery date
 
-tray-position = right
+tray-position = center
 tray-padding = 2
-;tray-transparent = true
-;tray-background = ${colors.background}
+;tray-transparent = false
+;for some reason isn't the same color as the background
+tray-background = #383838
 ; tray-maxsize=10
 
 ;wm-restack = bspwm
