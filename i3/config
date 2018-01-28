@@ -243,6 +243,7 @@ for_window [class="Xfburn"] floating enable
 # for_window [urgent=latest] focus
 
 bindsym $mod+plus exec --no-startup-id ~/.i3/display_updater.sh
+bindsym $mod+asciicircum exec --no-startup-id ~/.i3/blacken_screen.sh
 
 # toggle redshift
 bindsym $mod+grave exec --no-startup-id pkill -USR1 '^redshift$'
