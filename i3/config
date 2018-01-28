@@ -55,8 +55,8 @@ bindsym $mod+Ctrl+m exec terminal -e 'alsamixer'
 ################################################################################################
 
 # Screen brightness controls
-# bindsym XF86MonBrightnessUp exec "xbacklight -inc 10; notify-send 'brightness up'"
-# bindsym XF86MonBrightnessDown exec "xbacklight -dec 10; notify-send 'brightness down'"
+bindsym Ctrl+XF86MonBrightnessUp exec ~/.i3/i3_brightness.sh -inc 5
+bindsym Ctrl+XF86MonBrightnessDown exec ~/.i3/i3_brightness.sh -dec 5
 
 # Start Applications
 bindsym $mod+Ctrl+b exec terminal -e 'bmenu'
