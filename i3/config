@@ -311,7 +311,9 @@ bindsym $mod+m exec --no-startup-id ~/prog_mode_toggle.sh
 
 # Autostart applications
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-exec --no-startup-id ~/.fehbg sleep 1; compton -b
+exec --no-startup-id ~/.i3/display_updater.sh
+exec --no-startup-id compton -b
+# ~/.fehbg sleep 1;
 #exec --no-startup-id manjaro-hello
 exec --no-startup-id nm-applet
 exec --no-startup-id xfce4-power-manager
@@ -333,10 +335,10 @@ exec --no-startup-id xinput --set-prop 'ELAN0501:00 04F3:3060 Touchpad' 'libinpu
 exec google-chrome-stable
 exec emacs
 exec dropbox start
-exec polybar example
+# exec polybar example
 # exec xbindkeys
 exec redshift-gtk
-exec conky
+# exec conky
 
 # Color palette used for the terminal ( ~/.extend.Xresources file )
 # Colors are gathered based on the documentation:
