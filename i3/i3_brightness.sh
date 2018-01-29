@@ -10,5 +10,5 @@
 
 # if [[ "$cur<10" | bc -l ]]; then
 
-xbacklight $@
-# notify-send 'Brightness' "$(xbacklight -get)"
+xbacklight -steps 1 "$@"
+notify-send.sh --icon=display-brightness-symbolic.symbolic --replace-file=/tmp/i3brightnessnotifyreplaceid 'Brightness' "$(xbacklight -get)"

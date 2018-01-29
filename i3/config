@@ -55,8 +55,10 @@ bindsym $mod+Ctrl+m exec terminal -e 'alsamixer'
 ################################################################################################
 
 # Screen brightness controls
-bindsym Ctrl+XF86MonBrightnessUp exec "~/.i3/i3_brightness.sh -inc 5"
-bindsym Ctrl+XF86MonBrightnessDown exec "~/.i3/i3_brightness.sh -dec 5"
+# XF86MonBrightnessUp
+# XF86MonBrightnessDown
+bindsym $mod+Right exec "~/.i3/i3_brightness.sh -inc 1"
+bindsym $mod+Left exec "~/.i3/i3_brightness.sh -dec 1"
 
 # Start Applications
 bindsym $mod+Ctrl+b exec terminal -e 'bmenu'
@@ -77,6 +79,7 @@ bindsym $mod+Ctrl+x --release exec --no-startup-id xkill
 # focus_follows_mouse no
 
 bindsym $mod+minus exec --no-startup-id "~/.i3/flasher.sh"
+bindsym $mod+Shift+minus exec --no-startup-id "transset-df -a 0.99"
 
 # change focus
 bindsym $mod+h focus left
