@@ -258,7 +258,7 @@ bindsym $mod+asciicircum exec --no-startup-id ~/.i3/blacken_screen.sh
 bindsym $mod+grave exec --no-startup-id pkill -USR1 '^redshift$'
 
 # toggle color inversion
-bindsym $mod+apostrophe exec --no-startup-id xcalib -i -a
+bindsym $mod+apostrophe exec --no-startup-id xrandr-invert-colors
 
 # reload the configuration file
 bindsym $mod+Shift+c reload
