@@ -6,16 +6,16 @@ clear shift
 keycode 66 = Control_R
 keycode 9 = Escape Caps_Lock
 keycode 62 = Hyper_L
-keycode 23 = Shift_R
+! keycode 23 = Shift_R
 keycode 105 = Shift_L
 
-keycode any = Tab
+! keycode any = Tab
 ! keycode any = Escape
 ! keycode any = Shift_R
 
 add control = Control_L Control_R
 add mod3 = Hyper_L
-add shift = Shift_R Shift_L
+add shift = Shift_L
 
 ! switch places of buttons on acer swift 3 laptop
 keycode 112 = Home
