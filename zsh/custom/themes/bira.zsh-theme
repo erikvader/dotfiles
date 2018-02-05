@@ -28,7 +28,7 @@ function vi_mode_prompt_info() {
 }
 
 function ranger_prompt_info {
-  if [[ "$IS_INSIDE_RANGER" == '1' ]]; then
+  if [[ "$RANGER_LEVEL" ]]; then
     echo "${RANGER_INDICATOR}"
   else
     echo ""
