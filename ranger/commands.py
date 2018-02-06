@@ -56,3 +56,50 @@ class my_edit(Command):
         # This is a generic tab-completion function that iterates through the
         # content of the current directory.
         return self._tab_directory_content()
+
+
+class toggle_flat(Command):
+    """
+    :toggle_flat
+
+    Flattens or unflattens the directory view.
+    """
+
+    def execute(self):
+        if self.fm.thisdir.flat == 0:
+            self.fm.thisdir.unload()
+            self.fm.thisdir.flat = -1
+            self.fm.thisdir.load_content()
+        else:
+            self.fm.thisdir.unload()
+            self.fm.thisdir.flat = 0
+            self.fm.thisdir.load_content()
+
+class quick_nav(Command):
+    """
+    :quick_nav [down|up|_anything_else_]
+
+    Move prefix arg lines up or down and enter the new target if it is
+    a directory. If the first argument is neither down or up, prefix
+    arg is treated as the absolute position to go to.
+    """
+    def execute(self):
+        # get prefix arg
+        if self.quantifier:
+            amount = self.quantifier
+        else:
+            amount = 1
+
+        # move in direction according to first argument
+        if self.arg(1) == "down":
+            self.fm.move(down=amount)
+        elif self.arg(1) == "up":
+            self.fm.move(up=amount)
+        else:
+            self.fm.move(to=amount)
+
+        # enter the thing if it is a directory
+        if self.fm.thisfile.is_directory:
+            self.fm.move(right=1)
+        else:
+            self.fm.notify("not a directory, can't enter it!")
