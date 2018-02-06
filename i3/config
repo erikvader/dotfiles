@@ -350,6 +350,12 @@ exec dropbox start
 exec redshift-gtk
 # exec conky
 
+# popup terminal
+bindsym $mod+u [instance="dropdown"] scratchpad show, move position center
+
+for_window [instance="dropdown"] floating enable, resize set 1280 720, move scratchpad, border pixel 5
+exec --no-startup-id termite --name 'dropdown' --title 'Dropdown terminal! :D' -e "bash -c 'screenfetch; $SHELL'"
+
 # Color palette used for the terminal ( ~/.extend.Xresources file )
 # Colors are gathered based on the documentation:
 # https://i3wm.org/docs/userguide.html#xresources
