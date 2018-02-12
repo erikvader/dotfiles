@@ -9,6 +9,7 @@ function on {
     xmodmap ~/.xmodmap_prog &&
     sleep 0.5 &&
     xcape -e 'Control_R=Escape' &&
+    xset r rate 300 35 && # keyboard repeat speed
     echo "on" > "$status_file" &&
     notify-send 'Programming keyboard mode' 'on'
 
