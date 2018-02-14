@@ -96,7 +96,8 @@ modules-right = date
 [module/progmode]
 type = custom/script
 exec = ~/.config/polybar/progmode
-interval = 3
+; interval = 3
+tail = true
 
 format-underline = #4bffdc
 format-padding = 2

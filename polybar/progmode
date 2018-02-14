@@ -1,7 +1,21 @@
 #!/bin/bash
 
-if [ "$(cat ~/.program_mode)" == "on" ]; then
-    echo "P"
-else
-    echo ""
-fi
+function printStatus {
+    contents="$(cat ~/.program_mode)"
+    if [ "$contents" == "on" ]; then
+        echo "P"
+    elif [ "$contents" == "swe" ]; then
+        echo "Ö"
+    else
+        echo ""
+    fi
+}
+
+
+trap "printStatus" SIGUSR1
+
+printStatus
+while true; do
+    sleep infinity &
+    wait $!
+done

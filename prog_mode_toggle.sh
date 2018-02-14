@@ -15,22 +15,48 @@ function on {
 
     if [[ "$?" -ne 0 ]]; then
         notify-send 'Programming keyboard mode' 'error :('
+        exit 1
     fi
+}
+
+function sweon {
+    xmodmap -e 'keycode 47 = odiaeresis Odiaeresis' \
+            -e 'keycode 48 = adiaeresis Adiaeresis' \
+            -e 'keycode 34 = aring Aring' &&
+    echo "swe" > "$status_file" &&
+    notify-send 'åäö mode' 'on'
+}
+
+function sweoff {
+    xmodmap -e 'keycode 47 = bracketleft braceleft odiaeresis Odiaeresis' \
+            -e 'keycode 48 = bracketright braceright adiaeresis Adiaeresis' \
+            -e 'keycode 34 = at backslash aring Aring' &&
+    echo "on" > "$status_file" &&
+    notify-send 'åäö mode' 'off'
 }
 
 function off {
     setxkbmap se
     killall xcape 2>/dev/null
-    echo "off" > "$status_file"
+    echo "off" > "$status_file" &&
     notify-send 'Programming keyboard mode' 'off'
 }
 
-if [[ $1 == "off" ]]; then
+if [[ "$1" == "off" ]]; then
     off
-elif [[ $1 == "on" ]]; then
+elif [[ "$1" == "on" ]]; then
     on
-elif [[ -z $1 ]]; then
-    if [[ "$file_contents" == "on" ]]; then
+elif [[ "$1" == "swetoggle" ]]; then
+    if [[ "$file_contents" == "swe" ]]; then
+        sweoff
+    elif [[ "$file_contents" == "on" ]]; then
+        sweon
+    else
+        notify-send 'åäö mode' "program mode is not enabled, can't toggle"
+        exit 1
+    fi
+elif [[ -z "$1" ]]; then
+    if [[ "$file_contents" == "on" ]] || [[ "$file_contents" == "swe" ]]; then
         off
     elif [[ "$file_contents" == "off" ]]; then
         on
@@ -43,3 +69,7 @@ else
     exit 1
 fi
 
+# update polybar module
+pkill --signal SIGUSR1 progmode
+
+exit 0

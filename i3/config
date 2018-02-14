@@ -322,6 +322,7 @@ mode "resize" {
 bindsym $mod+9 exec --no-startup-id blurlock
 
 bindsym $mod+m exec --no-startup-id ~/prog_mode_toggle.sh
+bindsym $mod+n exec --no-startup-id ~/prog_mode_toggle.sh swetoggle
 
 # Autostart applications
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
