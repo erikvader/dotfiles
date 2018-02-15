@@ -28,9 +28,9 @@ function sweon {
 }
 
 function sweoff {
-    xmodmap -e 'keycode 47 = bracketleft braceleft odiaeresis Odiaeresis' \
-            -e 'keycode 48 = bracketright braceright adiaeresis Adiaeresis' \
-            -e 'keycode 34 = at backslash aring Aring' &&
+    xmodmap -e 'keycode 47 = bracketleft braceleft odiaeresis Odiaeresis odiaeresis Odiaeresis' \
+            -e 'keycode 48 = bracketright braceright adiaeresis Adiaeresis adiaeresis Adiaeresis' \
+            -e 'keycode 34 = at backslash aring Aring aring Aring' &&
     echo "on" > "$status_file" &&
     notify-send 'åäö mode' 'off'
 }
