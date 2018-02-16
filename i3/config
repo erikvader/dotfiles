@@ -38,7 +38,7 @@ bindsym $mod+q kill
 # launch categorized menu
 bindsym $mod+z exec --no-startup-id morc_menu
 
-bindsym $mod+r exec rofi -show run
+bindsym $mod+x exec rofi -show run
 bindsym $mod+Shift+r exec rofi -show drun
 bindsym $mod+Tab exec rofi -show window
 
