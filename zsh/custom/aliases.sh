@@ -1,6 +1,4 @@
 alias open="xdg-open"
-alias gotoschool="cd /home/erik/Dropbox/skol-grejer/Universitet"
-alias nemo="nemo --no-desktop"
 alias q="exit"
 alias r="ranger-cd"
 alias lsmnt="findmnt"
@@ -31,5 +29,5 @@ function mounterik {
 }
 
 function mkdircd {
-    mkdir $1 && cd $1
+    mkdir "$1" && cd "$1"
 }
