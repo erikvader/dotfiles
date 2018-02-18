@@ -23,4 +23,4 @@ fi
 
 pkill conky
 while pgrep -x conky >/dev/null; do sleep 1; done
-conky
+conky &
