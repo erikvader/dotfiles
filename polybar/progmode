@@ -5,7 +5,8 @@ function printStatus {
     if [ "$contents" == "on" ]; then
         echo "P"
     elif [ "$contents" == "swe" ]; then
-        echo "Ö"
+        # echo "%{F#ff6347}ÅÄÖ%{F-}"
+        echo "ÅÄÖ"
     else
         echo ""
     fi

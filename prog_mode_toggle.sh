@@ -23,16 +23,16 @@ function sweon {
     xmodmap -e 'keycode 47 = odiaeresis Odiaeresis' \
             -e 'keycode 48 = adiaeresis Adiaeresis' \
             -e 'keycode 34 = aring Aring' &&
-    echo "swe" > "$status_file" &&
-    notify-send 'åäö mode' 'on'
+    echo "swe" > "$status_file"
+    # notify-send 'åäö mode' 'on'
 }
 
 function sweoff {
     xmodmap -e 'keycode 47 = bracketleft braceleft odiaeresis Odiaeresis odiaeresis Odiaeresis' \
             -e 'keycode 48 = bracketright braceright adiaeresis Adiaeresis adiaeresis Adiaeresis' \
             -e 'keycode 34 = at backslash aring Aring aring Aring' &&
-    echo "on" > "$status_file" &&
-    notify-send 'åäö mode' 'off'
+    echo "on" > "$status_file"
+    # notify-send 'åäö mode' 'off'
 }
 
 function off {
