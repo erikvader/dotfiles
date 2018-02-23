@@ -2,7 +2,6 @@
 .emacs.d/non_elpa/**
 .emacs.d/session.*
 .emacs.d/.emacs.desktop
-.emacs.d/myinit.el
 .emacs.d/recentf
 .emacs.d/projectile.cache
 .emacs.d/projectile-bookmarks.eld
