@@ -41,6 +41,7 @@ bindsym $mod+z exec --no-startup-id morc_menu
 bindsym $mod+x exec rofi -show run
 bindsym $mod+Shift+r exec rofi -show drun
 bindsym $mod+Tab exec rofi -show window
+bindsym $mod+r exec "~/.i3/rofi_script_selector.sh"
 
 ################################################################################################
 ## sound-section - DO NOT EDIT if you wish to automatically upgrade Alsa -> Pulseaudio later! ##
@@ -93,7 +94,7 @@ bindsym $mod+Ctrl+x --release exec --no-startup-id xkill
 # focus_follows_mouse no
 
 bindsym $mod+minus exec --no-startup-id "~/.i3/flasher.sh"
-bindsym $mod+Shift+minus exec --no-startup-id "transset-df -a 0.99"
+# bindsym $mod+Shift+minus exec --no-startup-id "transset-df -a 0.99"
 
 # change focus
 bindsym $mod+h focus left
@@ -260,14 +261,17 @@ for_window [class="Xfburn"] floating enable
 # for_window [urgent=latest] focus
 
 bindsym $mod+plus exec --no-startup-id ~/.i3/display_updater.sh
-bindsym $mod+asciicircum exec --no-startup-id ~/.i3/blacken_screen.sh
-bindsym $mod+Shift+asciicircum exec --no-startup-id ~/.i3/restore_screen.sh
+# bindsym $mod+asciicircum exec --no-startup-id ~/.i3/blacken_screen.sh
+# bindsym $mod+Shift+asciicircum exec --no-startup-id ~/.i3/restore_screen.sh
 
 # toggle redshift
 bindsym $mod+grave exec --no-startup-id pkill -USR1 '^redshift$'
 
 # toggle color inversion
 bindsym $mod+apostrophe exec --no-startup-id xrandr-invert-colors
+
+# toggle audio powersave
+# bindsym $mod+p exec --no-startup-id "gksudo ~/.toggle_audio_powersave.sh"
 
 # reload the configuration file
 bindsym $mod+Shift+c reload
@@ -328,8 +332,8 @@ bindsym $mod+Control+l resize grow width 1 px or 1 ppt
 # Lock screen
 bindsym $mod+9 exec --no-startup-id blurlock
 
-bindsym $mod+m exec --no-startup-id ~/prog_mode_toggle.sh
-bindsym $mod+n exec --no-startup-id ~/prog_mode_toggle.sh swetoggle
+bindsym $mod+m exec --no-startup-id "~/prog_mode_toggle.sh"
+bindsym $mod+n exec --no-startup-id "~/prog_mode_toggle.sh swetoggle"
 
 # Autostart applications
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
