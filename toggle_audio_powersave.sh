@@ -14,3 +14,5 @@ else
     echo '1' > "$ps"
     notify-send 'powersave on'
 fi
+
+pkill --signal SIGUSR1 -x 'powersave.sh'
