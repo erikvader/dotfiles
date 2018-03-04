@@ -45,7 +45,7 @@ names=("Invert colors"
       )
 
 # eller printf '%s\n' "${names[@]}"
-choice="$( IFS=$'\n'; echo -e "${names[*]}" | rofi -dmenu -i -p "Run" -no-custom -format i )"
+choice="$( IFS=$'\n'; echo -e "${names[*]}" | rofi -dmenu -i -p "exec" -no-custom -format i )"
 
 if [[ "$choice" ]]; then
     echo "du valde ${names[$choice]}"
