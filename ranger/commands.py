@@ -103,3 +103,24 @@ class quick_nav(Command):
             self.fm.move(right=1)
         else:
             self.fm.notify("not a directory, can't enter it!")
+
+class toggle_super_zoom(Command):
+    """
+    :toggle_super_zoom
+
+    Toggles whether the middle current section should take up the
+    whole window.
+    """
+    def execute(self):
+        if hasattr(self.fm, "is_superzoomed") and self.fm.is_superzoomed == True:
+            self.fm.is_superzoomed = False
+            self.fm.settings.column_ratios = [1,3,4]
+            # self.fm.settings.collapse_preview = False
+            self.fm.settings.preview_files = True
+            self.fm.settings.preview_directories = True
+        else:
+            self.fm.is_superzoomed = True
+            self.fm.settings.column_ratios = [100000,1]
+            # self.fm.settings.collapse_preview = False
+            self.fm.settings.preview_files = False
+            self.fm.settings.preview_directories = False
