@@ -1,3 +1,0 @@
-[submodule ".emacs.d/submodules/evil-easymotion"]
-	path = .emacs.d/submodules/evil-easymotion
-	url = https://github.com/erikvader/erik-evilem.git
