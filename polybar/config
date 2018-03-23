@@ -58,7 +58,7 @@ font-2 = fontawesome:pixelsize=14;3
 font-3 = ubuntumono:pixelsize=11
 font-4 = fontawesome:pixelsize=10;3
 
-modules-left = i3 xwindow
+modules-left = xmonad
 modules-center =
 modules-right = powersave volume progmode temperature memory cpu wlan battery date
 
@@ -93,6 +93,12 @@ i3-focused-underline = #008b8b
 modules-left = i3
 modules-center =
 modules-right = date
+
+[module/xmonad]
+type = custom/script
+exec = xmonad-log
+
+tail = true
 
 [module/progmode]
 type = custom/script
