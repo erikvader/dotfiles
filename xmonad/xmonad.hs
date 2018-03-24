@@ -26,7 +26,12 @@ import qualified Data.Map        as M
 import qualified DBus as D
 import qualified DBus.Client as D
 
+-- TODO: description för Spiral
+
 myModMask = mod4Mask
+
+-- myWorkspaces = ["  ", "2"] ++ map (\n -> show n ++ "g") [3..9]
+myWorkspaces = map show [1..9]
 
 myLayoutHook =
   smartBorders .
@@ -56,7 +61,7 @@ myStartupHook =
   spawnOnce "redshift-gtk" <+>
   spawnOnce "blueman-applet"
 
-myKeys conf@(XConfig {XMonad.modMask = modm}) =
+myKeys conf@XConfig {XMonad.modMask = modm} =
   M.fromList $
   [
 
@@ -75,6 +80,10 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) =
     ((modm .|. shiftMask .|. controlMask, xK_Print), spawn "$HOME/.i3/scrot_clipboard.sh -s"),
     -- flash
     ((modm, xK_minus), spawn "$HOME/.i3/flasher.sh"),
+
+    -- toggle prog mode
+    ((modm, xK_m), spawn "$HOME/prog_mode_toggle.sh"),
+    ((modm .|. shiftMask, xK_m), spawn "$HOME/prog_mode_toggle.sh swetoggle"),
 
     -- display stuff
     ((modm, xK_plus), spawn "$HOME/.i3/display_updater.sh"),
@@ -140,7 +149,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) =
     -- , ((modm              , xK_b     ), sendMessage ToggleStruts)
 
     -- Quit xmonad
-    ((modm, xK_0), confirmPrompt defaultXPConfig "exit" $ io (exitWith ExitSuccess)),
+    ((modm, xK_0), confirmPrompt def "exit" $ io exitSuccess),
 
     -- Restart xmonad
     ((modm .|. shiftMask, xK_c), spawn "xmonad --recompile; xmonad --restart")
@@ -166,37 +175,22 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) =
     --     | (key, sc) <- zip [xK_w, xK_e, xK_r] [0..]
     --     , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
 
-fg        = "#ebdbb2"
-bg        = "#282828"
-gray      = "#a89984"
-bg1       = "#3c3836"
-bg2       = "#504945"
-bg3       = "#665c54"
-bg4       = "#7c6f64"
-
-green     = "#b8bb26"
-darkgreen = "#98971a"
-red       = "#fb4934"
-darkred   = "#cc241d"
-yellow    = "#fabd2f"
-blue      = "#83a598"
-purple    = "#d3869b"
-aqua      = "#8ec07c"
-
 -- Override the PP values as you would otherwise, adding colors etc depending
 -- on  the statusbar used
 myLogHook :: D.Client -> PP
 -- myLogHook dbus = def { ppOutput = dbusOutput dbus }
 myLogHook dbus = def
-    { ppOutput = dbusOutput dbus
-    , ppCurrent = wrap ("%{B" ++ bg2 ++ "} ") " %{B-}"
-    , ppVisible = wrap ("%{B" ++ bg1 ++ "} ") " %{B-}"
-    , ppUrgent = wrap ("%{F" ++ red ++ "} ") " %{F-}"
-    , ppHidden = wrap " " " "
-    , ppWsSep = ""
-    , ppSep = " : "
-    , ppTitle = shorten 40
+    { ppOutput = dbusOutput dbus,
+    ppCurrent = wrap "%{B#505050 F#dfdfdf U#ffb52a +u}  " "  %{B- F- -u}",
+    ppVisible = wrap "  " "  ",
+    ppUrgent = wrap "%{B#bd2c40}  " "!  %{B-}",
+    ppHidden = wrap "  " "  ",
+    ppWsSep = "",
+    ppSep = " : ",
+    ppTitle = shorten 40
+    -- ppOrder = \(w:_:t:rest) -> w:t:rest
     }
+
 -- Emit a DBus signal on log updates
 dbusOutput :: D.Client -> String -> IO ()
 dbusOutput dbus str = do
@@ -213,7 +207,8 @@ baseConfig = desktopConfig {
   modMask = myModMask,
   borderWidth = 0,
   terminal = "termite",
-  keys = myKeys
+  keys = myKeys,
+  workspaces = myWorkspaces
   }
 
 myConfig = baseConfig {
@@ -229,5 +224,7 @@ main = do
     D.requestName dbus (D.busName_ "org.xmonad.Log")
         [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
 
-    xmonad $ myConfig { logHook = dynamicLogWithPP (myLogHook dbus) }
+    xmonad $ myConfig {
+      logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus)
+      }
 

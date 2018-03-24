@@ -46,7 +46,7 @@ border-bottom-color = #333
 ; border-top-size = 3
 ; border-top-color = ${colors.background}
 
-padding-left = 0
+padding-left = 1
 padding-right = 3
 module-margin-left = 1
 module-margin-right = 2
