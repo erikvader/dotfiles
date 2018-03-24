@@ -19,6 +19,8 @@ import XMonad.Layout.Dwindle
 import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
 import XMonad.Layout.NoBorders
+import XMonad.Layout.Spacing
+import XMonad.Layout.Gaps
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
@@ -27,14 +29,19 @@ import qualified DBus as D
 import qualified DBus.Client as D
 
 -- TODO: description för Spiral
+-- TODO: fixa smartSpacingWithEdge
 
 myModMask = mod4Mask
 
 -- myWorkspaces = ["  ", "2"] ++ map (\n -> show n ++ "g") [3..9]
 myWorkspaces = map show [1..9]
 
+myDefaultSpacing :: Int
+myDefaultSpacing = 3
+
 myLayoutHook =
-  smartBorders .
+  gaps [(L, 2), (R, 2)] . -- compensate for weird spacing at the edges
+  smartSpacingWithEdge myDefaultSpacing .
   mkToggle (single FULL) .
   mkToggle (single MIRROR) $
   Tall 1 (3/100) (1/2) ||| Spiral R CW 1.5 1.1
@@ -89,6 +96,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_plus), spawn "$HOME/.i3/display_updater.sh"),
     ((modm, xK_grave), spawn "pkill -USR1 '^redshift$'"),
     ((modm, xK_apostrophe), spawn "xrandr-invert-colors"),
+
+    -- gaps
+    -- ((modm, xK_bracketleft), incSpacing (-1)),
+    -- ((modm, xK_bracketright), incSpacing 1),
 
     -- launch a terminal
     ((modm, xK_Return), spawn $ XMonad.terminal conf),
