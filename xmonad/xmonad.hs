@@ -3,8 +3,12 @@ import System.Exit
 
 import Codec.Binary.UTF8.String as UTF8
 
-import XMonad
+import XMonad hiding ( (|||) )
 import XMonad.Config.Desktop
+
+import XMonad.Actions.UpdatePointer
+import XMonad.Actions.CycleWindows
+import XMonad.Actions.RotSlaves
 
 import XMonad.Util.EZConfig(additionalKeys)
 import XMonad.Util.SpawnOnce
@@ -21,6 +25,10 @@ import XMonad.Layout.MultiToggle.Instances
 import XMonad.Layout.NoBorders
 import Erik.Spacing
 import XMonad.Layout.Gaps
+import XMonad.Layout.TwoPane
+import XMonad.Layout.Grid
+import XMonad.Layout.Renamed
+import XMonad.Layout.LayoutCombinators
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
@@ -28,19 +36,20 @@ import qualified Data.Map        as M
 import qualified DBus as D
 import qualified DBus.Client as D
 
--- TODO: fixa smartSpacingWithEdge
-
 myModMask = mod4Mask
 
 -- myWorkspaces = ["  ", "2"] ++ map (\n -> show n ++ "g") [3..9]
 myWorkspaces = map show [1..9]
+
+myBaseLayouts = Tall 1 (3/100) (1/2) ||| TwoPane (3/100) (1/2) ||| renamed [Replace "Spiral"] (Spiral R CW 1.4 1.1) ||| Grid
+myBaseLayoutsNames = ["Tall", "TwoPane", "Spiral", "Grid"]
 
 myLayoutHook =
   gaps [(L, 3), (R, 3)] . -- compensate for weird spacing at the edges
   smartSpacing 3 .
   mkToggle (single FULL) .
   mkToggle (single MIRROR) $
-  Tall 1 (3/100) (1/2) ||| Spiral R CW 1.5 1.1
+  myBaseLayouts
 
 myStartupHook =
   spawnOnce "pulseaudio" <+>
@@ -69,6 +78,12 @@ myStartupHook =
 myKeys conf@XConfig {XMonad.modMask = modm} =
   M.fromList $
   [
+
+    --cycle
+    ((modm, xK_i), rotUnfocusedUp),
+    ((modm, xK_u), rotUnfocusedDown),
+    ((modm .|. shiftMask, xK_i), rotFocusedUp),
+    ((modm .|. shiftMask, xK_u), rotFocusedDown), -- rotAllDown ??
 
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),
@@ -176,7 +191,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     [((m .|. modm, k), windows $ f i)
         | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
         , (f, m) <- [(W.greedyView, 0), (W.shift, shiftMask)]]
-    -- ++
+    ++
+
+    [((modm .|. controlMask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
 
     --
     -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
@@ -198,7 +215,7 @@ myLogHook dbus = def
     ppHidden = wrap "  " "  ",
     ppWsSep = "",
     ppSep = " : ",
-    ppLayout = unwords . filter (\w -> elem w ["Tall", "Mirror", "Full", "Spiral"]) . words,
+    ppLayout = unwords . (\x -> drop 2 x) . words,
     ppTitle = shorten 40
     -- ppOrder = \(w:_:t:rest) -> w:t:rest
     }
@@ -237,6 +254,6 @@ main = do
         [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
 
     xmonad $ myConfig {
-      logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus)
+      logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus) >> updatePointer (0.95, 0.95) (0, 0)
       }
 
