@@ -28,7 +28,6 @@ import qualified Data.Map        as M
 import qualified DBus as D
 import qualified DBus.Client as D
 
--- TODO: description för Spiral
 -- TODO: fixa smartSpacingWithEdge
 
 myModMask = mod4Mask
@@ -196,6 +195,7 @@ myLogHook dbus = def
     ppHidden = wrap "  " "  ",
     ppWsSep = "",
     ppSep = " : ",
+    ppLayout = unwords . filter (\w -> elem w ["Tall", "Mirror", "Full", "Spiral"]) . words,
     ppTitle = shorten 40
     -- ppOrder = \(w:_:t:rest) -> w:t:rest
     }
