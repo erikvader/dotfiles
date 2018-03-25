@@ -19,7 +19,7 @@ import XMonad.Layout.Dwindle
 import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
 import XMonad.Layout.NoBorders
-import XMonad.Layout.Spacing
+import Erik.Spacing
 import XMonad.Layout.Gaps
 
 import qualified XMonad.StackSet as W
@@ -36,12 +36,9 @@ myModMask = mod4Mask
 -- myWorkspaces = ["  ", "2"] ++ map (\n -> show n ++ "g") [3..9]
 myWorkspaces = map show [1..9]
 
-myDefaultSpacing :: Int
-myDefaultSpacing = 3
-
 myLayoutHook =
-  gaps [(L, 2), (R, 2)] . -- compensate for weird spacing at the edges
-  smartSpacingWithEdge myDefaultSpacing .
+  gaps [(L, 3), (R, 3)] . -- compensate for weird spacing at the edges
+  smartSpacing 3 .
   mkToggle (single FULL) .
   mkToggle (single MIRROR) $
   Tall 1 (3/100) (1/2) ||| Spiral R CW 1.5 1.1
@@ -98,8 +95,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_apostrophe), spawn "xrandr-invert-colors"),
 
     -- gaps
-    -- ((modm, xK_bracketleft), incSpacing (-1)),
-    -- ((modm, xK_bracketright), incSpacing 1),
+    ((modm, xK_bracketleft), incSpacing (-1)),
+    ((modm, xK_bracketright), incSpacing 1),
+    ((modm, xK_at), setSpacing 0),
 
     -- launch a terminal
     ((modm, xK_Return), spawn $ XMonad.terminal conf),
