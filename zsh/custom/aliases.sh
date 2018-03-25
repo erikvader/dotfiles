@@ -6,12 +6,7 @@ alias lsmnt="findmnt"
 alias l='ls -a'
 alias ll='ls -la'
 
-alias ecb="emacsclient -n"
-
-function ec {
-    i3-msg -q workspace "2"
-    emacsclient -n "$1"
-}
+alias ec="emacsclient -n -c"
 
 #mvlink .inputrc Dropbox/
 function mvlink {
