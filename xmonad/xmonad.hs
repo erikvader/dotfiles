@@ -30,6 +30,8 @@ import XMonad.Layout.TwoPane
 import XMonad.Layout.Grid
 import XMonad.Layout.Renamed
 import XMonad.Layout.LayoutCombinators
+import XMonad.Layout.Mosaic
+import XMonad.Layout.ThreeColumns
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
@@ -42,8 +44,8 @@ myModMask = mod4Mask
 -- myWorkspaces = ["  ", "2"] ++ map (\n -> show n ++ "g") [3..9]
 myWorkspaces = map show [1..9]
 
-myBaseLayouts = Tall 1 (3/100) (1/2) ||| TwoPane (3/100) (1/2) ||| renamed [Replace "Spiral"] (Spiral R CW 1.4 1.1) ||| Grid
-myBaseLayoutsNames = ["Tall", "TwoPane", "Spiral", "Grid"]
+myBaseLayouts = Tall 1 (3/100) (1/2) ||| TwoPane (3/100) (1/2) ||| ThreeColMid 1 (3/100) (1/2) ||| renamed [Replace "Spiral"] (Spiral R CW 1.4 1.1) ||| Grid ||| mosaic 1.1 [3,2,2]
+myBaseLayoutsNames = ["Tall", "TwoPane", "ThreeCol", "Spiral", "Grid", "Mosaic"]
 
 myLayoutHook =
   gaps [(L, 3), (R, 3)] . -- compensate for weird spacing at the edges
@@ -81,11 +83,18 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
   [
 
     --cycle
-    ((modm, xK_i), rotUnfocusedUp),
-    ((modm, xK_u), rotUnfocusedDown),
-    ((modm .|. shiftMask, xK_i), rotFocusedUp),
-    ((modm .|. shiftMask, xK_u), rotFocusedDown), -- rotAllDown ??
+    ((modm, xK_i), rotAllUp),
+    ((modm, xK_u), rotAllDown),
+    ((modm .|. controlMask, xK_i), rotUnfocusedUp), --rotate all except the one with focus
+    ((modm .|. controlMask, xK_u), rotUnfocusedDown),
+    ((modm .|. shiftMask, xK_i), rotFocusedUp), --rotate current window in two pane pretty much
+    ((modm .|. shiftMask, xK_u), rotFocusedDown),
     ((modm, xK_z), rotLastUp), -- rotate all windows from including focused one and all after
+
+    -- mosaic
+    ((modm, xK_e), sendMessage Taller),
+    ((modm, xK_y), sendMessage Wider),
+    ((modm, xK_s), sendMessage Reset),
 
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),
