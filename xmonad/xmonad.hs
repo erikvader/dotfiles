@@ -24,6 +24,7 @@ import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
 import XMonad.Layout.NoBorders
 import Erik.Spacing
+import Erik.MyStuff
 import XMonad.Layout.Gaps
 import XMonad.Layout.TwoPane
 import XMonad.Layout.Grid
@@ -84,6 +85,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_u), rotUnfocusedDown),
     ((modm .|. shiftMask, xK_i), rotFocusedUp),
     ((modm .|. shiftMask, xK_u), rotFocusedDown), -- rotAllDown ??
+    ((modm, xK_z), rotLastUp), -- rotate all windows from including focused one and all after
 
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),
