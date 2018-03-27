@@ -18,6 +18,7 @@ import XMonad.Prompt.ConfirmPrompt
 
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
+import XMonad.Hooks.EwmhDesktops
 
 import XMonad.Layout.Dwindle
 import XMonad.Layout.MultiToggle
@@ -186,7 +187,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- , ((modm              , xK_b     ), sendMessage ToggleStruts)
 
     -- Quit xmonad
-    ((modm, xK_0), confirmPrompt def "exit" $ io exitSuccess),
+    ((modm .|. shiftMask, xK_0), confirmPrompt def "logout?" $ io exitSuccess),
+    ((modm, xK_0), confirmPrompt def "power off?" $ spawn "poweroff"),
 
     -- Restart xmonad
     ((modm .|. shiftMask, xK_c), spawn "xmonad --recompile; xmonad --restart")
@@ -264,7 +266,8 @@ main = do
     D.requestName dbus (D.busName_ "org.xmonad.Log")
         [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
 
-    xmonad $ myConfig {
-      logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus) >> updatePointer (0.95, 0.95) (0, 0)
+    xmonad $ ewmh $ myConfig {
+      logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus) >> updatePointer (0.95, 0.95) (0, 0),
+      handleEventHook = handleEventHook myConfig <+> fullscreenEventHook
       }
 
