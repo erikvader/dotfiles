@@ -85,10 +85,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
   M.fromList $
   [
     --cycle
-    ((modm, xK_i), layoutBind [("TwoPane", rotFocusedUp),--rotate current window in two pane pretty much
-                               ("__DEFAULT__", rotAllUp)]),
-    ((modm, xK_u), layoutBind [("TwoPane", rotFocusedDown),
-                               ("__DEFAULT__", rotAllDown)]),
+    ((modm, xK_i), onLayout [("TwoPane", rotFocusedUp)] rotAllUp), --rotate current window in two pane pretty much
+    ((modm, xK_u), onLayout [("TwoPane", rotFocusedDown)] rotAllDown),
     ((modm .|. shiftMask, xK_i), rotUnfocusedUp), --rotate all except the one with focus
     ((modm .|. shiftMask, xK_u), rotUnfocusedDown),
     ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
@@ -171,12 +169,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_s), sendMessage Reset),
 
     -- Increment the number of windows in the master area
-    ((modm .|. shiftMask , xK_h), layoutBind [("Mosaic", sendMessage Taller),
-                                              ("__DEFAULT__", sendMessage (IncMasterN 1))]),
+    ((modm .|. shiftMask , xK_h), onLayout [("Mosaic", sendMessage Taller)] (sendMessage (IncMasterN 1))),
 
     -- Deincrement the number of windows in the master area
-    ((modm .|. shiftMask , xK_l), layoutBind [("Mosaic", sendMessage Wider),
-                                              ("__DEFAULT__", sendMessage (IncMasterN (-1)))]),
+    ((modm .|. shiftMask , xK_l), onLayout [("Mosaic", sendMessage Wider)] (sendMessage (IncMasterN (-1)))),
 
     -- Push window back into tiling
     ((modm, xK_t), withFocused $ windows . W.sink),
@@ -220,10 +216,17 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 logWindowCount :: X (Maybe String)
 logWindowCount = do
   s <- W.stack . W.workspace . W.current <$> gets windowset
-  let count = case s of
-                Nothing  -> 0
-                Just sta -> 1 + length (W.up sta) + length (W.down sta)
-  return (Just $ show count)
+  onLayout [("TwoPane", showAt 3 s),
+            ("Full", showAt 2 s)] (return $ Just "")
+    where
+      showAt limit sta = return $ format limit sta (wrap "%{B#e60053}  " "  %{B-}")
+
+      format 0 Nothing f      = Just (f $ show 0)
+      format _ Nothing _      = (Just "")
+      format limit (Just s) f = let count = 1 + length (W.up s) + length (W.down s)
+                                in if count >= limit
+                                   then Just (f $ show count)
+                                   else (Just "")
 
 -- Override the PP values as you would otherwise, adding colors etc depending
 -- on  the statusbar used
@@ -238,7 +241,7 @@ myLogHook dbus = def
     ppWsSep = "",
     ppSep = " : ",
     ppTitle = shorten 40,
-    ppOrder = \(w:l:t:wc:rest) -> w:l:(wrap "%{F#ffb52a}" "%{F-}" wc):t:rest,
+    ppOrder = \(w:l:t:lwc:_) -> filter (not . null) [w, l, lwc, t],
     ppExtras = [logWindowCount]
     }
 
