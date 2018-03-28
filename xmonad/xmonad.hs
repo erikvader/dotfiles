@@ -222,11 +222,11 @@ logWindowCount = do
       showAt limit sta = return $ format limit sta (wrap "%{B#e60053}  " "  %{B-}")
 
       format 0 Nothing f      = Just (f $ show 0)
-      format _ Nothing _      = (Just "")
+      format _ Nothing _      = Just ""
       format limit (Just s) f = let count = 1 + length (W.up s) + length (W.down s)
                                 in if count >= limit
                                    then Just (f $ show count)
-                                   else (Just "")
+                                   else Just ""
 
 -- Override the PP values as you would otherwise, adding colors etc depending
 -- on  the statusbar used
