@@ -1,10 +1,13 @@
 module Erik.MyStuff (
   rotLastUp, rotLastDown, rotLast',
-  rotUp, rotDown
+  rotUp, rotDown,
+  layoutBind
 ) where
 
 import XMonad
 import qualified XMonad.StackSet as W
+import qualified Data.Map as M
+import Data.List (find)
 
 rotLastUp :: X()
 rotLastUp = windows $ W.modify' (rotLast' rotUp)
@@ -27,3 +30,19 @@ rotUp :: [a] -> [a]
 rotUp   l = drop 1 l ++ take 1 l
 rotDown :: [a] -> [a]
 rotDown = reverse . rotUp . reverse
+
+-- runs a X command(?) depending on the description of the current
+-- layout. Useful for assigning layout specifik keybinds. The string
+-- "__DEFAULT__" is the default value and is run if no other
+-- description is matched.
+layoutBind :: [(String, X ())] -> X ()
+layoutBind xs = do
+  d <- description . W.layout . W.workspace . W.current <$> gets windowset
+  findBind [d, "__DEFAULT__"]
+    where
+      findBind [] = return ()
+      findBind (s:ss) = case find ((== s) . fst) xs of
+                          Just (_, x) -> x
+                          Nothing -> findBind ss
+
+

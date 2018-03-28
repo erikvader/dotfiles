@@ -49,6 +49,7 @@ myBaseLayouts = Tall 1 (3/100) (1/2) ||| TwoPane (3/100) (1/2) ||| ThreeColMid 1
 myBaseLayoutsNames = ["Tall", "TwoPane", "ThreeCol", "Spiral", "Grid", "Mosaic"]
 
 myLayoutHook =
+  renamed [CutWordsLeft 2] $ -- remove smartspacing text
   gaps [(L, 3), (R, 3)] . -- compensate for weird spacing at the edges
   smartSpacing 3 .
   mkToggle (single FULL) .
@@ -82,15 +83,14 @@ myStartupHook =
 myKeys conf@XConfig {XMonad.modMask = modm} =
   M.fromList $
   [
-
     --cycle
-    ((modm, xK_i), rotAllUp),
-    ((modm, xK_u), rotAllDown),
-    ((modm .|. controlMask, xK_i), rotUnfocusedUp), --rotate all except the one with focus
-    ((modm .|. controlMask, xK_u), rotUnfocusedDown),
-    ((modm .|. shiftMask, xK_i), rotFocusedUp), --rotate current window in two pane pretty much
-    ((modm .|. shiftMask, xK_u), rotFocusedDown),
-    ((modm, xK_z), rotLastUp), -- rotate all windows from including focused one and all after
+    ((modm, xK_i), layoutBind [("TwoPane", rotFocusedUp),--rotate current window in two pane pretty much
+                               ("__DEFAULT__", rotAllUp)]),
+    ((modm, xK_u), layoutBind [("TwoPane", rotFocusedDown),
+                               ("__DEFAULT__", rotAllDown)]),
+    ((modm .|. shiftMask, xK_i), rotUnfocusedUp), --rotate all except the one with focus
+    ((modm .|. shiftMask, xK_u), rotUnfocusedDown),
+    ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
 
     -- mosaic
     ((modm, xK_e), sendMessage Taller),
@@ -228,7 +228,7 @@ myLogHook dbus = def
     ppHidden = wrap "  " "  ",
     ppWsSep = "",
     ppSep = " : ",
-    ppLayout = unwords . (\x -> drop 2 x) . words,
+    -- ppLayout = unwords . (\x -> drop 2 x) . words,
     ppTitle = shorten 40
     -- ppOrder = \(w:_:t:rest) -> w:t:rest
     }
