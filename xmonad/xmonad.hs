@@ -10,6 +10,7 @@ import XMonad.Config.Desktop
 import XMonad.Actions.UpdatePointer
 import XMonad.Actions.CycleWindows
 import XMonad.Actions.RotSlaves
+import XMonad.Actions.Warp
 
 import XMonad.Util.EZConfig(additionalKeys)
 import XMonad.Util.SpawnOnce
@@ -143,7 +144,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- Resize viewed windows to the correct size
     ((modm, xK_n), refresh),
 
-    ((modm, xK_a), myUpdatePointer),
+    ((modm, xK_a), warpToWindow 0.5 0.5),
 
     -- Move focus to the previous window
     ((modm, xK_k), windows W.focusUp >> myUpdatePointer),
