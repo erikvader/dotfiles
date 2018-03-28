@@ -267,7 +267,7 @@ main = do
         [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
 
     xmonad $ ewmh $ myConfig {
-      logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus) >> updatePointer (0.95, 0.95) (0, 0),
+      logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus) >> updatePointer (0.5, 0.5) (0.25, 0.25),
       handleEventHook = handleEventHook myConfig <+> fullscreenEventHook
       }
 
