@@ -43,8 +43,7 @@ import qualified DBus.Client as D
 
 myModMask = mod4Mask
 
--- myWorkspaces = ["  ", "2"] ++ map (\n -> show n ++ "g") [3..9]
-myWorkspaces = map show [1..9]
+myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9]
 
 myBaseLayouts = Tall 1 (3/100) (1/2) ||| TwoPane (3/100) (1/2) ||| ThreeColMid 1 (3/100) (1/2) ||| renamed [Replace "Spiral"] (Spiral R CW 1.4 1.1) ||| Grid ||| mosaic 1.1 [3,2,2]
 myBaseLayoutsNames = ["Tall", "TwoPane", "ThreeCol", "Spiral", "Grid", "Mosaic"]
