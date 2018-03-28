@@ -80,6 +80,8 @@ myStartupHook =
   spawnOnce "google-chrome-stable" <+>
   spawnOnce "emacs --daemon"
 
+myUpdatePointer = updatePointer (0.5, 0.5) (0.25, 0.25)
+
 myKeys conf@XConfig {XMonad.modMask = modm} =
   M.fromList $
   [
@@ -141,22 +143,24 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- Resize viewed windows to the correct size
     ((modm, xK_n), refresh),
 
-    -- Move focus to the previous window
-    ((modm, xK_k), windows W.focusUp),
+    ((modm, xK_a), myUpdatePointer),
 
-    ((modm, xK_j), windows W.focusDown),
+    -- Move focus to the previous window
+    ((modm, xK_k), windows W.focusUp >> myUpdatePointer),
+
+    ((modm, xK_j), windows W.focusDown >> myUpdatePointer),
 
     -- Move focus to the master window
-    ((modm, xK_b), windows W.focusMaster),
+    ((modm, xK_b), windows W.focusMaster >> myUpdatePointer),
 
     -- Swap the focused window and the master window
-    ((modm .|. shiftMask, xK_b), windows W.swapMaster),
+    ((modm .|. shiftMask, xK_b), windows W.swapMaster >> myUpdatePointer),
 
     -- Swap the focused window with the next window
-    ((modm .|. shiftMask, xK_j), windows W.swapDown),
+    ((modm .|. shiftMask, xK_j), windows W.swapDown >> myUpdatePointer),
 
     -- Swap the focused window with the previous window
-    ((modm .|. shiftMask, xK_k), windows W.swapUp),
+    ((modm .|. shiftMask, xK_k), windows W.swapUp >> myUpdatePointer),
 
     -- Shrink the master area
     ((modm, xK_h), sendMessage Shrink),
@@ -278,7 +282,7 @@ main = do
         [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
 
     xmonad $ ewmh $ myConfig {
-      logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus) <+> updatePointer (0.5, 0.5) (0.25, 0.25),
+      logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus),
       handleEventHook = handleEventHook myConfig <+> fullscreenEventHook
       }
 
