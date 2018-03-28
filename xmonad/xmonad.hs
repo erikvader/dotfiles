@@ -1,5 +1,6 @@
 import System.IO
 import System.Exit
+import Data.Maybe (fromMaybe)
 
 import Codec.Binary.UTF8.String as UTF8
 
@@ -216,6 +217,14 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     --     | (key, sc) <- zip [xK_w, xK_e, xK_r] [0..]
     --     , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
 
+logWindowCount :: X (Maybe String)
+logWindowCount = do
+  s <- W.stack . W.workspace . W.current <$> gets windowset
+  let count = case s of
+                Nothing  -> 0
+                Just sta -> 1 + length (W.up sta) + length (W.down sta)
+  return (Just $ show count)
+
 -- Override the PP values as you would otherwise, adding colors etc depending
 -- on  the statusbar used
 myLogHook :: D.Client -> PP
@@ -228,9 +237,9 @@ myLogHook dbus = def
     ppHidden = wrap "  " "  ",
     ppWsSep = "",
     ppSep = " : ",
-    -- ppLayout = unwords . (\x -> drop 2 x) . words,
-    ppTitle = shorten 40
-    -- ppOrder = \(w:_:t:rest) -> w:t:rest
+    ppTitle = shorten 40,
+    ppOrder = \(w:l:t:wc:rest) -> w:l:(wrap "%{F#ffb52a}" "%{F-}" wc):t:rest,
+    ppExtras = [logWindowCount]
     }
 
 -- Emit a DBus signal on log updates
@@ -267,7 +276,7 @@ main = do
         [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
 
     xmonad $ ewmh $ myConfig {
-      logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus) >> updatePointer (0.5, 0.5) (0.25, 0.25),
+      logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus) <+> updatePointer (0.5, 0.5) (0.25, 0.25),
       handleEventHook = handleEventHook myConfig <+> fullscreenEventHook
       }
 
