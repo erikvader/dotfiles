@@ -92,11 +92,6 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_u), rotUnfocusedDown),
     ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
 
-    -- mosaic
-    ((modm, xK_e), sendMessage Taller),
-    ((modm, xK_y), sendMessage Wider),
-    ((modm, xK_s), sendMessage Reset),
-
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),
     ((modm, xK_Tab), spawn "rofi -show window"),
@@ -171,11 +166,16 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- Expand the master area
     ((modm, xK_l), sendMessage Expand),
 
+    -- mosaic
+    ((modm, xK_s), sendMessage Reset),
+
     -- Increment the number of windows in the master area
-    ((modm .|. shiftMask , xK_h), sendMessage (IncMasterN 1)),
+    ((modm .|. shiftMask , xK_h), layoutBind [("Mosaic", sendMessage Taller),
+                                              ("__DEFAULT__", sendMessage (IncMasterN 1))]),
 
     -- Deincrement the number of windows in the master area
-    ((modm .|. shiftMask , xK_l), sendMessage (IncMasterN (-1))),
+    ((modm .|. shiftMask , xK_l), layoutBind [("Mosaic", sendMessage Wider),
+                                              ("__DEFAULT__", sendMessage (IncMasterN (-1)))]),
 
     -- Push window back into tiling
     ((modm, xK_t), withFocused $ windows . W.sink),
