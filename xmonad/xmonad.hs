@@ -1,6 +1,6 @@
-import System.IO
+{-# OPTIONS_GHC -W -fwarn-unused-imports #-}
+
 import System.Exit
-import Data.Maybe (fromMaybe)
 
 import Codec.Binary.UTF8.String as UTF8
 
@@ -12,10 +12,8 @@ import XMonad.Actions.CycleWindows
 import XMonad.Actions.RotSlaves
 import XMonad.Actions.Warp
 
-import XMonad.Util.EZConfig(additionalKeys)
 import XMonad.Util.SpawnOnce
 
-import XMonad.Prompt
 import XMonad.Prompt.ConfirmPrompt
 
 import XMonad.Hooks.DynamicLog
@@ -25,7 +23,6 @@ import XMonad.Hooks.EwmhDesktops
 import XMonad.Layout.Dwindle
 import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
-import XMonad.Layout.NoBorders
 import Erik.Spacing
 import Erik.MyStuff
 import XMonad.Layout.Gaps
