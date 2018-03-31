@@ -61,7 +61,7 @@ myLayoutHook =
 myStartupHook =
   spawnOnce "pulseaudio" <+>
   spawnOnce "pa-applet" <+>
-  -- spawn "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1" <+>
+  spawnOnce "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1" <+>
   spawn "$HOME/.i3/display_updater.sh" <+>
   spawnOnce "compton -b" <+>
   spawnOnce "nm-applet" <+>
