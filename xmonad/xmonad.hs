@@ -35,6 +35,7 @@ import XMonad.Layout.Renamed
 import XMonad.Layout.LayoutCombinators
 import XMonad.Layout.Mosaic
 import XMonad.Layout.ThreeColumns
+import XMonad.Layout.OneBig
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
@@ -46,8 +47,8 @@ myModMask = mod4Mask
 
 myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9]
 
-myBaseLayouts = Tall 1 (3/100) (1/2) ||| TwoPane (3/100) (1/2) ||| ThreeColMid 1 (3/100) (1/2) ||| renamed [Replace "Spiral"] (Spiral R CW 1.4 1.1) ||| Grid ||| mosaic 1.1 [3,2,2]
-myBaseLayoutsNames = ["Tall", "TwoPane", "ThreeCol", "Spiral", "Grid", "Mosaic"]
+myBaseLayouts = Tall 1 (3/100) (1/2) ||| TwoPane (3/100) (1/2) ||| ThreeColMid 1 (3/100) (1/2) ||| renamed [Replace "Spiral"] (Spiral R CW 1.4 1.1) ||| Grid ||| mosaic 1.1 [3,2,2] ||| renamed [Replace "OneBig"] (OneBig (3/4) (3/4))
+myBaseLayoutsNames = ["Tall", "TwoPane", "ThreeCol", "Spiral", "Grid", "Mosaic", "OneBig"]
 
 myLayoutHook =
   renamed [CutWordsLeft 2] $ -- remove smartspacing text
