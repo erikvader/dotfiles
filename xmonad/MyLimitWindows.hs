@@ -120,10 +120,10 @@ stackSize Nothing                = 0
 stackSize (Just (W.Stack _ u d)) = 1 + length u + length d
 
 visible :: Int -> W.Stack a -> (W.Stack a, [a])
-visible n (W.Stack f u d) = (W.Stack f uu du, dd)
+visible n (W.Stack f u d) = (W.Stack f ud du, dd)
   where
-    (uu, ud) = splitAt (n - 1) u
-    (du, dd) = splitAt (n - (length uu + 1)) (ud ++ d)
+    (uu, ud) = splitAt (length u - (n - 1)) u
+    (du, dd) = splitAt (n - (length ud + 1)) (reverse uu ++ d)
 
 firstN :: Int -> W.Stack a -> W.Stack a
 firstN n st = fst $ visible n st
