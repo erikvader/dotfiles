@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -W -fwarn-unused-imports #-}
+{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-missing-signatures #-}
 
 import System.Exit
 
@@ -23,8 +23,6 @@ import XMonad.Hooks.EwmhDesktops
 import XMonad.Layout.Dwindle
 import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
-import Erik.Spacing
-import Erik.MyStuff
 import XMonad.Layout.Gaps
 import XMonad.Layout.TwoPane
 import XMonad.Layout.Grid
@@ -33,6 +31,11 @@ import XMonad.Layout.LayoutCombinators
 import XMonad.Layout.Mosaic
 import XMonad.Layout.ThreeColumns
 import XMonad.Layout.OneBig
+
+import Erik.Spacing
+import Erik.MyStuff
+import Erik.MyLimitWindows
+-- import XMonad.Layout.LimitWindows
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
@@ -48,11 +51,12 @@ myBaseLayouts = Tall 1 (3/100) (1/2) ||| TwoPane (3/100) (1/2) ||| ThreeColMid 1
 myBaseLayoutsNames = ["Tall", "TwoPane", "ThreeCol", "Spiral", "Grid", "Mosaic", "OneBig"]
 
 myLayoutHook =
-  renamed [CutWordsLeft 2] $ -- remove smartspacing text
-  gaps [(L, 3), (R, 3)] . -- compensate for weird spacing at the edges
-  smartSpacing 3 .
-  mkToggle (single FULL) .
-  mkToggle (single MIRROR) $
+  limitWindows 3 $
+  -- renamed [CutWordsLeft 2] $ -- remove smartspacing text
+  -- gaps [(L, 3), (R, 3)] . -- compensate for weird spacing at the edges
+  -- smartSpacing 3 .
+  -- mkToggle (single FULL) .
+  -- mkToggle (single MIRROR) $
   myBaseLayouts
 
 myStartupHook =
@@ -84,6 +88,11 @@ myUpdatePointer = updatePointer (0.5, 0.5) (0.25, 0.25)
 myKeys conf@XConfig {XMonad.modMask = modm} =
   M.fromList $
   [
+    ((modm .|. mod1Mask, xK_h), decreaseLimit),
+    ((modm .|. mod1Mask, xK_l), increaseLimit),
+    ((modm, xK_c), toggleLimit),
+    ((modm, xK_f), toggleFull),
+
     --cycle
     ((modm, xK_i), onLayout [("TwoPane", rotFocusedUp)] rotAllUp), --rotate current window in two pane pretty much
     ((modm, xK_u), onLayout [("TwoPane", rotFocusedDown)] rotAllDown),
@@ -126,7 +135,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_Return), spawn "emacsclient -nc"),
 
     -- toggle zoom
-    ((modm, xK_f), sendMessage $ Toggle FULL),
+    -- ((modm, xK_f), sendMessage $ Toggle FULL),
 
     ((modm, xK_d), sendMessage $ Toggle MIRROR),
 
@@ -275,13 +284,13 @@ myConfig = baseConfig {
 
 main :: IO ()
 main = do
-    dbus <- D.connectSession
-    -- Request access to the DBus name
-    D.requestName dbus (D.busName_ "org.xmonad.Log")
-        [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
+  dbus <- D.connectSession
+  -- Request access to the DBus name
+  D.requestName dbus (D.busName_ "org.xmonad.Log")
+    [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
 
-    xmonad $ ewmh $ myConfig {
-      logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus),
-      handleEventHook = handleEventHook myConfig <+> fullscreenEventHook
-      }
+  xmonad $ ewmh $ myConfig {
+    logHook = logHook myConfig <+> dynamicLogWithPP (myLogHook dbus),
+    handleEventHook = handleEventHook myConfig <+> fullscreenEventHook
+    }
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, FlexibleInstances, MultiParamTypeClasses, DeriveDataTypeable, PatternGuards #-}
+{-# LANGUAGE CPP, RecordWildCards, FlexibleInstances, MultiParamTypeClasses, DeriveDataTypeable, PatternGuards #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  XMonad.Layout.LimitWindows
@@ -15,23 +15,18 @@
 --
 -----------------------------------------------------------------------------
 
-module XMonad.Layout.LimitWindows (
+module Erik.MyLimitWindows (
     -- * Usage
     -- $usage
 
     -- * Layout Modifiers
-    limitWindows,limitSlice,limitSelect,
+    limitWindows,limitSlice,
 
     -- * Change the number of windows
-    increaseLimit,decreaseLimit,setLimit,
-
-#ifdef TESTING
-    -- * For tests
-    select,update,Selection(..),updateAndSelect,
-#endif
+    increaseLimit,decreaseLimit,setLimit,toggleFull,toggleLimit,
 
     -- * Types
-    LimitWindows, Selection,
+    LimitWindows
     ) where
 
 import XMonad.Layout.LayoutModifier
@@ -68,44 +63,64 @@ decreaseLimit = sendMessage . LimitChange $ max 1 . pred
 setLimit :: Int -> X ()
 setLimit tgt = sendMessage . LimitChange $ const tgt
 
+toggleFull :: X ()
+toggleFull = sendMessage LimitFull
+
+toggleLimit :: X ()
+toggleLimit = sendMessage LimitToggle
+
 -- | Only display the first @n@ windows.
 limitWindows :: Int -> l a -> ModifiedLayout LimitWindows l a
-limitWindows n = ModifiedLayout (LimitWindows FirstN n)
+limitWindows n = ModifiedLayout (LimitWindows FirstN n False False)
 
 -- | Only display @n@ windows around the focused window. This makes sense with
 -- layouts that arrange windows linearily, like 'XMonad.Layout.Layout.Accordion'.
 limitSlice :: Int -> l a -> ModifiedLayout LimitWindows l a
-limitSlice n = ModifiedLayout (LimitWindows Slice n)
+limitSlice n = ModifiedLayout (LimitWindows Slice n False False)
 
 -- | Only display the first @m@ windows and @r@ others.
 -- The @IncMasterN@ message will change @m@, as well as passing it onto the
 -- underlying layout.
-limitSelect :: Int -> Int -> l a -> ModifiedLayout Selection l a
-limitSelect m r = ModifiedLayout Sel{ nMaster=m, start=m, nRest=r }
+-- limitSelect :: Int -> Int -> l a -> ModifiedLayout Selection l a
+-- limitSelect m r = ModifiedLayout Sel{ nMaster=m, start=m, nRest=r }
 
-data LimitWindows a = LimitWindows SliceStyle Int deriving (Read,Show)
+data LimitWindows a = LimitWindows { lstyle :: SliceStyle,
+                                     llimit :: Int,
+                                     lfull  :: Bool,
+                                     loff   :: Bool} deriving (Read,Show)
 
 data SliceStyle = FirstN | Slice deriving (Read,Show)
 
-data LimitChange = LimitChange { unLC :: (Int -> Int) } deriving (Typeable)
+data LimitChange = LimitToggle | LimitFull | LimitChange { unLC :: (Int -> Int) } deriving (Typeable)
 
 instance Message LimitChange
 
 instance LayoutModifier LimitWindows a where
-     pureMess (LimitWindows s n) =
-        fmap (LimitWindows s) . pos <=< (`app` n) . unLC <=< fromMessage
-      where pos x   = guard (x>=1)     >> return x
-            app f x = guard (f x /= x) >>  return (f x)
+     handleMess lw@(LimitWindows{..}) mes
+       | Just (LimitChange{unLC=f}) <- fromMessage mes =
+           return $ do
+             newLimit <- (f `app` llimit) >>= pos
+             return $ lw { llimit = newLimit }
+       | Just (LimitToggle) <- fromMessage mes = return $ Just $ lw { loff = not loff }
+       | Just (LimitFull) <- fromMessage mes = return $ Just $ lw { lfull = not lfull }
+       | otherwise = return Nothing
+       where pos x   = guard (x>=1)     >> return x
+             app f x = guard (f x /= x) >> return (f x)
 
-     modifyLayout (LimitWindows style n) ws r =
-        runLayout ws { W.stack = f n <$> W.stack ws } r
-      where f = case style of
-                    FirstN -> firstN
-                    Slice -> slice
+     modifyLayout (LimitWindows{..}) ws r
+       | lfull || not loff = runLayout ws { W.stack = f llimit <$> W.stack ws } r
+       | otherwise = runLayout ws r
+       where f | lfull     = full
+               | otherwise = case lstyle of
+                               FirstN -> firstN
+                               Slice -> slice
 
 firstN ::  Int -> W.Stack a -> W.Stack a
 firstN n st = upfocus $ fromJust $ W.differentiate $ take (max 1 n) $ W.integrate st
     where upfocus = foldr (.) id $ replicate (length (W.up st)) W.focusDown'
+
+full :: Int -> W.Stack a -> W.Stack a
+full _ = firstN 1
 
 -- | A non-wrapping, fixed-size slice of a stack around the focused element
 slice ::  Int -> W.Stack t -> W.Stack t
