@@ -20,7 +20,7 @@ module Erik.MyLimitWindows (
     -- $usage
 
     -- * Layout Modifiers
-    limitWindows,limitSlice,
+    limitWindows,
 
     -- * Change the number of windows
     increaseLimit,decreaseLimit,setLimit,toggleFull,toggleLimit,
@@ -75,8 +75,8 @@ limitWindows n = ModifiedLayout (LimitWindows FirstN n False False)
 
 -- | Only display @n@ windows around the focused window. This makes sense with
 -- layouts that arrange windows linearily, like 'XMonad.Layout.Layout.Accordion'.
-limitSlice :: Int -> l a -> ModifiedLayout LimitWindows l a
-limitSlice n = ModifiedLayout (LimitWindows Slice n False False)
+-- limitSlice :: Int -> l a -> ModifiedLayout LimitWindows l a
+-- limitSlice n = ModifiedLayout (LimitWindows Slice n False False)
 
 -- | Only display the first @m@ windows and @r@ others.
 -- The @IncMasterN@ message will change @m@, as well as passing it onto the
@@ -113,24 +113,35 @@ instance LayoutModifier LimitWindows a where
        where f | lfull     = full
                | otherwise = case lstyle of
                                FirstN -> firstN
-                               Slice -> slice
+                               -- Slice -> slice
 
-firstN ::  Int -> W.Stack a -> W.Stack a
-firstN n st = upfocus $ fromJust $ W.differentiate $ take (max 1 n) $ W.integrate st
-    where upfocus = foldr (.) id $ replicate (length (W.up st)) W.focusDown'
+stackSize :: Maybe (W.Stack a) -> Int
+stackSize Nothing                = 0
+stackSize (Just (W.Stack _ u d)) = 1 + length u + length d
+
+visible :: Int -> W.Stack a -> (W.Stack a, [a])
+visible n (W.Stack f u d) = (W.Stack f uu du, dd)
+  where
+    (uu, ud) = splitAt (n - 1) u
+    (du, dd) = splitAt (n - (length uu + 1)) (ud ++ d)
+
+firstN :: Int -> W.Stack a -> W.Stack a
+firstN n st = fst $ visible n st
+-- firstN n st = upfocus $ fromJust $ W.differentiate $ take (max 1 n) $ W.integrate st
+--     where upfocus = foldr (.) id $ replicate (length (W.up st)) W.focusDown'
 
 full :: Int -> W.Stack a -> W.Stack a
 full _ = firstN 1
 
 -- | A non-wrapping, fixed-size slice of a stack around the focused element
-slice ::  Int -> W.Stack t -> W.Stack t
-slice n (W.Stack f u d) =
-        W.Stack f (take (nu + unusedD) u)
-                  (take (nd + unusedU) d)
-    where unusedD = max 0 $ nd - length d
-          unusedU = max 0 $ nu - length u
-          nd = div (n - 1) 2
-          nu = uncurry (+) $ divMod (n - 1) 2
+-- slice ::  Int -> W.Stack t -> W.Stack t
+-- slice n (W.Stack f u d) =
+--         W.Stack f (take (nu + unusedD) u)
+--                   (take (nd + unusedU) d)
+--     where unusedD = max 0 $ nd - length d
+--           unusedU = max 0 $ nu - length u
+--           nd = div (n - 1) 2
+--           nu = uncurry (+) $ divMod (n - 1) 2
 
 -- data Selection a = Sel { nMaster :: Int, start :: Int, nRest :: Int }
 --     deriving (Read, Show, Eq)
