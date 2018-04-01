@@ -26,15 +26,21 @@ module Erik.MyLimitWindows (
     increaseLimit,decreaseLimit,setLimit,toggleFull,toggleLimit,
 
     -- * Types
-    LimitWindows
+    LimitWindows,
+
+    initStates,getCurrentState,
+
+    visible,stackSize
     ) where
 
 import XMonad.Layout.LayoutModifier
 import XMonad
 import qualified XMonad.StackSet as W
-import Control.Monad((<=<),guard)
+import Control.Monad((<=<),guard,when)
 import Control.Applicative((<$>))
-import Data.Maybe(fromJust)
+import Data.Maybe(fromJust,isJust)
+import qualified XMonad.Util.ExtensibleState as XS
+import qualified Data.Map.Lazy as Map
 
 -- $usage
 -- To use this module, add the following import to @~\/.xmonad\/xmonad.hs@:
@@ -89,31 +95,59 @@ data LimitWindows a = LimitWindows { lstyle :: SliceStyle,
                                      lfull  :: Bool,
                                      loff   :: Bool} deriving (Read,Show)
 
+-- limit, full, off
+data LimitState = LimitState (Map.Map WorkspaceId (Int, Bool, Bool)) deriving (Read,Show)
+
 data SliceStyle = FirstN | Slice deriving (Read,Show)
 
 data LimitChange = LimitToggle | LimitFull | LimitChange { unLC :: (Int -> Int) } deriving (Typeable)
 
 instance Message LimitChange
 
-instance LayoutModifier LimitWindows a where
-     handleMess lw@(LimitWindows{..}) mes
-       | Just (LimitChange{unLC=f}) <- fromMessage mes =
-           return $ do
-             newLimit <- (f `app` llimit) >>= pos
-             return $ lw { llimit = newLimit }
-       | Just (LimitToggle) <- fromMessage mes = return $ Just $ lw { loff = not loff }
-       | Just (LimitFull) <- fromMessage mes = return $ Just $ lw { lfull = not lfull }
-       | otherwise = return Nothing
-       where pos x   = guard (x>=1)     >> return x
-             app f x = guard (f x /= x) >> return (f x)
+instance ExtensionClass LimitState where
+  initialValue = LimitState Map.empty
 
-     modifyLayout (LimitWindows{..}) ws r
-       | lfull || not loff = runLayout ws { W.stack = f llimit <$> W.stack ws } r
-       | otherwise = runLayout ws r
-       where f | lfull     = full
-               | otherwise = case lstyle of
-                               FirstN -> firstN
-                               -- Slice -> slice
+instance LayoutModifier LimitWindows a where
+  handleMess lw mes = do
+    x <- handleMess' lw mes
+    when (isJust x) (do
+                        id <- W.tag . W.workspace . W.current <$> gets windowset
+                        updateState (fromJust x) id)
+    return x
+    where
+      handleMess' lw@(LimitWindows{..}) mes
+        | Just (LimitChange{unLC=f}) <- fromMessage mes =
+            return $ do
+            newLimit <- (f `app` llimit) >>= pos
+            return $ lw { llimit = newLimit }
+        | Just (LimitToggle) <- fromMessage mes = return $ Just $ lw { loff = not loff }
+        | Just (LimitFull) <- fromMessage mes = return $ Just $ lw { lfull = not lfull }
+        | otherwise = return Nothing
+      pos x   = guard (x>=1)     >> return x
+      app f x = guard (f x /= x) >> return (f x)
+
+  modifyLayout (LimitWindows{..}) ws r
+    | lfull || not loff = runLayout ws { W.stack = f llimit <$> W.stack ws } r
+    | otherwise = runLayout ws r
+    where f | lfull     = full
+            | otherwise = case lstyle of
+                            FirstN -> firstN
+
+getCurrentState :: X (Maybe (Int, Bool, Bool))
+getCurrentState = do
+  id <- W.tag . W.workspace . W.current <$> gets windowset
+  (LimitState states) <- XS.get
+  return $ Map.lookup id states
+
+updateState :: LimitWindows a -> WorkspaceId -> X ()
+updateState lw id = do
+  (LimitState old) <- XS.get
+  XS.put $ LimitState $ Map.insert id ((llimit lw), (lfull lw), (loff lw)) old
+
+initStates :: [WorkspaceId] -> Int -> Bool -> Bool -> X ()
+initStates ws l f o = do
+  (LimitState old) <- XS.get
+  XS.put $ LimitState $ Map.fromList [(k, (l,f,o)) | k <- ws]
 
 stackSize :: Maybe (W.Stack a) -> Int
 stackSize Nothing                = 0

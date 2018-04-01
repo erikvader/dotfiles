@@ -40,6 +40,8 @@ import Erik.MyLimitWindows
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
 
+import Data.Maybe
+
 import qualified DBus as D
 import qualified DBus.Client as D
 
@@ -50,8 +52,11 @@ myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9]
 myBaseLayouts = Tall 1 (3/100) (1/2) ||| TwoPane (3/100) (1/2) ||| ThreeColMid 1 (3/100) (1/2) ||| renamed [Replace "Spiral"] (Spiral R CW 1.4 1.1) ||| Grid ||| mosaic 1.1 [3,2,2] ||| renamed [Replace "OneBig"] (OneBig (3/4) (3/4))
 myBaseLayoutsNames = ["Tall", "TwoPane", "ThreeCol", "Spiral", "Grid", "Mosaic", "OneBig"]
 
+lwLimit :: Int
+lwLimit = 3
+
 myLayoutHook =
-  limitWindows 3 $
+  limitWindows lwLimit $
   -- renamed [CutWordsLeft 2] $ -- remove smartspacing text
   -- gaps [(L, 3), (R, 3)] . -- compensate for weird spacing at the edges
   -- smartSpacing 3 .
@@ -81,7 +86,8 @@ myStartupHook =
   spawnOnce "redshift-gtk" <+>
   spawnOnce "blueman-applet" <+>
   spawnOnce "google-chrome-stable" <+>
-  spawnOnce "emacs --daemon"
+  spawnOnce "emacs --daemon" <+>
+  initStates myWorkspaces lwLimit False False -- limitWindows
 
 myUpdatePointer = updatePointer (0.5, 0.5) (0.25, 0.25)
 
@@ -239,6 +245,14 @@ logWindowCount = do
                                    then Just (f $ show count)
                                    else Just ""
 
+logDebugLimit :: X (Maybe String)
+logDebugLimit = do
+  cur <- getCurrentState
+  if isNothing cur
+    then return $ Just "something is wrong"
+    else let (l, f, o) = fromJust cur
+         in return $ Just $ show l ++ show f ++ show o
+
 -- Override the PP values as you would otherwise, adding colors etc depending
 -- on  the statusbar used
 myLogHook :: D.Client -> PP
@@ -253,7 +267,7 @@ myLogHook dbus = def
     ppSep = " : ",
     ppTitle = shorten 40,
     ppOrder = \(w:l:t:lwc:_) -> filter (not . null) [w, l, lwc, t],
-    ppExtras = [logWindowCount]
+    ppExtras = [logDebugLimit]
     }
 
 -- Emit a DBus signal on log updates
