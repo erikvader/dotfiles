@@ -56,7 +56,7 @@ lwLimit :: Int
 lwLimit = 3
 
 myLayoutHook =
-  limitWindows lwLimit True $
+  limitWindows lwLimit False True $
   renamed [CutWordsLeft 2] $ -- remove smartspacing text
   gaps [(L, 3), (R, 3)] . -- compensate for weird spacing at the edges
   smartSpacing 3 .

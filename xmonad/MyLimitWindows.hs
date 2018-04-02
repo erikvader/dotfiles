@@ -126,8 +126,8 @@ toggleLimit :: X ()
 toggleLimit = sendMessage LimitToggle
 
 -- | Only display the first @n@ windows.
-limitWindows :: Int -> Bool -> l a -> ModifiedLayout LimitWindows l a
-limitWindows n off = ModifiedLayout (LimitWindows FirstN n False off)
+limitWindows :: Int -> Bool -> Bool -> l a -> ModifiedLayout LimitWindows l a
+limitWindows n full off = ModifiedLayout (LimitWindows FirstN n full off)
 
 -- | Only display @n@ windows around the focused window. This makes sense with
 -- layouts that arrange windows linearily, like 'XMonad.Layout.Layout.Accordion'.
