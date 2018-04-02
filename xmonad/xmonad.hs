@@ -57,10 +57,10 @@ lwLimit = 3
 
 myLayoutHook =
   limitWindows lwLimit True $
-  -- renamed [CutWordsLeft 2] $ -- remove smartspacing text
-  -- gaps [(L, 3), (R, 3)] . -- compensate for weird spacing at the edges
-  -- smartSpacing 3 .
-  -- mkToggle (single MIRROR) $
+  renamed [CutWordsLeft 2] $ -- remove smartspacing text
+  gaps [(L, 3), (R, 3)] . -- compensate for weird spacing at the edges
+  smartSpacing 3 .
+  mkToggle (single MIRROR) $
   myBaseLayouts
 
 myStartupHook =
@@ -93,6 +93,7 @@ myUpdatePointer = updatePointer (0.5, 0.5) (0.25, 0.25)
 myKeys conf@XConfig {XMonad.modMask = modm} =
   M.fromList $
   [
+    -- limitWindows
     ((modm .|. mod1Mask, xK_h), decreaseLimit),
     ((modm .|. mod1Mask, xK_l), increaseLimit),
     ((modm, xK_c), toggleLimit),
@@ -103,9 +104,11 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- ((modm, xK_u), onLayout [("TwoPane", rotFocusedDown)] rotAllDown),
     ((modm, xK_i), rotateVisibleUp), --rotate current window in two pane pretty much
     ((modm, xK_u), rotateVisibleDown),
-    ((modm .|. shiftMask, xK_i), rotUnfocusedUp), --rotate all except the one with focus
-    ((modm .|. shiftMask, xK_u), rotUnfocusedDown),
-    ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
+    -- ((modm .|. shiftMask, xK_i), rotUnfocusedUp), --rotate all except the one with focus
+    -- ((modm .|. shiftMask, xK_u), rotUnfocusedDown),
+    ((modm .|. shiftMask, xK_i), rotateFocHiddenUp),
+    ((modm .|. shiftMask, xK_u), rotateFocHiddenDown),
+    -- ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
 
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),
@@ -231,26 +234,28 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     --     | (key, sc) <- zip [xK_w, xK_e, xK_r] [0..]
     --     , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
 
+-- limitWindows
 logWindowCount :: X (Maybe String)
 logWindowCount = do
-  wc <- stackSize <$> W.stack . W.workspace . W.current <$> gets windowset
+  wc <- stackSize . W.stack . W.workspace . W.current <$> gets windowset
   state <- getCurrentState
   return $ warningNumber wc state
   where
-    warningNumber _ Nothing     = Just ""
+    warningNumber _ Nothing = Just ""
     warningNumber open (Just (hidden, full, off))
       | (full || not off) && actualHidden full > 0 = Just $ wrap "%{B#e60053}  " "  %{B-}" $ show $ actualHidden full
-      | otherwise                        = Just ""
+      | otherwise = Just ""
       where actualHidden False = open - hidden
             actualHidden True  = open - 1
 
-logWindowFull :: X (Maybe String)
-logWindowFull = do
-  isFull <$> getCurrentState
+-- limitWindows
+logWindowStatus :: X (Maybe String)
+logWindowStatus = status <$> getCurrentState
   where
-    isFull Nothing             = Just ""
-    isFull (Just (_, True, _)) = Just "Full "
-    isFull _                   = Just ""
+    status Nothing              = Just ""
+    status (Just (_, True, _))  = Just "Full "
+    status (Just (l, _, False)) = Just $ "Limit " ++ show l ++ " "
+    status _                    = Just ""
 
 -- Override the PP values as you would otherwise, adding colors etc depending
 -- on  the statusbar used
@@ -266,7 +271,7 @@ myLogHook dbus = def
     ppSep = " : ",
     ppTitle = shorten 40,
     ppOrder = \(w:l:t:lwc:lwf:_) -> filter (not . null) [w, lwf ++ l, lwc, t],
-    ppExtras = [logWindowCount, logWindowFull]
+    ppExtras = [logWindowCount, logWindowStatus]
     }
 
 -- Emit a DBus signal on log updates

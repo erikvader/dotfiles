@@ -32,7 +32,7 @@ module Erik.MyLimitWindows (
 
     visible,stackSize,
 
-    rotateVisibleDown,rotateVisibleUp
+    rotateVisibleDown,rotateVisibleUp,rotateFocHiddenUp,rotateFocHiddenDown
     ) where
 
 import XMonad.Layout.LayoutModifier
@@ -63,8 +63,25 @@ import Erik.MyStuff (rotUp,rotDown)
 -- See also 'XMonad.Layout.BoringWindows.boringAuto' for keybindings that skip
 -- the hidden windows.
 
-rotateFocHidden :: X ()
-rotateFocHidden = undefined
+rotateFocHiddenUp :: X ()
+rotateFocHiddenUp = rotateFocHidden rotUp
+
+rotateFocHiddenDown :: X ()
+rotateFocHiddenDown = rotateFocHidden rotDown
+
+rotateFocHidden :: ([Window] -> [Window]) -> X ()
+rotateFocHidden rot = do
+  state <- getCurrentState
+  windows (W.modify' (f state))
+  where
+    f :: Maybe (Int, Bool, Bool) -> W.Stack Window -> W.Stack Window
+    f Nothing s = s
+    f (Just (limit, full, off)) s
+      | full      = f (Just (1, False, off)) s
+      | off       = s
+      | otherwise = let (W.Stack f u d, (uu, h)) = visible limit s
+                        (newf:newh) = rot (f:h)
+                    in arcVisible (W.Stack newf u d, (uu, newh))
 
 rotateVisibleUp :: X ()
 rotateVisibleUp = rotateVisible rotUp
@@ -80,8 +97,8 @@ rotateVisible rot = do
     f :: Maybe (Int, Bool, Bool) -> W.Stack Window -> W.Stack Window
     f Nothing s = s
     f (Just (limit, full, off)) s
-      | full       = f (Just (1,                    False, off))   s
-      | off        = f (Just ((stackSize (Just s)), full,  False)) s
+      | full       = f (Just (1,                  False, off))   s
+      | off        = f (Just (stackSize (Just s), full,  False)) s
       | limit == 1 = s
       | otherwise  = let (sta@(W.Stack _ u _), tup) = visible limit s
                      in arcVisible (diffN (length u) (rot (W.integrate sta)), tup)
@@ -91,7 +108,7 @@ diffN _ [] = error "går int, borde int vara tom"
 diffN n as = case splitAt n as of
                (u, []) -> let (f:uu) = reverse u
                           in W.Stack f uu []
-               (u, (f:d)) -> W.Stack f (reverse u) d
+               (u, f:d) -> W.Stack f (reverse u) d
 
 increaseLimit :: X ()
 increaseLimit = sendMessage $ LimitChange succ
@@ -129,11 +146,11 @@ data LimitWindows a = LimitWindows { lstyle :: SliceStyle,
                                      loff   :: Bool} deriving (Read,Show)
 
 -- limit, full, off
-data LimitState = LimitState (Map.Map WorkspaceId (Int, Bool, Bool)) deriving (Read,Show)
+newtype LimitState = LimitState (Map.Map WorkspaceId (Int, Bool, Bool)) deriving (Read,Show)
 
 data SliceStyle = FirstN | Slice deriving (Read,Show)
 
-data LimitChange = LimitToggle | LimitFull | LimitChange { unLC :: (Int -> Int) } deriving (Typeable)
+data LimitChange = LimitToggle | LimitFull | LimitChange { unLC :: Int -> Int } deriving (Typeable)
 
 instance Message LimitChange
 
@@ -146,18 +163,18 @@ instance LayoutModifier LimitWindows a where
     when (isJust x) (updateCurrentState $ fromJust x)
     return x
     where
-      handleMess' lw@(LimitWindows{..}) mes
-        | Just (LimitChange{unLC=f}) <- fromMessage mes =
+      handleMess' lw@LimitWindows{..} mes
+        | Just LimitChange{unLC=f} <- fromMessage mes =
             return $ do
             newLimit <- (f `app` llimit) >>= pos
             return $ lw { llimit = newLimit }
-        | Just (LimitToggle) <- fromMessage mes = return $ Just $ lw { loff  = not loff }
-        | Just (LimitFull)   <- fromMessage mes = return $ Just $ lw { lfull = not lfull }
+        | Just LimitToggle <- fromMessage mes = return $ Just $ lw { loff  = not loff }
+        | Just LimitFull   <- fromMessage mes = return $ Just $ lw { lfull = not lfull }
         | otherwise = return Nothing
       pos x   = guard (x>=1)     >> return x
       app f x = guard (f x /= x) >> return (f x)
 
-  modifyLayout (LimitWindows{..}) ws r
+  modifyLayout LimitWindows{..} ws r
     | lfull || not loff = runLayout ws { W.stack = f llimit <$> W.stack ws } r
     | otherwise = runLayout ws r
     where f | lfull     = full
@@ -174,11 +191,10 @@ updateCurrentState :: LimitWindows a -> X ()
 updateCurrentState lw = do
   id <- W.tag . W.workspace . W.current <$> gets windowset
   (LimitState old) <- XS.get
-  XS.put $ LimitState $ Map.insert id ((llimit lw), (lfull lw), (loff lw)) old
+  XS.put $ LimitState $ Map.insert id (llimit lw, lfull lw, loff lw) old
 
 initStates :: [WorkspaceId] -> Int -> Bool -> Bool -> X ()
-initStates ws l f o = do
-  XS.put $ LimitState $ Map.fromList [(k, (l,f,o)) | k <- ws]
+initStates ws l f o = XS.put $ LimitState $ Map.fromList [(k, (l,f,o)) | k <- ws]
 
 stackSize :: Maybe (W.Stack a) -> Int
 stackSize Nothing                = 0
@@ -192,71 +208,11 @@ visible n (W.Stack f u d) = (W.Stack f ud du, (ddu, ddd))
     (ddu, ddd) = splitAt (length uu) dd
 
 arcVisible :: (W.Stack a, ([a], [a])) -> W.Stack a
-arcVisible ((W.Stack f u d), (h1, h2)) = W.Stack f (reverse h1 ++ u) (d ++ h2)
+arcVisible (W.Stack f u d, (h1, h2)) = W.Stack f (reverse h1 ++ u) (d ++ h2)
 
 firstN :: Int -> W.Stack a -> W.Stack a
 firstN n st = fst $ visible n st
--- firstN n st = upfocus $ fromJust $ W.differentiate $ take (max 1 n) $ W.integrate st
---     where upfocus = foldr (.) id $ replicate (length (W.up st)) W.focusDown'
 
 full :: Int -> W.Stack a -> W.Stack a
 full _ = firstN 1
 
--- | A non-wrapping, fixed-size slice of a stack around the focused element
--- slice ::  Int -> W.Stack t -> W.Stack t
--- slice n (W.Stack f u d) =
---         W.Stack f (take (nu + unusedD) u)
---                   (take (nd + unusedU) d)
---     where unusedD = max 0 $ nd - length d
---           unusedU = max 0 $ nu - length u
---           nd = div (n - 1) 2
---           nu = uncurry (+) $ divMod (n - 1) 2
-
--- data Selection a = Sel { nMaster :: Int, start :: Int, nRest :: Int }
---     deriving (Read, Show, Eq)
-
--- instance LayoutModifier Selection a where
---     modifyLayout s w r =
---         runLayout (w { W.stack = updateAndSelect s <$> W.stack w }) r
-
---     pureModifier sel _ stk wins = (wins, update sel <$> stk)
-
---     pureMess sel m
---         | Just f <- unLC <$> fromMessage m =
---             Just $ sel { nRest = max 0 (f (nMaster sel + nRest sel) - nMaster sel) }
---         | Just (IncMasterN n) <- fromMessage m =
---             Just $ sel { nMaster = max 0 (nMaster sel + n) }
---         | otherwise =
---             Nothing
-
--- select :: Selection l -> W.Stack a -> W.Stack a
--- select s stk
---     | lups < nMaster s
---         = stk { W.down=take (nMaster s - lups - 1) downs ++
---                     (take (nRest s) . drop (start s - lups - 1) $ downs) }
---     | otherwise
---         = stk { W.up=reverse (take (nMaster s) ups ++ drop (start s) ups),
---                 W.down=take ((nRest s) - (lups - start s) - 1) downs }
---     where
---         downs = W.down stk
---         ups = reverse $ W.up stk
---         lups = length ups
-
--- updateStart :: Selection l -> W.Stack a -> Int
--- updateStart s stk
---     | lups < nMaster s  -- the focussed window is in the master pane
---         = start s `min` (lups + ldown - (nRest s) + 1) `max` nMaster s
---     | otherwise
---         = start s `min` lups
---                   `max` (lups - (nRest s) + 1)
---                   `min` (lups + ldown - (nRest s) + 1)
---                   `max` nMaster s
---     where
---         lups = length $ W.up stk
---         ldown = length $ W.down stk
-
--- update :: Selection l -> W.Stack a -> Selection a
--- update sel stk = sel { start=updateStart sel stk }
-
--- updateAndSelect :: Selection l -> W.Stack a -> W.Stack a
--- updateAndSelect sel stk = select (update sel stk) stk
