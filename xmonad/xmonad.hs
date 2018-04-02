@@ -49,18 +49,17 @@ myModMask = mod4Mask
 
 myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9]
 
-myBaseLayouts = Tall 1 (3/100) (1/2) ||| TwoPane (3/100) (1/2) ||| ThreeColMid 1 (3/100) (1/2) ||| renamed [Replace "Spiral"] (Spiral R CW 1.4 1.1) ||| Grid ||| mosaic 1.1 [3,2,2] ||| renamed [Replace "OneBig"] (OneBig (3/4) (3/4))
-myBaseLayoutsNames = ["Tall", "TwoPane", "ThreeCol", "Spiral", "Grid", "Mosaic", "OneBig"]
+myBaseLayouts = Tall 1 (3/100) (1/2) ||| renamed [Replace "OneBig"] (OneBig (3/4) (3/4)) ||| ThreeColMid 1 (3/100) (1/2) ||| mosaic 1.1 [3,2,2] ||| Grid ||| renamed [Replace "Spiral"] (Spiral R CW 1.4 1.1)
+myBaseLayoutsNames = ["Tall", "OneBig", "ThreeCol", "Mosaic", "Grid", "Spiral"]
 
 lwLimit :: Int
 lwLimit = 3
 
 myLayoutHook =
-  limitWindows lwLimit $
+  limitWindows lwLimit True $
   -- renamed [CutWordsLeft 2] $ -- remove smartspacing text
   -- gaps [(L, 3), (R, 3)] . -- compensate for weird spacing at the edges
   -- smartSpacing 3 .
-  -- mkToggle (single FULL) .
   -- mkToggle (single MIRROR) $
   myBaseLayouts
 
@@ -87,7 +86,7 @@ myStartupHook =
   spawnOnce "blueman-applet" <+>
   spawnOnce "google-chrome-stable" <+>
   spawnOnce "emacs --daemon" <+>
-  initStates myWorkspaces lwLimit False False -- limitWindows
+  initStates myWorkspaces lwLimit False True -- limitWindows
 
 myUpdatePointer = updatePointer (0.5, 0.5) (0.25, 0.25)
 
@@ -100,8 +99,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_f), toggleFull),
 
     --cycle
-    ((modm, xK_i), onLayout [("TwoPane", rotFocusedUp)] rotAllUp), --rotate current window in two pane pretty much
-    ((modm, xK_u), onLayout [("TwoPane", rotFocusedDown)] rotAllDown),
+    -- ((modm, xK_i), onLayout [("TwoPane", rotFocusedUp)] rotAllUp), --rotate current window in two pane pretty much
+    -- ((modm, xK_u), onLayout [("TwoPane", rotFocusedDown)] rotAllDown),
+    ((modm, xK_i), rotateVisibleUp), --rotate current window in two pane pretty much
+    ((modm, xK_u), rotateVisibleDown),
     ((modm .|. shiftMask, xK_i), rotUnfocusedUp), --rotate all except the one with focus
     ((modm .|. shiftMask, xK_u), rotUnfocusedDown),
     ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
@@ -232,26 +233,24 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
 logWindowCount :: X (Maybe String)
 logWindowCount = do
-  s <- W.stack . W.workspace . W.current <$> gets windowset
-  onLayout [("TwoPane", showAt 3 s),
-            ("Full", showAt 2 s)] (return $ Just "")
-    where
-      showAt limit sta = return $ format limit sta (wrap "%{B#e60053}  " "  %{B-}")
+  wc <- stackSize <$> W.stack . W.workspace . W.current <$> gets windowset
+  state <- getCurrentState
+  return $ warningNumber wc state
+  where
+    warningNumber _ Nothing     = Just ""
+    warningNumber open (Just (hidden, full, off))
+      | (full || not off) && actualHidden full > 0 = Just $ wrap "%{B#e60053}  " "  %{B-}" $ show $ actualHidden full
+      | otherwise                        = Just ""
+      where actualHidden False = open - hidden
+            actualHidden True  = open - 1
 
-      format 0 Nothing f      = Just (f $ show 0)
-      format _ Nothing _      = Just ""
-      format limit (Just s) f = let count = 1 + length (W.up s) + length (W.down s)
-                                in if count >= limit
-                                   then Just (f $ show count)
-                                   else Just ""
-
-logDebugLimit :: X (Maybe String)
-logDebugLimit = do
-  cur <- getCurrentState
-  if isNothing cur
-    then return $ Just "something is wrong"
-    else let (l, f, o) = fromJust cur
-         in return $ Just $ show l ++ show f ++ show o
+logWindowFull :: X (Maybe String)
+logWindowFull = do
+  isFull <$> getCurrentState
+  where
+    isFull Nothing             = Just ""
+    isFull (Just (_, True, _)) = Just "Full "
+    isFull _                   = Just ""
 
 -- Override the PP values as you would otherwise, adding colors etc depending
 -- on  the statusbar used
@@ -266,8 +265,8 @@ myLogHook dbus = def
     ppWsSep = "",
     ppSep = " : ",
     ppTitle = shorten 40,
-    ppOrder = \(w:l:t:lwc:_) -> filter (not . null) [w, l, lwc, t],
-    ppExtras = [logDebugLimit]
+    ppOrder = \(w:l:t:lwc:lwf:_) -> filter (not . null) [w, lwf ++ l, lwc, t],
+    ppExtras = [logWindowCount, logWindowFull]
     }
 
 -- Emit a DBus signal on log updates

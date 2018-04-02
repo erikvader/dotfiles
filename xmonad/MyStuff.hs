@@ -9,10 +9,10 @@ import qualified XMonad.StackSet as W
 import qualified Data.Map as M
 import Data.List (find)
 
-rotLastUp :: X()
+rotLastUp :: X ()
 rotLastUp = windows $ W.modify' (rotLast' rotUp)
 
-rotLastDown :: X()
+rotLastDown :: X ()
 rotLastDown = windows $ W.modify' (rotLast' rotDown)
 
 -- rotate the lower windows in the stack (including focused)

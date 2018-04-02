@@ -30,7 +30,9 @@ module Erik.MyLimitWindows (
 
     initStates,getCurrentState,
 
-    visible,stackSize
+    visible,stackSize,
+
+    rotateVisibleDown,rotateVisibleUp
     ) where
 
 import XMonad.Layout.LayoutModifier
@@ -41,6 +43,7 @@ import Control.Applicative((<$>))
 import Data.Maybe(fromJust,isJust)
 import qualified XMonad.Util.ExtensibleState as XS
 import qualified Data.Map.Lazy as Map
+import Erik.MyStuff (rotUp,rotDown)
 
 -- $usage
 -- To use this module, add the following import to @~\/.xmonad\/xmonad.hs@:
@@ -60,6 +63,36 @@ import qualified Data.Map.Lazy as Map
 -- See also 'XMonad.Layout.BoringWindows.boringAuto' for keybindings that skip
 -- the hidden windows.
 
+rotateFocHidden :: X ()
+rotateFocHidden = undefined
+
+rotateVisibleUp :: X ()
+rotateVisibleUp = rotateVisible rotUp
+
+rotateVisibleDown :: X ()
+rotateVisibleDown = rotateVisible rotDown
+
+rotateVisible :: ([Window] -> [Window]) -> X ()
+rotateVisible rot = do
+  state <- getCurrentState
+  windows (W.modify' (f state))
+  where
+    f :: Maybe (Int, Bool, Bool) -> W.Stack Window -> W.Stack Window
+    f Nothing s = s
+    f (Just (limit, full, off)) s
+      | full       = f (Just (1,                    False, off))   s
+      | off        = f (Just ((stackSize (Just s)), full,  False)) s
+      | limit == 1 = s
+      | otherwise  = let (sta@(W.Stack _ u _), tup) = visible limit s
+                     in arcVisible (diffN (length u) (rot (W.integrate sta)), tup)
+
+diffN :: Int -> [a] -> W.Stack a
+diffN _ [] = error "går int, borde int vara tom"
+diffN n as = case splitAt n as of
+               (u, []) -> let (f:uu) = reverse u
+                          in W.Stack f uu []
+               (u, (f:d)) -> W.Stack f (reverse u) d
+
 increaseLimit :: X ()
 increaseLimit = sendMessage $ LimitChange succ
 
@@ -76,8 +109,8 @@ toggleLimit :: X ()
 toggleLimit = sendMessage LimitToggle
 
 -- | Only display the first @n@ windows.
-limitWindows :: Int -> l a -> ModifiedLayout LimitWindows l a
-limitWindows n = ModifiedLayout (LimitWindows FirstN n False False)
+limitWindows :: Int -> Bool -> l a -> ModifiedLayout LimitWindows l a
+limitWindows n off = ModifiedLayout (LimitWindows FirstN n False off)
 
 -- | Only display @n@ windows around the focused window. This makes sense with
 -- layouts that arrange windows linearily, like 'XMonad.Layout.Layout.Accordion'.
@@ -110,9 +143,7 @@ instance ExtensionClass LimitState where
 instance LayoutModifier LimitWindows a where
   handleMess lw mes = do
     x <- handleMess' lw mes
-    when (isJust x) (do
-                        id <- W.tag . W.workspace . W.current <$> gets windowset
-                        updateState (fromJust x) id)
+    when (isJust x) (updateCurrentState $ fromJust x)
     return x
     where
       handleMess' lw@(LimitWindows{..}) mes
@@ -120,8 +151,8 @@ instance LayoutModifier LimitWindows a where
             return $ do
             newLimit <- (f `app` llimit) >>= pos
             return $ lw { llimit = newLimit }
-        | Just (LimitToggle) <- fromMessage mes = return $ Just $ lw { loff = not loff }
-        | Just (LimitFull) <- fromMessage mes = return $ Just $ lw { lfull = not lfull }
+        | Just (LimitToggle) <- fromMessage mes = return $ Just $ lw { loff  = not loff }
+        | Just (LimitFull)   <- fromMessage mes = return $ Just $ lw { lfull = not lfull }
         | otherwise = return Nothing
       pos x   = guard (x>=1)     >> return x
       app f x = guard (f x /= x) >> return (f x)
@@ -139,25 +170,29 @@ getCurrentState = do
   (LimitState states) <- XS.get
   return $ Map.lookup id states
 
-updateState :: LimitWindows a -> WorkspaceId -> X ()
-updateState lw id = do
+updateCurrentState :: LimitWindows a -> X ()
+updateCurrentState lw = do
+  id <- W.tag . W.workspace . W.current <$> gets windowset
   (LimitState old) <- XS.get
   XS.put $ LimitState $ Map.insert id ((llimit lw), (lfull lw), (loff lw)) old
 
 initStates :: [WorkspaceId] -> Int -> Bool -> Bool -> X ()
 initStates ws l f o = do
-  (LimitState old) <- XS.get
   XS.put $ LimitState $ Map.fromList [(k, (l,f,o)) | k <- ws]
 
 stackSize :: Maybe (W.Stack a) -> Int
 stackSize Nothing                = 0
 stackSize (Just (W.Stack _ u d)) = 1 + length u + length d
 
-visible :: Int -> W.Stack a -> (W.Stack a, [a])
-visible n (W.Stack f u d) = (W.Stack f ud du, dd)
+visible :: Int -> W.Stack a -> (W.Stack a, ([a], [a]))
+visible n (W.Stack f u d) = (W.Stack f ud du, (ddu, ddd))
   where
-    (uu, ud) = splitAt (length u - (n - 1)) u
-    (du, dd) = splitAt (n - (length ud + 1)) (reverse uu ++ d)
+    (uu, ud)   = splitAt (length u - (n - 1)) u
+    (du, dd)   = splitAt (n - (length ud + 1)) (reverse uu ++ d)
+    (ddu, ddd) = splitAt (length uu) dd
+
+arcVisible :: (W.Stack a, ([a], [a])) -> W.Stack a
+arcVisible ((W.Stack f u d), (h1, h2)) = W.Stack f (reverse h1 ++ u) (d ++ h2)
 
 firstN :: Int -> W.Stack a -> W.Stack a
 firstN n st = fst $ visible n st
