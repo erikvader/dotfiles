@@ -63,45 +63,45 @@ import Erik.MyStuff (rotUp,rotDown)
 -- See also 'XMonad.Layout.BoringWindows.boringAuto' for keybindings that skip
 -- the hidden windows.
 
+type HiddenStack a = (W.Stack a, ([a], [a]))
+
+class StackSize a where
+  stackSize :: Maybe a -> Int
+
+instance StackSize (W.Stack a) where
+  stackSize Nothing                = 0
+  stackSize (Just (W.Stack _ u d)) = 1 + length u + length d
+
+instance StackSize (HiddenStack a) where
+  stackSize Nothing              = 0
+  stackSize (Just (s, (l1, l2))) = (stackSize (Just s)) + (length l1) + (length l2)
+
 rotateFocHiddenUp :: X ()
-rotateFocHiddenUp = rotateFocHidden rotUp
+rotateFocHiddenUp = modifyHidden (rotateFocHidden rotUp)
 
 rotateFocHiddenDown :: X ()
-rotateFocHiddenDown = rotateFocHidden rotDown
-
-rotateFocHidden :: ([Window] -> [Window]) -> X ()
-rotateFocHidden rot = do
-  state <- getCurrentState
-  windows (W.modify' (f state))
-  where
-    f :: Maybe (Int, Bool, Bool) -> W.Stack Window -> W.Stack Window
-    f Nothing s = s
-    f (Just (limit, full, off)) s
-      | full      = f (Just (1, False, off)) s
-      | off       = s
-      | otherwise = let (W.Stack f u d, (uu, h)) = visible limit s
-                        (newf:newh) = rot (f:h)
-                    in arcVisible (W.Stack newf u d, (uu, newh))
+rotateFocHiddenDown = modifyHidden (rotateFocHidden rotDown)
 
 rotateVisibleUp :: X ()
-rotateVisibleUp = rotateVisible rotUp
+rotateVisibleUp = modifyHidden (rotateVisible rotUp)
 
 rotateVisibleDown :: X ()
-rotateVisibleDown = rotateVisible rotDown
+rotateVisibleDown = modifyHidden (rotateVisible rotDown)
 
-rotateVisible :: ([Window] -> [Window]) -> X ()
-rotateVisible rot = do
+rotateFocHidden :: ([Window] -> [Window]) -> HiddenStack Window -> HiddenStack Window
+rotateFocHidden dir (W.Stack f u d, (uu, h)) = let (newf:newh) = dir (f:h)
+                                               in (W.Stack newf u d, (uu, newh))
+
+rotateVisible :: ([Window] -> [Window]) -> HiddenStack Window -> HiddenStack Window
+rotateVisible dir (s@(W.Stack _ u _), hid) = (diffN (length u) (dir (W.integrate s)), hid)
+
+modifyHidden :: (HiddenStack Window -> HiddenStack Window) -> X ()
+modifyHidden f = do
   state <- getCurrentState
-  windows (W.modify' (f state))
-  where
-    f :: Maybe (Int, Bool, Bool) -> W.Stack Window -> W.Stack Window
-    f Nothing s = s
-    f (Just (limit, full, off)) s
-      | full       = f (Just (1,                  False, off))   s
-      | off        = f (Just (stackSize (Just s), full,  False)) s
-      | limit == 1 = s
-      | otherwise  = let (sta@(W.Stack _ u _), tup) = visible limit s
-                     in arcVisible (diffN (length u) (rot (W.integrate sta)), tup)
+  mapM_ (\(l, fu, o) -> windows (W.modify' (\s -> let actualVisible | fu = 1
+                                                                    | o  = 0
+                                                                    | otherwise = l
+                                                  in arcVisible $ f (visible actualVisible s)))) state
 
 diffN :: Int -> [a] -> W.Stack a
 diffN _ [] = error "går int, borde int vara tom"
@@ -196,18 +196,15 @@ updateCurrentState lw = do
 initStates :: [WorkspaceId] -> Int -> Bool -> Bool -> X ()
 initStates ws l f o = XS.put $ LimitState $ Map.fromList [(k, (l,f,o)) | k <- ws]
 
-stackSize :: Maybe (W.Stack a) -> Int
-stackSize Nothing                = 0
-stackSize (Just (W.Stack _ u d)) = 1 + length u + length d
-
-visible :: Int -> W.Stack a -> (W.Stack a, ([a], [a]))
+visible :: Int -> W.Stack a -> HiddenStack a
+visible 0 s               = (s, ([], []))
 visible n (W.Stack f u d) = (W.Stack f ud du, (ddu, ddd))
   where
     (uu, ud)   = splitAt (length u - (n - 1)) u
     (du, dd)   = splitAt (n - (length ud + 1)) (reverse uu ++ d)
     (ddu, ddd) = splitAt (length uu) dd
 
-arcVisible :: (W.Stack a, ([a], [a])) -> W.Stack a
+arcVisible :: HiddenStack a -> W.Stack a
 arcVisible (W.Stack f u d, (h1, h2)) = W.Stack f (reverse h1 ++ u) (d ++ h2)
 
 firstN :: Int -> W.Stack a -> W.Stack a
