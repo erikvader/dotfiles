@@ -58,7 +58,6 @@ lwLimit = 3
 myLayoutHook =
   limitWindows lwLimit False True $
   renamed [CutWordsLeft 2] $ -- remove smartspacing text
-  gaps [(L, 3), (R, 3)] . -- compensate for weird spacing at the edges
   smartSpacing 3 .
   mkToggle (single MIRROR) $
   myBaseLayouts
@@ -243,7 +242,7 @@ logWindowCount = do
   where
     warningNumber _ Nothing = Just ""
     warningNumber open (Just (hidden, full, off))
-      | (full || not off) && actualHidden full > 0 = Just $ wrap "%{B#e60053}  " "  %{B-}" $ show $ actualHidden full
+      | (full || not off) && actualHidden full > 0 = Just $ wrap "%{F#ff8c00}" "%{F-}" $ show $ actualHidden full
       | otherwise = Just ""
       where actualHidden False = open - hidden
             actualHidden True  = open - 1
