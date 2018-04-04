@@ -1,31 +1,10 @@
 {-# LANGUAGE CPP, RecordWildCards, FlexibleInstances, MultiParamTypeClasses, DeriveDataTypeable, PatternGuards #-}
------------------------------------------------------------------------------
--- |
--- Module      :  XMonad.Layout.LimitWindows
--- Copyright   :  (c) 2009 Adam Vogt
---                (c) 2009 Max Rabkin -- wrote limitSelect
--- License     :  BSD-style (see xmonad/LICENSE)
---
--- Maintainer  :  vogt.adam@gmail.com
--- Stability   :  unstable
--- Portability :  unportable
---
--- A layout modifier that limits the number of windows that can be shown.
--- See "XMonad.Layout.Minimize" for manually setting hidden windows.
---
------------------------------------------------------------------------------
 
 module Erik.MyLimitWindows (
-    -- * Usage
-    -- $usage
-
-    -- * Layout Modifiers
     limitWindows,
 
-    -- * Change the number of windows
     increaseLimit,decreaseLimit,setLimit,toggleFull,toggleLimit,
 
-    -- * Types
     LimitWindows,
 
     initStates,getCurrentState,
@@ -63,8 +42,18 @@ import Erik.MyStuff (rotUp,rotDown)
 -- See also 'XMonad.Layout.BoringWindows.boringAuto' for keybindings that skip
 -- the hidden windows.
 
+-- (s, (l1, l2))
+-- s        is a normal stack from xmonad
+-- l1 ++ l2 are the windows that are hidden from view,
+--          l2 are the windows that come after the focused window
+--          and l1 are the windows that come before
+--
+--  1  2  3  4  5  6  7  8  9
+-- |---u---|-f-|---d---|--l2--|
+-- |---u---|---l1--|-f-|---l2-|
 type HiddenStack a = (W.Stack a, ([a], [a]))
 
+-- class for calculating the size of stacks
 class StackSize a where
   stackSize :: Maybe a -> Int
 
@@ -76,12 +65,14 @@ instance StackSize (HiddenStack a) where
   stackSize Nothing              = 0
   stackSize (Just (s, (l1, l2))) = (stackSize (Just s)) + (length l1) + (length l2)
 
+-- rotate the currently focused window with all hidden ones
 rotateFocHiddenUp :: X ()
 rotateFocHiddenUp = modifyHidden (rotateFocHidden rotUp)
 
 rotateFocHiddenDown :: X ()
 rotateFocHiddenDown = modifyHidden (rotateFocHidden rotDown)
 
+-- rotate only the actually visible windows
 rotateVisibleUp :: X ()
 rotateVisibleUp = modifyHidden (rotateVisible rotUp)
 
@@ -95,6 +86,7 @@ rotateFocHidden dir (W.Stack f u d, (uu, h)) = let (newf:newh) = dir (f:h)
 rotateVisible :: ([Window] -> [Window]) -> HiddenStack Window -> HiddenStack Window
 rotateVisible dir (s@(W.Stack _ u _), hid) = (diffN (length u) (dir (W.integrate s)), hid)
 
+-- like windows (W.modify' ...) but for HiddenStack a
 modifyHidden :: (HiddenStack Window -> HiddenStack Window) -> X ()
 modifyHidden f = do
   state <- getCurrentState
@@ -103,6 +95,7 @@ modifyHidden f = do
                                                                     | otherwise = l
                                                   in arcVisible $ f (visible actualVisible s)))) state
 
+-- same as W.differentiate but can choose which window that is focused
 diffN :: Int -> [a] -> W.Stack a
 diffN _ [] = error "går int, borde int vara tom"
 diffN n as = case splitAt n as of
@@ -119,13 +112,16 @@ decreaseLimit = sendMessage . LimitChange $ max 1 . pred
 setLimit :: Int -> X ()
 setLimit tgt = sendMessage . LimitChange $ const tgt
 
+-- toggle full (only one window at a time), same as limit=1
 toggleFull :: X ()
 toggleFull = sendMessage LimitFull
 
+-- toggle this feature on or off
 toggleLimit :: X ()
 toggleLimit = sendMessage LimitToggle
 
 -- | Only display the first @n@ windows.
+-- n, full and off are the default values
 limitWindows :: Int -> Bool -> Bool -> l a -> ModifiedLayout LimitWindows l a
 limitWindows n full off = ModifiedLayout (LimitWindows FirstN n full off)
 
@@ -181,6 +177,7 @@ instance LayoutModifier LimitWindows a where
             | otherwise = case lstyle of
                             FirstN -> firstN
 
+-- returns the state for the current workspace if there is one
 getCurrentState :: X (Maybe (Int, Bool, Bool))
 getCurrentState = do
   id <- W.tag . W.workspace . W.current <$> gets windowset
@@ -193,9 +190,12 @@ updateCurrentState lw = do
   (LimitState old) <- XS.get
   XS.put $ LimitState $ Map.insert id (llimit lw, lfull lw, loff lw) old
 
+-- initialize the states as a extended state so we can access them easily
 initStates :: [WorkspaceId] -> Int -> Bool -> Bool -> X ()
 initStates ws l f o = XS.put $ LimitState $ Map.fromList [(k, (l,f,o)) | k <- ws]
 
+-- converts a normal stack to a HiddenStack, n is the amount of windows that should be visible
+-- on the screen
 visible :: Int -> W.Stack a -> HiddenStack a
 visible 0 s               = (s, ([], []))
 visible n (W.Stack f u d) = (W.Stack f ud du, (ddu, ddd))
