@@ -160,7 +160,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- Resize viewed windows to the correct size
     ((modm, xK_n), refresh),
 
-    ((modm, xK_a), warpToWindow 0.5 0.5),
+    ((modm, xK_a), warpToWindow 1 1),
 
     -- Move focus to the previous window
     ((modm, xK_k), windows W.focusUp >> myUpdatePointer),
