@@ -3,6 +3,8 @@ alias q="exit"
 alias r="ranger-cd"
 alias lsmnt="findmnt"
 
+alias cdiff="colordiff"
+
 alias l='ls -a'
 alias ll='ls -la'
 
