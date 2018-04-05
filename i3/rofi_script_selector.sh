@@ -20,6 +20,7 @@ scripts=("xrandr-invert-colors"
          "transset-df -a 0.99"
          "$HOME/prog_mode_toggle.sh"
          "$HOME/prog_mode_toggle.sh swetoggle"
+         'notify-send "$(xtitle)"'
         )
 
 names=("Invert colors"
@@ -42,6 +43,7 @@ names=("Invert colors"
        "Set transparency to 99%"
        "Program mode toggle"
        "Program mode swedish toggle"
+       "Show xtitle"
       )
 
 # eller printf '%s\n' "${names[@]}"
