@@ -38,7 +38,7 @@ conky.config = {
     top_name_width = 10,
 
     use_xft = true,
-    font = 'DejaVu Sans Mono:style=bold:size=14',
+    font = 'DejaVu Sans Mono:style=bold:size=12',
     gap_x = 50,
     gap_y = 100,
     minimum_height = 5,
@@ -87,7 +87,6 @@ conky.text = [[
 ${alignc}$kernel
 ${alignc}${uptime}
 $hr
-${color1}${alignc}File systems:$color
  $color1/$color    $color${fs_used_perc /}%$color1/$color${fs_size /} ${fs_bar 6 /}
  ${color1}data$color $color${fs_used_perc /media/data}%$color1/$color${fs_size /media/data} ${fs_bar 6 /media/data}
 $hr
