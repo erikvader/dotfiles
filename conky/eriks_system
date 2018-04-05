@@ -85,6 +85,7 @@ conky.text = [[
 # ${color}Uptime:$color $uptime
 # ${color}Swap Usage:$color $swap/$swapmax - $swapperc% ${swapbar 4}
 ${alignc}$kernel
+${alignc}${uptime}
 $hr
 ${color1}${alignc}File systems:$color
  $color1/$color    $color${fs_used_perc /}%$color1/$color${fs_size /} ${fs_bar 6 /}
