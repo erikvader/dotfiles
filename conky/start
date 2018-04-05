@@ -1,0 +1,5 @@
+#!/bin/bash
+
+conky -d -c "$HOME/.config/conky/eriks_metro"
+conky -d -c "$HOME/.config/conky/eriks_system"
+

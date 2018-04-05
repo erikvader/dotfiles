@@ -2,6 +2,6 @@
 
 ~/.fehbg
 if ! pgrep -x conky &>/dev/null; then
-    conky &
+    $HOME/.config/conky/start &
 fi
 

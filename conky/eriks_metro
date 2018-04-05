@@ -8,8 +8,6 @@ conky.config = {
     double_buffer = true,
     no_buffers = true,
     
-    text_buffer_size = 2048,
-    
     -- Window specifications
     own_window = true,
     own_window_class = 'conky',
