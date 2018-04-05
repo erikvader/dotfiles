@@ -93,8 +93,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
   M.fromList $
   [
     -- limitWindows
-    ((modm .|. mod1Mask, xK_h), decreaseLimit),
-    ((modm .|. mod1Mask, xK_l), increaseLimit),
+    ((modm, xK_y), decreaseLimit),
+    ((modm, xK_e), increaseLimit),
     ((modm, xK_c), toggleLimit),
     ((modm, xK_f), toggleFull),
 
