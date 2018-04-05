@@ -165,13 +165,14 @@ label-indicator-underline = ${colors.secondary}
 
 [module/filesystem]
 type = internal/fs
-interval = 25
+interval = 60
 
 mount-0 = /
-mount-1 = /home
-mount-2 = /invalid/mountpoint
+mount-1 = /media/data
 
-label-mounted = %mountpoint%: %percentage_free%%
+label-mounted-underline = #ffb52a
+
+label-mounted = %percentage_used%%
 
 label-unmounted = %mountpoint%: not mounted
 label-unmounted-foreground = ${colors.foreground-alt}
@@ -298,8 +299,8 @@ format-connected = <label-connected>
 format-connected-underline = #9f78e1
 format-disconnected-underline = ${self.format-connected-underline}
 
-label-connected =  %essid:0:15:...%
-label-disconnected = %ifname% disconnected
+label-connected =  %essid:0:10:...%
+label-disconnected =  %ifname:0:10:...%
 label-disconnected-foreground = ${colors.foreground-alt}
 
 ramp-signal-0 = 5
@@ -354,7 +355,7 @@ label-volume-font = 0
 
 format-muted-prefix = " "
 format-muted-foreground = ${colors.foreground-alt}
-label-muted = sound muted
+label-muted = muted
 
 bar-volume-width = 10
 bar-volume-foreground-0 = #55aa55
