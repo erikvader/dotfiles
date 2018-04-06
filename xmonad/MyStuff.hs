@@ -1,13 +1,30 @@
 module Erik.MyStuff (
   rotLastUp, rotLastDown, rotLast',
   rotUp, rotDown,
-  onLayout
+  onLayout,
+  pointerDance
 ) where
 
 import XMonad
 import qualified XMonad.StackSet as W
 import qualified Data.Map as M
 import Data.List (find)
+import Control.Concurrent (threadDelay)
+import XMonad.Actions.Warp
+import Control.Monad
+
+-- pointerDance (num of loops) (delay in microseconds)
+pointerDance :: Int -> Int -> X ()
+pointerDance n t = sequence_ $ tail $ concat $ zipWith (\a b -> [a,b]) sleeps pos
+  where
+    pos = map (uncurry warpToWindow) $
+      concat (replicate n [
+      (0.2, 0.2),
+      (0.8, 0.2),
+      (0.8, 0.8),
+      (0.2, 0.8)
+      ]) ++ [(0.5, 0.5)]
+    sleeps = repeat (liftIO (threadDelay t))
 
 rotLastUp :: X ()
 rotLastUp = windows $ W.modify' (rotLast' rotUp)

@@ -123,7 +123,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. controlMask, xK_Print), spawn "$HOME/.i3/scrot_clipboard.sh -u"),
     ((modm .|. shiftMask .|. controlMask, xK_Print), spawn "$HOME/.i3/scrot_clipboard.sh -s"),
     -- flash
-    ((modm, xK_minus), spawn "$HOME/.i3/flasher.sh"),
+    -- ((modm, xK_minus), spawn "$HOME/.i3/flasher.sh"),
+
+    ((modm, xK_z), pointerDance 3 60000),
 
     -- toggle prog mode
     ((modm, xK_m), spawn "$HOME/prog_mode_toggle.sh"),
