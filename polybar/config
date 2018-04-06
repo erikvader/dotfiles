@@ -90,7 +90,7 @@ tray-position =
 
 i3-focused-underline = #008b8b
 
-modules-left = i3
+modules-left = xmonad
 modules-center =
 modules-right = date
 
