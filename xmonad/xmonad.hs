@@ -19,8 +19,9 @@ import XMonad.Prompt.ConfirmPrompt
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.EwmhDesktops
+import XMonad.Hooks.ManageHelpers
 
-import XMonad.Layout.Dwindle
+import qualified XMonad.Layout.Dwindle as Dwind
 import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
 import XMonad.Layout.Gaps
@@ -49,7 +50,7 @@ myModMask = mod4Mask
 
 myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9]
 
-myBaseLayouts = Tall 1 (3/100) (1/2) ||| renamed [Replace "OneBig"] (OneBig (3/4) (3/4)) ||| ThreeColMid 1 (3/100) (1/2) ||| mosaic 1.1 [3,2,2] ||| Grid ||| renamed [Replace "Spiral"] (Spiral R CW 1.4 1.1)
+myBaseLayouts = Tall 1 (3/100) (1/2) ||| renamed [Replace "OneBig"] (OneBig (3/4) (3/4)) ||| ThreeColMid 1 (3/100) (1/2) ||| mosaic 1.1 [3,2,2] ||| Grid ||| renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
 myBaseLayoutsNames = ["Tall", "OneBig", "ThreeCol", "Mosaic", "Grid", "Spiral"]
 
 lwLimit :: Int
@@ -300,7 +301,7 @@ baseConfig = desktopConfig {
 
 myConfig = baseConfig {
   layoutHook = avoidStruts myLayoutHook,
-  manageHook = manageDocks <+> manageHook baseConfig,
+  manageHook = composeAll [ isDialog --> doCenterFloat ] <+> manageDocks <+> manageHook baseConfig,
   startupHook = startupHook baseConfig <+> myStartupHook
   }
 
