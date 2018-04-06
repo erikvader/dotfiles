@@ -145,6 +145,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- launch a terminal
     ((modm, xK_Return), spawn $ XMonad.terminal conf),
     ((modm .|. shiftMask, xK_Return), spawn "emacsclient -nc"),
+    ((modm, xK_BackSpace), spawn "$HOME/.emacs_anywhere/bin/run"),
 
     -- toggle zoom
     -- ((modm, xK_f), sendMessage $ Toggle FULL),
@@ -163,8 +164,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- Resize viewed windows to the correct size
     ((modm, xK_n), refresh),
 
-    ((modm, xK_a), warpToWindow 1 1),
-    ((modm .|. shiftMask, xK_a), warpToWindow 0.5 0.5),
+    ((modm .|. shiftMask, xK_a), warpToWindow 1 1),
+    ((modm, xK_a), warpToWindow 0.5 0.5),
 
     -- Move focus to the previous window
     ((modm, xK_k), windows W.focusUp >> myUpdatePointer),
