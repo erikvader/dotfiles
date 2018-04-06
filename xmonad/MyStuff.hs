@@ -15,7 +15,7 @@ import Control.Monad
 
 -- pointerDance (num of loops) (delay in microseconds)
 pointerDance :: Int -> Int -> X ()
-pointerDance n t = sequence_ $ tail $ concat $ zipWith (\a b -> [a,b]) sleeps pos
+pointerDance n t = sequence_ $ tail $ (++[head sleeps]) . concat $ zipWith (\a b -> [a,b]) sleeps pos
   where
     pos = map (uncurry warpToWindow) $
       concat (replicate n [
