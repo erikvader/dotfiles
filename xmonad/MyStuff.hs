@@ -12,19 +12,34 @@ import Data.List (find)
 import Control.Concurrent (threadDelay)
 import XMonad.Actions.Warp
 import Control.Monad
+import System.Random
 
--- pointerDance (num of loops) (delay in microseconds)
+-- pointerDance (num of jumps) (delay in microseconds)
 pointerDance :: Int -> Int -> X ()
-pointerDance n t = sequence_ $ tail $ (++[head sleeps]) . concat $ zipWith (\a b -> [a,b]) sleeps pos
+pointerDance n t = do
+  pos <- warps
+  sequence_ $ tail $ (++[head sleeps]) . concat $ zipWith (\a b -> [a,b]) sleeps pos
   where
-    pos = map (uncurry warpToWindow) $
-      concat (replicate n [
-      (0.2, 0.2),
-      (0.8, 0.2),
-      (0.8, 0.8),
-      (0.2, 0.8)
-      ]) ++ [(0.5, 0.5)]
-    sleeps = repeat (liftIO (threadDelay t))
+    warps :: X [X ()]
+    warps = do
+      ls <- io $ rposes n [] 0 >>= return . (++ [(0.5, 0.5)])
+      return $ map (uncurry warpToWindow) (map (\(a, b) -> (toRational a, toRational b)) ls)
+
+    sleeps = repeat (io $ threadDelay t)
+
+    rposes :: Int -> [(Double, Double)] -> Int -> IO [(Double, Double)]
+    rposes 0 l _ = return l
+    rposes n l a = do
+      x <- randomRIO (0.1, 0.9)
+      y <- randomRIO (0.1, 0.9)
+      let t = (x, y) in case l of
+                          [] -> rposes (n-1) [t] a
+                          (x:xs) | a >= 3 || good t x -> rposes (n-1) (t:x:xs) 0
+                                 | otherwise          -> rposes n (x:xs) (a + 1)
+
+    good (x1, y1) (x2, y2) = ((x1-x2) ** 2) + ((y1-y2) ** 2) < (100 ** 2)
+
+
 
 rotLastUp :: X ()
 rotLastUp = windows $ W.modify' (rotLast' rotUp)

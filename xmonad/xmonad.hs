@@ -126,7 +126,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- flash
     -- ((modm, xK_minus), spawn "$HOME/.i3/flasher.sh"),
 
-    ((modm, xK_z), pointerDance 3 60000),
+    ((modm, xK_z), pointerDance 15 60000),
 
     -- toggle prog mode
     ((modm, xK_m), spawn "$HOME/prog_mode_toggle.sh"),
