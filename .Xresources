@@ -1,17 +1,22 @@
 !RXVT
-URxvt.background:   [80]#000000
-URxvt.foreground:	#DEDEDE
-URxvt.font:			xft:Ubuntu mono:pixelsize=16:antialias=true:hinting=true
-!URxvt.boldFont:		xft:DejaVu Sans Mono:bold:pixelsize=12:antialias=true:hinting=true
-URxvt.scrollBar:	false
+URxvt.background: [80]#000000
+URxvt.foreground: #DEDEDE
+URxvt.font:       xft:Ubuntu mono:pixelsize=18:antialias=true:hinting=true
+! URxvt.boldFont:   xft:Ubuntu mono:bold:pixelsize=14:antialias=true:hinting=true
+! URxvt.boldFont:		xft:DejaVu Sans Mono:bold:pixelsize=12:antialias=true:hinting=true
+URxvt.letterSpace: -1
+URxvt.scrollBar: false
 
 Xft*dpi:       96
 Xft*antialias: True
 Xft*hinting:   Full
 
-URxvt.saveLines:	65535
+URxvt.saveLines: 10000
 
-URxvt.cursorBlink: 1
+URxvt*skipBuiltinGlyphs: true
+
+! buggar ranger image preview
+! URxvt.cursorBlink: 1
 
 URxvt*depth: 32
 
@@ -25,7 +30,24 @@ URxvt*scrollWithBuffer: true
 URxvt*scrollTtyKeypress: true
 
 !samma colors som i xterm
-URxvt.color12: rgb:5c/5c/ff
+! URxvt.color12: rgb:5c/5c/ff
+
+URxvt.color0:  rgb:00/00/00
+URxvt.color1:  rgb:cc/00/00
+URxvt.color2:  rgb:4e/9a/06
+URxvt.color3:  rgb:c4/a0/00
+URxvt.color4:  rgb:34/65/a4
+URxvt.color5:  rgb:75/50/7b
+URxvt.color6:  rgb:06/98/9a
+URxvt.color7:  rgb:d3/d7/cf
+URxvt.color8:  rgb:55/57/53
+URxvt.color9:  rgb:ef/29/29
+URxvt.color10: rgb:8a/e2/34
+URxvt.color11: rgb:fc/e9/4f
+URxvt.color12: rgb:72/9f/cf
+URxvt.color13: rgb:ad/7f/a8
+URxvt.color14: rgb:34/e2/e2
+URxvt.color15: rgb:ee/ee/ec
 
 !disable jobbig keybind
 URxvt.iso14755: false
@@ -39,10 +61,19 @@ URxvt.clipboard.autocopy: true
 URxvt.perl-ext-common: default,resize-font,keyboard-select,clipboard
 
 URxvt.keysym.M-Escape: perl:keyboard-select:activate
-URxvt.keysym.M-s: perl:keyboard-select:search
-URxvt.keysym.M-c:   perl:clipboard:copy
-URxvt.keysym.M-v:   perl:clipboard:paste
-URxvt.keysym.M-C-v: perl:clipboard:paste_escaped
+URxvt.keysym.M-s:      perl:keyboard-select:search
+URxvt.keysym.C-C:      perl:clipboard:copy
+URxvt.keysym.C-V:      perl:clipboard:paste
+! URxvt.keysym.M-C-v:    perl:clipboard:paste_escaped
+URxvt.keysym.M-k:      eval:scroll_up 1
+URxvt.keysym.M-j:      eval:scroll_down 1
+URxvt.keysym.M-y:      eval:scroll_up 1
+URxvt.keysym.M-e:      eval:scroll_down 1
+URxvt.keysym.M-u:      eval:scroll_up_pages 0.5
+URxvt.keysym.M-d:      eval:scroll_down_pages 0.5
+URxvt.keysym.M-b:      eval:scroll_up_pages 1
+URxvt.keysym.M-f:      eval:scroll_down_pages 1
+URxvt.keysym.M-g:      eval:scroll_to_bottom
 
 !XTERM
 xterm.termName: xterm-256color

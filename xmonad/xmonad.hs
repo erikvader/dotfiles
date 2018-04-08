@@ -143,7 +143,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_at), setSpacing 0),
 
     -- launch a terminal
-    ((modm, xK_Return), spawn $ XMonad.terminal conf),
+    ((modm .|. mod1Mask, xK_Return), spawn $ XMonad.terminal conf),
+    ((modm, xK_Return), spawn "urxvt"),
     ((modm .|. shiftMask, xK_Return), spawn "emacsclient -nc"),
     ((modm, xK_BackSpace), spawn "$HOME/.emacs_anywhere/bin/run"),
 
