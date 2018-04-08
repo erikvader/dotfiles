@@ -1,9 +1,23 @@
 alias open="xdg-open"
 alias q="exit"
 alias r="ranger-cd"
+alias p="pcmanfm &!"
 alias lsmnt="findmnt"
 
 alias cdiff="colordiff"
+
+alias ao="xarchiver"
+
+# change output dir with -C
+# --keep-old-files, --keep-newer-files
+alias amt="tar -cvf"
+alias aut="tar -xvf"
+alias amtg="tar -zcvf"
+alias autg="tar -zxvf"
+
+# -c to write to stdout and pipe to other file
+alias amg="gzip"
+alias aug="gunzip"
 
 alias l='ls -a'
 alias ll='ls -la'
