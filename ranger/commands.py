@@ -61,6 +61,16 @@ class my_edit(Command):
         # content of the current directory.
         return self._tab_directory_content()
 
+class list_copied(Command):
+    """
+    :list_copied
+
+    Lists all files currently copied in less
+    """
+    def execute(self):
+        copied = [f.path for f in self.fm.copy_buffer]
+        self.fm.notify(copied)
+        self.fm.execute_console("shell echo -e '" + '\n'.join(copied) + "' | less")
 
 class toggle_flat(Command):
     """
