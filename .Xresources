@@ -3,7 +3,8 @@ URxvt.background: [80]#000000
 URxvt.foreground: #DEDEDE
 URxvt.font:       xft:Ubuntu mono:pixelsize=18:antialias=true:hinting=true
 ! URxvt.boldFont:   xft:Ubuntu mono:bold:pixelsize=14:antialias=true:hinting=true
-! URxvt.boldFont:		xft:DejaVu Sans Mono:bold:pixelsize=12:antialias=true:hinting=true
+! URxvt.boldFont: xft:DejaVu Sans Mono:bold:pixelsize=12:antialias=true:hinting=true
+
 URxvt.letterSpace: -1
 URxvt.scrollBar: false
 
