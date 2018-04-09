@@ -1,6 +1,5 @@
-rofi.opacity: 85
+# rofi.opacity: 85
 rofi.bw: 0
-##State:      ´bg´,     ´fg´,     ´bgalt´,  ´hlbg´,   ´hlfg´
-rofi.color-normal: #000000,#f3f4f5,#000000,#ff69b4,#f3f4f5
-rofi.color-window: #000000,#ff69b4
-
+##State:           ´bg´,      ´fg´,    ´bgalt´,   ´hlbg´,  ´hlfg´
+rofi.color-normal: #00000000, #f3f4f5, #00000000, #ff69b4, #f3f4f5
+rofi.color-window: #d8000000, #ff69b4

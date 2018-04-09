@@ -276,7 +276,7 @@ card = intel_backlight
 [module/cpu]
 type = internal/cpu
 interval = 2
-format-prefix = " "
+format-prefix = " "
 format-prefix-foreground = ${colors.foreground}
 format-underline = #f90000
 label = %{A1:gnome-system-monitor:}%percentage%%%{A}
