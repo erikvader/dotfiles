@@ -11,7 +11,7 @@ module Erik.MyLimitWindows (
 
     visible,stackSize,
 
-    rotateVisibleDown,rotateVisibleUp,rotateFocHiddenUp,rotateFocHiddenDown
+    rotateVisibleDown,rotateVisibleUp,rotateFocHiddenUp,rotateFocHiddenDown,bury
     ) where
 
 import XMonad.Layout.LayoutModifier
@@ -19,7 +19,7 @@ import XMonad
 import qualified XMonad.StackSet as W
 import Control.Monad((<=<),guard,when)
 import Control.Applicative((<$>))
-import Data.Maybe(fromJust,isJust)
+import Data.Maybe(fromJust,isJust,isNothing)
 import qualified XMonad.Util.ExtensibleState as XS
 import qualified Data.Map.Lazy as Map
 import Erik.MyStuff (rotUp,rotDown)
@@ -63,7 +63,7 @@ instance StackSize (W.Stack a) where
 
 instance StackSize (HiddenStack a) where
   stackSize Nothing              = 0
-  stackSize (Just (s, (l1, l2))) = (stackSize (Just s)) + (length l1) + (length l2)
+  stackSize (Just (s, (l1, l2))) = stackSize (Just s) + length l1 + length l2
 
 -- rotate the currently focused window with all hidden ones
 rotateFocHiddenUp :: X ()
@@ -119,6 +119,27 @@ toggleFull = sendMessage LimitFull
 -- toggle this feature on or off
 toggleLimit :: X ()
 toggleLimit = sendMessage LimitToggle
+
+-- Moves the focused window into hidden
+bury :: X ()
+bury = do
+  state <- getCurrentState
+  case state of
+    Nothing -> return ()
+    (Just (l, f, o)) | f || l == 1 -> return ()
+                     | otherwise -> do
+                         size <- stackSize . W.stack . W.workspace . W.current <$> gets windowset
+                         when o $ setLimit size >> toggleLimit
+                         when (not o && l > size) $ setLimit size
+                         modifyHidden putLast
+                         decreaseLimit
+  where
+    putLast :: HiddenStack a -> HiddenStack a
+    putLast (s, hid) | null (W.down s) = (W.focusUp' s, hid)
+    putLast (W.Stack f u d, hid) = (W.Stack f' u d', hid)
+      where (f':d') = rotUp (f:d)
+
+
 
 -- | Only display the first @n@ windows.
 -- n, full and off are the default values
