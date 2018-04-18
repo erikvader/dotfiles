@@ -1,6 +1,8 @@
 {-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-missing-signatures #-}
 
 import System.Exit
+import Data.Bits (testBit)
+import Control.Monad (unless)
 
 import Codec.Binary.UTF8.String as UTF8
 
@@ -88,7 +90,18 @@ myStartupHook =
   spawnOnce "emacs --daemon" <+>
   initStates myWorkspaces lwLimit False True -- limitWindows
 
-myUpdatePointer = updatePointer (0.5, 0.5) (0.25, 0.25)
+-- Do the same thing as XMonad.Actions.UpdatePointer, except that it
+-- also checks whether a mouse button is currently pressed. If one is
+-- pressed, then that probably means that something is being dragged,
+-- and if something is being dragged we don't want the cursor to jump
+-- all over the place. So if a mouse button is pressed, this does
+-- nothing.
+myUpdatePointer = do
+  dpy <- asks display
+  root <- asks theRoot
+  (_,_,_,_,_,_,_,m) <- io $ queryPointer dpy root
+  unless (testBit m 9 || testBit m 8 || testBit m 10) $
+    updatePointer (0.5, 0.5) (0.25, 0.25)
 
 myKeys conf@XConfig {XMonad.modMask = modm} =
   M.fromList $
@@ -170,21 +183,21 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_a), warpToWindow 0.5 0.5),
 
     -- Move focus to the previous window
-    ((modm, xK_k), windows W.focusUp >> myUpdatePointer),
+    ((modm, xK_k), windows W.focusUp),
 
-    ((modm, xK_j), windows W.focusDown >> myUpdatePointer),
+    ((modm, xK_j), windows W.focusDown),
 
     -- Move focus to the master window
-    ((modm, xK_b), windows W.focusMaster >> myUpdatePointer),
+    ((modm, xK_b), windows W.focusMaster),
 
     -- Swap the focused window and the master window
-    ((modm .|. shiftMask, xK_b), windows W.swapMaster >> myUpdatePointer),
+    ((modm .|. shiftMask, xK_b), windows W.swapMaster),
 
     -- Swap the focused window with the next window
-    ((modm .|. shiftMask, xK_j), windows W.swapDown >> myUpdatePointer),
+    ((modm .|. shiftMask, xK_j), windows W.swapDown),
 
     -- Swap the focused window with the previous window
-    ((modm .|. shiftMask, xK_k), windows W.swapUp >> myUpdatePointer),
+    ((modm .|. shiftMask, xK_k), windows W.swapUp),
 
     -- Shrink the master area
     ((modm, xK_h), sendMessage Shrink),
@@ -225,7 +238,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- mod-[1..9], Switch to workspace N
     -- mod-shift-[1..9], Move client to workspace N
     --
-    [((m .|. modm, k), windows (f i) >> myUpdatePointer)
+    [((m .|. modm, k), windows (f i))
         | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
         , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
     ++
@@ -238,7 +251,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- mod-{F1,F2,f3}, Switch to physical/Xinerama screens 1, 2, or 3
     -- mod-shift-{F1,F2,f3}, Move client to screen 1, 2, or 3
     --
-    [((m .|. modm, key), screenWorkspace sc >>= flip whenJust (windows . f) >> myUpdatePointer)
+    [((m .|. modm, key), screenWorkspace sc >>= flip whenJust (windows . f))
         | (key, sc) <- zip [xK_F1, xK_F2, xK_F3] [0..]
         , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
 
@@ -305,7 +318,8 @@ baseConfig = desktopConfig {
 myConfig = baseConfig {
   layoutHook = avoidStruts myLayoutHook,
   manageHook = composeAll [ isDialog --> doCenterFloat ] <+> manageDocks <+> manageHook baseConfig,
-  startupHook = startupHook baseConfig <+> myStartupHook
+  startupHook = startupHook baseConfig <+> myStartupHook,
+  logHook = logHook baseConfig >> myUpdatePointer
   }
 
 main :: IO ()
