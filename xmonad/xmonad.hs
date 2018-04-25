@@ -150,6 +150,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_plus), spawn "$HOME/.i3/display_updater.sh"),
     ((modm, xK_grave), spawn "pkill -USR1 '^redshift$'"),
     ((modm, xK_apostrophe), spawn "xrandr-invert-colors"),
+    ((modm, xK_asciicircum), spawn "pkill compton"),
 
     -- gaps
     ((modm, xK_bracketleft), incSpacing (-1)),
