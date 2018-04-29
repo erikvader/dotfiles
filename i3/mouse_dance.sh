@@ -10,7 +10,11 @@ fi;
 
 
 # get info of focused window
-eval $(xdotool getactivewindow getwindowgeometry --shell)
+res=$(xdotool getactivewindow getwindowgeometry --shell)
+if [[ $? -ne 0 ]]; then
+    exit $?
+fi;
+eval $res
 curwindow="$WINDOW"
 curx="$X"
 cury="$Y"
