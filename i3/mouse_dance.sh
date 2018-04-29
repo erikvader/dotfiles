@@ -18,7 +18,11 @@ curw="$WIDTH"
 curh="$HEIGHT"
 
 # move to middle
-xdotool mousemove --clearmodifiers $(($curx + $curw / 2)) $(($cury + $curh / 2))
+function jumpToMiddle {
+    xdotool mousemove --clearmodifiers $(($curx + $curw / 2)) $(($cury + $curh / 2))
+}
+
+jumpToMiddle
 
 # test_dist x1 y1 x2 y2 d
 function testDist {
@@ -57,6 +61,7 @@ while true; do
 
     # moved during sleep? then exit
     if [[ $rx -ne -1 && $ry -ne -1 && ($rx -ne $X || $ry -ne $Y) ]]; then
+        jumpToMiddle
         break;
     fi;
 
