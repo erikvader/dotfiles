@@ -1,8 +1,8 @@
 module Erik.MyStuff (
   rotLastUp, rotLastDown, rotLast',
   rotUp, rotDown,
-  onLayout,
-  pointerDance
+  onLayout
+  -- pointerDance
 ) where
 
 import XMonad
@@ -15,29 +15,29 @@ import Control.Monad
 import System.Random
 
 -- pointerDance (num of jumps) (delay in microseconds)
-pointerDance :: Int -> Int -> X ()
-pointerDance n t = do
-  pos <- warps
-  sequence_ $ tail $ (++[head sleeps]) . concat $ zipWith (\a b -> [a,b]) sleeps pos
-  where
-    warps :: X [X ()]
-    warps = do
-      ls <- io $ rposes n [] 0 >>= return . (++ [(0.5, 0.5)])
-      return $ map (uncurry warpToWindow) (map (\(a, b) -> (toRational a, toRational b)) ls)
+-- pointerDance :: Int -> Int -> X ()
+-- pointerDance n t = do
+--   pos <- warps
+--   sequence_ $ tail $ (++[head sleeps]) . concat $ zipWith (\a b -> [a,b]) sleeps pos
+--   where
+--     warps :: X [X ()]
+--     warps = do
+--       ls <- io $ rposes n [] 0 >>= return . (++ [(0.5, 0.5)])
+--       return $ map (uncurry warpToWindow) (map (\(a, b) -> (toRational a, toRational b)) ls)
 
-    sleeps = repeat (io $ threadDelay t)
+--     sleeps = repeat (io $ threadDelay t)
 
-    rposes :: Int -> [(Double, Double)] -> Int -> IO [(Double, Double)]
-    rposes 0 l _ = return l
-    rposes n l a = do
-      x <- randomRIO (0.1, 0.9)
-      y <- randomRIO (0.1, 0.9)
-      let t = (x, y) in case l of
-                          [] -> rposes (n-1) [t] a
-                          (x:xs) | a >= 3 || good t x -> rposes (n-1) (t:x:xs) 0
-                                 | otherwise          -> rposes n (x:xs) (a + 1)
+--     rposes :: Int -> [(Double, Double)] -> Int -> IO [(Double, Double)]
+--     rposes 0 l _ = return l
+--     rposes n l a = do
+--       x <- randomRIO (0.1, 0.9)
+--       y <- randomRIO (0.1, 0.9)
+--       let t = (x, y) in case l of
+--                           [] -> rposes (n-1) [t] a
+--                           (x:xs) | a >= 3 || good t x -> rposes (n-1) (t:x:xs) 0
+--                                  | otherwise          -> rposes n (x:xs) (a + 1)
 
-    good (x1, y1) (x2, y2) = ((x1-x2) ** 2) + ((y1-y2) ** 2) < (100 ** 2)
+--     good (x1, y1) (x2, y2) = ((x1-x2) ** 2) + ((y1-y2) ** 2) < (100 ** 2)
 
 
 
