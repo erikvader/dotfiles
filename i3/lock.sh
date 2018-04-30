@@ -10,4 +10,4 @@
 # i3lock -i "$SCREEN"
 # rm "$SCREEN"
 
-i3lock -i "$HOME/Pictures/lock_img.png"
+i3lock -i "$HOME/.lock"

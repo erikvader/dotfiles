@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 out1='eDP1'
 out2='HDMI1'
@@ -23,4 +23,4 @@ fi
 
 pkill conky
 while pgrep -x conky >/dev/null; do sleep 1; done
-"$HOME/.config/conky/start" &
+"$HOME/.start_conky" &!
