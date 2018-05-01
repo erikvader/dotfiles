@@ -19,16 +19,10 @@ alias autg="tar -zxvf"
 alias amg="gzip"
 alias aug="gunzip"
 
-alias l='ls -a'
-alias ll='ls -la'
+alias l='ls -A'
+alias ll='ls -lA'
 
 alias ec="emacsclient -n -c"
-
-#mvlink .inputrc Dropbox/
-function mvlink {
-    mv "$1" "$2"
-    ln -s "$2" "$1"
-}
 
 # alias copycmakefile="cp /home/erik/dotfiles/makefiles/c-makefile makefile"
 function copymake {
@@ -36,7 +30,32 @@ function copymake {
 }
 
 function mounterik {
-    sudo mount -t cifs "//192.168.1.$1/$2" "$3" -o user='erik rimskog'
+    if [[ $# -eq 0 ]]; then
+        echo "give me arguments plz" 1>&2
+        return 1
+    fi
+    ip="$(nmblookup ERIKRIMSKOG | grep '192.168.1' | cut -d' ' -f1)"
+    if ! [[ -n "$ip" && "${pipestatus[1]}" -eq 0 ]]; then
+        echo "couldn't find an ip" 1>&2
+        return 1
+    fi
+    sudo mkdir -p "/media/ERIKRIMSKOG/$1" &>/dev/null
+    if ! [[ -d "/media/ERIKRIMSKOG/$1" ]]; then
+        echo "failed to create dir" 1>&2
+        return 1
+    fi
+    sudo mount -t cifs "//$ip/$1" "/media/ERIKRIMSKOG/$1" -o user='erik rimskog'
+    cd "/media/ERIKRIMSKOG/$1"
+}
+
+function umounterik {
+    if [[ $# -eq 0 ]]; then
+        echo "give me arguments plz" 1>&2
+        return 1
+    fi
+    sudo umount -lf "/media/ERIKRIMSKOG/$1"
+    [[ -z "$(ls -A -1 /media/ERIKRIMSKOG/$1)" ]] && sudo rmdir "/media/ERIKRIMSKOG/$1"
+    [[ -z "$(ls -A -1 /media/ERIKRIMSKOG)" ]] && sudo rmdir "/media/ERIKRIMSKOG"
 }
 
 function mkdircd {
