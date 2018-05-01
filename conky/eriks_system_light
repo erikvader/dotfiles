@@ -71,12 +71,12 @@ conky.config = {
     -- minimum_width = 450,
     -- minimum_size = 280,
 
-	default_color = 'ffffff',
+	default_color = 'ebebeb',
     default_outline_color = 'white',
     default_shade_color = 'white',
 
-    color0 = 'ffffff',
-    color1 = 'ffffff'
+    color0 = 'ebebeb',
+    color1 = 'ebebeb'
 }
 
 conky.text = [[

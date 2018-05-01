@@ -35,7 +35,7 @@ conky.config = {
     
     uppercase = false,
     
-    default_color = 'ffffff',
+    default_color = 'ebebeb',
     
     top_cpu_separate = false,
 };

@@ -23,6 +23,8 @@ scripts=("xrandr-invert-colors"
          "$HOME/prog_mode_toggle.sh"
          "$HOME/prog_mode_toggle.sh swetoggle"
          'notify-send "$(xtitle)"'
+         "$HOME/dotfiles/themes/theme_select_rofi.sh"
+         "blurlock"
         )
 
 names=("Invert colors"
@@ -48,6 +50,8 @@ names=("Invert colors"
        "Program mode toggle"
        "Program mode swedish toggle"
        "Show xtitle"
+       "Change theme"
+       "Lock"
       )
 
 # eller printf '%s\n' "${names[@]}"

@@ -19,8 +19,10 @@ else
     xrandr --output "$out1" --auto --primary --output "$out2" --off && ~/.config/polybar/run_polybar.sh "$out1"
     notify-send "$out2 deactivated"
 fi
-~/.fehbg
+
+"$HOME/.start_feh" &!
 
 pkill conky
 while pgrep -x conky >/dev/null; do sleep 1; done
 "$HOME/.start_conky" &!
+

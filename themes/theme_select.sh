@@ -5,7 +5,7 @@ cur="$theme_dir/$1"
 
 case "$1" in
     -l)
-        find "$theme_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n'
+        find -L "$theme_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n'
         exit 0
         ;;
     "")
@@ -15,12 +15,13 @@ case "$1" in
         if ! [[ -d "$cur" ]]; then
             echo "$1 is not a directory"
             exit 1
-        fi;
+        fi
         ;;
-esac;
+esac
 
 # change bg
-"$cur/feh"
+ln -sf "$cur/feh" "$HOME/.start_feh"
+"$HOME/.start_feh" &!
 
 # change lock
 ln -sf "$cur/lock.png" "$HOME/.lock"

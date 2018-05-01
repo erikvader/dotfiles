@@ -152,6 +152,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_apostrophe), spawn "xrandr-invert-colors"),
     ((modm, xK_asciicircum), spawn "pkill compton"),
 
+    ((modm, xK_minus), spawn "theme_select safe"),
+
     -- gaps
     ((modm, xK_bracketleft), incSpacing (-1)),
     ((modm, xK_bracketright), incSpacing 1),
