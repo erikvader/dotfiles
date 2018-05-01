@@ -6,14 +6,14 @@ if ! [[ $1 ]]; then
     sleep=0.04
 else
     sleep=$1
-fi;
+fi
 
 
 # get info of focused window
 res=$(xdotool getactivewindow getwindowgeometry --shell)
 if [[ $? -ne 0 ]]; then
     exit $?
-fi;
+fi
 eval $res
 curwindow="$WINDOW"
 curx="$X"
@@ -51,23 +51,23 @@ function moveNext {
         rx=$(shuf -i $minx-$maxx -n 1)
         ry=$(shuf -i $miny-$maxy -n 1)
         if testDist $1 $2 $rx $ry 100; then
-            break;
-        fi;
-    done;
+            break
+        fi
+    done
 }
 
 while true; do
     # move to random within window
     eval $(xdotool getmouselocation --shell)
-    if [[ $curwindow -ne $WINDOW ]]; then
-        break;
-    fi;
+    if [[ $curwindow != $WINDOW ]]; then
+        break
+    fi
 
     # moved during sleep? then exit
     if [[ $rx -ne -1 && $ry -ne -1 && ($rx -ne $X || $ry -ne $Y) ]]; then
         jumpToMiddle
-        break;
-    fi;
+        break
+    fi
 
     moveNext $X $Y
     xdotool mousemove --clearmodifiers --sync $rx $ry
@@ -75,4 +75,4 @@ while true; do
     # sleep
     sleep $sleep
 
-done;
+done
