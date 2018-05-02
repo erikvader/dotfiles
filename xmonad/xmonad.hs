@@ -143,8 +143,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_z), spawn "mouse_dance"),
 
     -- toggle prog mode
-    ((modm, xK_m), spawn "$HOME/prog_mode_toggle.sh"),
-    ((modm .|. shiftMask, xK_m), spawn "$HOME/prog_mode_toggle.sh swetoggle"),
+    ((modm .|. shiftMask, xK_m), spawn "$HOME/prog_mode_toggle.sh"),
+    ((modm, xK_m), spawn "$HOME/prog_mode_toggle.sh swetoggle"),
 
     -- display stuff
     ((modm, xK_plus), spawn "$HOME/.i3/display_updater.sh"),
