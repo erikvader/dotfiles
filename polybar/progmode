@@ -13,10 +13,18 @@ function printStatus {
 }
 
 
-trap "printStatus" SIGUSR1
+trap 'printStatus' USR1
+# samma för SIGQUIT?
+trap 'trap "" TERM EXIT; kill 0; trap - INT TERM; kill -INT $$' INT
+trap "kill 0" EXIT
+
+# doesn't kill itself with INT, but it should
+# trap "exit" INT TERM
+# trap "kill 0" EXIT
 
 printStatus
-while true; do
-    sleep infinity &
-    wait $!
+sleep infinity & # SIGINT och SIGQUIT funkar inte på denna eftersom den är i background i ett icke-interaktivt bash-läge
+spid=$!
+while kill -0 $spid &>/dev/null; do
+    wait $spid &>/dev/null # om vi waitar måste alla barn dö innan vi själva dör, om vi får en SIGINT eller SIGQUIT
 done
