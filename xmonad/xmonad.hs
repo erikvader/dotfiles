@@ -243,10 +243,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     --
     [((m .|. modm, k), windows (f i))
         | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
-        , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
+        , (f, m) <- [(W.view, 0), (\i -> W.view i . W.shift i, shiftMask), (W.shift, controlMask)]]
     ++
 
-    [((modm .|. controlMask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
+    [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
 
     ++
 
@@ -256,7 +256,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     --
     [((m .|. modm, key), screenWorkspace sc >>= flip whenJust (windows . f))
         | (key, sc) <- zip [xK_F1, xK_F2, xK_F3] [0..]
-        , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
+        , (f, m) <- [(W.view, 0), (\i -> W.view i . W.shift i, shiftMask), (W.shift, controlMask)]]
 
 -- limitWindows
 logWindowCount :: X (Maybe String)
