@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function printStatus {
-    contents="$(cat ~/.program_mode)"
+    contents="$(cat "$HOME/.program_mode")"
     if [ "$contents" == "on" ]; then
         echo "P"
     elif [ "$contents" == "swe" ]; then
@@ -25,6 +25,7 @@ trap "kill 0" EXIT
 printStatus
 sleep infinity & # SIGINT och SIGQUIT funkar inte på denna eftersom den är i background i ett icke-interaktivt bash-läge
 spid=$!
-while kill -0 $spid &>/dev/null; do
-    wait $spid &>/dev/null # om vi waitar måste alla barn dö innan vi själva dör, om vi får en SIGINT eller SIGQUIT
+# kill -0 $spid &>/dev/null
+while ps -p $spid &>/dev/null; do
+    wait $spid &>/dev/null # om vi waitar måste alla barn dö innan vi själva dör, om vi får en SIGINT eller SIGQUIT (??? källa på det). Vi fastnar i en oändlig loop av kill(sigint) till oss själva iaf (se strace)
 done
