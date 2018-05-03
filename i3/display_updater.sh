@@ -26,3 +26,7 @@ pkill conky
 while pgrep -x conky >/dev/null; do sleep 1; done
 "$HOME/.start_conky" &!
 
+# eftersom en extern monitor blir svart om inte compton startas om
+pkill compton
+while pgrep -x compton >/dev/null; do sleep 1; done
+compton -b

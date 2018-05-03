@@ -70,7 +70,7 @@ myStartupHook =
   spawnOnce "pa-applet" <+>
   spawnOnce "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1" <+>
   spawn "$HOME/.i3/display_updater.sh" <+>
-  spawnOnce "compton -b" <+>
+  -- spawnOnce "compton -b" <+>
   spawnOnce "nm-applet" <+>
   spawnOnce "xfce4-power-manager" <+>
   spawnOnce "pamac-tray" <+>
