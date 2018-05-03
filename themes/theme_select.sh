@@ -4,6 +4,14 @@ theme_dir="$HOME/themes"
 cur="$theme_dir/$1"
 
 case "$1" in
+    -s)
+        "$0" "safe"
+        exit
+        ;;
+    -r)
+        "$0" "$(shuf -n1 <<< "$("$0" -l)")"
+        exit
+        ;;
     -l)
         find -L "$theme_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n'
         exit 0
