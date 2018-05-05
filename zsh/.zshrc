@@ -106,11 +106,13 @@ TRAPWINCH() {
 }
 
 zle -N zle-keymap-select
-zle -N edit-command-line
-
 # bindkey -v
+# zle -N edit-command-line
 
 export KEYTIMEOUT=1
+
+bindkey '^b' vi-backward-blank-word
+bindkey '^f' vi-forward-blank-word
 
 # # allow v to edit the command line (standard behaviour)
 # autoload -Uz edit-command-line
