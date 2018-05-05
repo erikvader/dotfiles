@@ -8,6 +8,7 @@ module Erik.MyLimitWindows (
     LimitWindows,
 
     initStates,getCurrentState,
+    LimitState(..),
 
     visible,stackSize,
 
@@ -21,7 +22,7 @@ import Control.Monad((<=<),guard,when)
 import Control.Applicative((<$>))
 import Data.Maybe(fromJust,isJust,isNothing)
 import qualified XMonad.Util.ExtensibleState as XS
-import qualified Data.Map.Lazy as Map
+import qualified Data.Map.Strict as Map
 import Erik.MyStuff (rotUp,rotDown)
 
 -- $usage
@@ -90,10 +91,11 @@ rotateVisible dir (s@(W.Stack _ u _), hid) = (diffN (length u) (dir (W.integrate
 modifyHidden :: (HiddenStack Window -> HiddenStack Window) -> X ()
 modifyHidden f = do
   state <- getCurrentState
-  mapM_ (\(l, fu, o) -> windows (W.modify' (\s -> let actualVisible | fu = 1
-                                                                    | o  = 0
-                                                                    | otherwise = l
-                                                  in arcVisible $ f (visible actualVisible s)))) state
+  mapM_ (\LimitState{sfull = fu, soff = o, slimit = l} ->
+           windows (W.modify' (\s -> let actualVisible | fu = 1
+                                                       | o  = 0
+                                                       | otherwise = l
+                                     in arcVisible $ f (visible actualVisible s)))) state
 
 -- same as W.differentiate but can choose which window that is focused
 diffN :: Int -> [a] -> W.Stack a
@@ -126,20 +128,18 @@ bury = do
   state <- getCurrentState
   case state of
     Nothing -> return ()
-    (Just (l, f, o)) | f || l == 1 -> return ()
-                     | otherwise -> do
-                         size <- stackSize . W.stack . W.workspace . W.current <$> gets windowset
-                         when o $ setLimit size >> toggleLimit
-                         when (not o && l > size) $ setLimit size
-                         modifyHidden putLast
-                         decreaseLimit
+    (Just LimitState{slimit = l, soff = o, sfull = f}) | f || l == 1 -> return ()
+                                                       | otherwise -> do
+                                                           size <- stackSize . W.stack . W.workspace . W.current <$> gets windowset
+                                                           when o $ setLimit size >> toggleLimit
+                                                           when (not o && l > size) $ setLimit size
+                                                           modifyHidden putLast
+                                                           decreaseLimit
   where
     putLast :: HiddenStack a -> HiddenStack a
     putLast (s, hid) | null (W.down s) = (W.focusUp' s, hid)
     putLast (W.Stack f u d, hid) = (W.Stack f' u d', hid)
       where (f':d') = rotUp (f:d)
-
-
 
 -- | Only display the first @n@ windows.
 -- n, full and off are the default values
@@ -162,8 +162,14 @@ data LimitWindows a = LimitWindows { lstyle :: SliceStyle,
                                      lfull  :: Bool,
                                      loff   :: Bool} deriving (Read,Show)
 
--- limit, full, off
-newtype LimitState = LimitState (Map.Map WorkspaceId (Int, Bool, Bool)) deriving (Read,Show)
+data LimitState = LimitState { slimit          :: Int,
+                               sfull           :: Bool,
+                               soff            :: Bool,
+                               shidden         :: Int,
+                               svisible        :: Int,
+                               sdetachedOffset :: Int } deriving (Read,Show)
+
+newtype LimitStates = LimitStates (Map.Map WorkspaceId LimitState) deriving (Read, Show)
 
 data SliceStyle = FirstN | Slice deriving (Read,Show)
 
@@ -171,23 +177,19 @@ data LimitChange = LimitToggle | LimitFull | LimitChange { unLC :: Int -> Int } 
 
 instance Message LimitChange
 
-instance ExtensionClass LimitState where
-  initialValue = LimitState Map.empty
+instance ExtensionClass LimitStates where
+  initialValue = LimitStates Map.empty
 
 instance LayoutModifier LimitWindows a where
-  handleMess lw mes = do
-    x <- handleMess' lw mes
-    when (isJust x) (updateCurrentState $ fromJust x)
-    return x
+  handleMess lw@LimitWindows{..} mes
+    | Just LimitChange{unLC=f} <- fromMessage mes =
+        return $ do
+        newLimit <- (f `app` llimit) >>= pos
+        return $ lw { llimit = newLimit }
+    | Just LimitToggle <- fromMessage mes = return $ Just $ lw { loff  = not loff }
+    | Just LimitFull   <- fromMessage mes = return $ Just $ lw { lfull = not lfull }
+    | otherwise = return Nothing
     where
-      handleMess' lw@LimitWindows{..} mes
-        | Just LimitChange{unLC=f} <- fromMessage mes =
-            return $ do
-            newLimit <- (f `app` llimit) >>= pos
-            return $ lw { llimit = newLimit }
-        | Just LimitToggle <- fromMessage mes = return $ Just $ lw { loff  = not loff }
-        | Just LimitFull   <- fromMessage mes = return $ Just $ lw { lfull = not lfull }
-        | otherwise = return Nothing
       pos x   = guard (x>=1)     >> return x
       app f x = guard (f x /= x) >> return (f x)
 
@@ -198,22 +200,39 @@ instance LayoutModifier LimitWindows a where
             | otherwise = case lstyle of
                             FirstN -> firstN
 
+  hook = updateCurrentState
+
 -- returns the state for the current workspace if there is one
-getCurrentState :: X (Maybe (Int, Bool, Bool))
+getCurrentState :: X (Maybe LimitState)
 getCurrentState = do
   id <- W.tag . W.workspace . W.current <$> gets windowset
-  (LimitState states) <- XS.get
+  (LimitStates states) <- XS.get
   return $ Map.lookup id states
 
 updateCurrentState :: LimitWindows a -> X ()
 updateCurrentState lw = do
-  id <- W.tag . W.workspace . W.current <$> gets windowset
-  (LimitState old) <- XS.get
-  XS.put $ LimitState $ Map.insert id (llimit lw, lfull lw, loff lw) old
+  wor <- W.workspace . W.current <$> gets windowset
+  let id = W.tag wor
+      sta = W.stack wor
+      (s, (s1, s2)) = visibleSizes (if lfull lw then 1 else llimit lw) sta
+      newState = LimitState { slimit          = llimit lw,
+                              sfull           = lfull lw,
+                              soff            = loff lw,
+                              shidden         = s1 + s2,
+                              svisible        = s,
+                              sdetachedOffset = s1}
+  (LimitStates old) <- XS.get
+  XS.put $ LimitStates $ Map.insert id newState old
+    where visibleSizes _ Nothing = (0, (0, 0))
+          visibleSizes n (Just s) = (stackSize (Just h0), (length h1, length h2))
+            where (h0, (h1, h2)) = visible n s
 
 -- initialize the states as a extended state so we can access them easily
-initStates :: [WorkspaceId] -> Int -> Bool -> Bool -> X ()
-initStates ws l f o = XS.put $ LimitState $ Map.fromList [(k, (l,f,o)) | k <- ws]
+initStates :: Int -> Bool -> Bool -> X ()
+initStates l f o = do
+  ws <- W.workspaces <$> gets windowset
+  XS.put $ LimitStates $ Map.fromList [(W.tag k, LimitState { slimit = l, sfull = f, soff = o, shidden = 0, svisible = 0, sdetachedOffset = 0 }) | k <- ws]
+
 
 -- converts a normal stack to a HiddenStack, n is the amount of windows that should be visible
 -- on the screen

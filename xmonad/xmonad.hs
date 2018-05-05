@@ -10,8 +10,6 @@ import XMonad hiding ( (|||) )
 import XMonad.Config.Desktop
 
 import XMonad.Actions.UpdatePointer
-import XMonad.Actions.CycleWindows
-import XMonad.Actions.RotSlaves
 import XMonad.Actions.Warp
 
 import XMonad.Util.SpawnOnce
@@ -26,8 +24,6 @@ import XMonad.Hooks.ManageHelpers
 import qualified XMonad.Layout.Dwindle as Dwind
 import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
-import XMonad.Layout.Gaps
-import XMonad.Layout.TwoPane
 import XMonad.Layout.Grid
 import XMonad.Layout.Renamed
 import XMonad.Layout.LayoutCombinators
@@ -37,20 +33,18 @@ import XMonad.Layout.OneBig
 
 import Erik.Spacing
 import Erik.MyStuff
-import Erik.MyLimitWindows
+import qualified Erik.MyLimitWindows as L
 -- import XMonad.Layout.LimitWindows
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
-
-import Data.Maybe
 
 import qualified DBus as D
 import qualified DBus.Client as D
 
 myModMask = mod4Mask
 
-myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9]
+myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer]
 
 myBaseLayouts = Tall 1 (3/100) (1/2) ||| renamed [Replace "OneBig"] (OneBig (3/4) (3/4)) ||| ThreeColMid 1 (3/100) (1/2) ||| mosaic 1.1 [3,2,2] ||| Grid ||| renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
 myBaseLayoutsNames = ["Tall", "OneBig", "ThreeCol", "Mosaic", "Grid", "Spiral"]
@@ -59,7 +53,7 @@ lwLimit :: Int
 lwLimit = 3
 
 myLayoutHook =
-  limitWindows lwLimit False True $
+  L.limitWindows lwLimit False True $
   renamed [CutWordsLeft 2] $ -- remove smartspacing text
   smartSpacing 3 .
   mkToggle (single MIRROR) $
@@ -88,7 +82,7 @@ myStartupHook =
   spawnOnce "blueman-applet" <+>
   spawnOnce "google-chrome-stable" <+>
   spawnOnce "emacs --daemon" <+>
-  initStates myWorkspaces lwLimit False True -- limitWindows
+  L.initStates lwLimit False True -- limitWindows
 
 -- Do the same thing as XMonad.Actions.UpdatePointer, except that it
 -- also checks whether a mouse button is currently pressed. If one is
@@ -107,22 +101,22 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
   M.fromList $
   [
     -- limitWindows
-    ((modm, xK_y), decreaseLimit),
-    ((modm, xK_e), increaseLimit),
-    ((modm, xK_c), toggleLimit),
-    ((modm, xK_f), toggleFull),
+    ((modm, xK_y), L.decreaseLimit),
+    ((modm, xK_e), L.increaseLimit),
+    ((modm, xK_c), L.toggleLimit),
+    ((modm, xK_f), L.toggleFull),
 
     --cycle
     -- ((modm, xK_i), onLayout [("TwoPane", rotFocusedUp)] rotAllUp), --rotate current window in two pane pretty much
     -- ((modm, xK_u), onLayout [("TwoPane", rotFocusedDown)] rotAllDown),
-    ((modm, xK_i), rotateVisibleUp), --rotate current window in two pane pretty much
-    ((modm, xK_u), rotateVisibleDown),
+    ((modm, xK_i), L.rotateVisibleUp), --rotate current window in two pane pretty much
+    ((modm, xK_u), L.rotateVisibleDown),
     -- ((modm .|. shiftMask, xK_i), rotUnfocusedUp), --rotate all except the one with focus
     -- ((modm .|. shiftMask, xK_u), rotUnfocusedDown),
-    ((modm .|. shiftMask, xK_i), rotateFocHiddenUp),
-    ((modm .|. shiftMask, xK_u), rotateFocHiddenDown),
+    ((modm .|. shiftMask, xK_i), L.rotateFocHiddenUp),
+    ((modm .|. shiftMask, xK_u), L.rotateFocHiddenDown),
     -- ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
-    ((modm, xK_w), bury),
+    ((modm, xK_w), L.bury),
 
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),
@@ -259,27 +253,33 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
         , (f, m) <- [(W.view, 0), (\i -> W.view i . W.shift i, shiftMask), (W.shift, controlMask)]]
 
 -- limitWindows
+logDetachedHead :: X (Maybe String)
+logDetachedHead =
+  detach <$> L.getCurrentState
+    where detach Nothing = Just ""
+          detach (Just L.LimitState{L.sdetachedOffset=det})
+            | det > 0 = Just $ wrap "%{F#ff00ff}" "%{F-}" "d"
+            | otherwise = Just ""
+
+-- limitWindows
 logWindowCount :: X (Maybe String)
-logWindowCount = do
-  wc <- stackSize . W.stack . W.workspace . W.current <$> gets windowset
-  state <- getCurrentState
-  return $ warningNumber wc state
+logWindowCount =
+  -- wc <- L.stackSize . W.stack . W.workspace . W.current <$> gets windowset
+  warningNumber <$> L.getCurrentState
   where
-    warningNumber _ Nothing = Just ""
-    warningNumber open (Just (hidden, full, off))
-      | (full || not off) && actualHidden full > 0 = Just $ wrap "%{F#ff8c00}" "%{F-}" $ show $ actualHidden full
+    warningNumber Nothing = Just ""
+    warningNumber (Just L.LimitState{L.sfull=full, L.soff=off, L.shidden=hidden})
+      | (full || not off) && hidden > 0 = Just $ wrap "%{F#ff8c00}" "%{F-}" $ show hidden
       | otherwise = Just ""
-      where actualHidden False = open - hidden
-            actualHidden True  = open - 1
 
 -- limitWindows
 logWindowStatus :: X (Maybe String)
-logWindowStatus = status <$> getCurrentState
+logWindowStatus = status <$> L.getCurrentState
   where
-    status Nothing              = Just ""
-    status (Just (_, True, _))  = Just "Full "
-    status (Just (l, _, False)) = Just $ "Limit " ++ show l ++ " "
-    status _                    = Just ""
+    status Nothing                                       = Just ""
+    status (Just L.LimitState{L.sfull=True})             = Just "%{F#eeee00}Full %{F-}"
+    status (Just L.LimitState{L.slimit=l, L.soff=False}) = Just $ "%{F#eeee00}Limit " ++ show l ++ "%{F-} "
+    status _                                             = Just ""
 
 -- Override the PP values as you would otherwise, adding colors etc depending
 -- on  the statusbar used
@@ -294,8 +294,8 @@ myLogHook dbus = def
     ppWsSep = "",
     ppSep = " : ",
     ppTitle = shorten 40,
-    ppOrder = \(w:l:t:lwc:lwf:_) -> filter (not . null) [w, lwf ++ l, lwc, t],
-    ppExtras = [logWindowCount, logWindowStatus]
+    ppOrder = \(w:l:t:lwc:lwf:ldh:_) -> filter (not . null) [w, lwf ++ l, ldh, lwc, t],
+    ppExtras = [logWindowCount, logWindowStatus, logDetachedHead]
     }
 
 -- Emit a DBus signal on log updates
