@@ -64,7 +64,7 @@ myStartupHook =
   spawnOnce "pulseaudio" <+>
   spawnOnce "pa-applet" <+>
   spawnOnce "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1" <+>
-  spawn "$HOME/.i3/display_updater.sh" <+>
+  spawnOnce "display_updater startup" <+>
   -- spawnOnce "compton -b" <+>
   spawnOnce "nm-applet" <+>
   spawnOnce "xfce4-power-manager" <+>
@@ -82,7 +82,8 @@ myStartupHook =
   spawnOnce "redshift-gtk" <+>
   spawnOnce "blueman-applet" <+>
   spawnOnce "google-chrome-stable" <+>
-  spawnOnce "emacs --daemon"
+  spawnOnce "emacs --daemon" <+>
+  spawn "notify-send \"XMonad started/restarted\""
 
 -- Do the same thing as XMonad.Actions.UpdatePointer, except that it
 -- also checks whether a mouse button is currently pressed. If one is
@@ -141,7 +142,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_m), spawn "$HOME/prog_mode_toggle.sh swetoggle"),
 
     -- display stuff
-    ((modm, xK_plus), spawn "$HOME/.i3/display_updater.sh"),
+    ((modm, xK_plus), spawn "display_updater update"),
     ((modm, xK_grave), spawn "pkill -USR1 '^redshift$'"),
     ((modm, xK_apostrophe), spawn "xrandr-invert-colors"),
     ((modm, xK_asciicircum), spawn "pkill compton"),
