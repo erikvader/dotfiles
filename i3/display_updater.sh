@@ -12,12 +12,23 @@ out2='HDMI1'
 #     out2c="1"
 # fi
 
-if xrandr | grep -E "^$out2 connected"; then
-    xrandr --output "$out1" --auto --primary --output "$out2" --auto --right-of "$out1" && ~/.config/polybar/run_polybar.sh "$out1" "$out2"
+out2connected="$(xrandr | grep -qE "^$out2 connected"; echo $?)"
+out2displaying="$(getCRTC "$out2" &>/dev/null; echo $?)"
+
+if [[ "$out2connected" -eq 0 && "$out2displaying" -ne 0 ]]; then
+    xrandr --output "$out1" --auto --primary --output "$out2" --auto --right-of "$out1"
     notify-send "$out2 activated"
-else
-    xrandr --output "$out1" --auto --primary --output "$out2" --off && ~/.config/polybar/run_polybar.sh "$out1"
+elif [[ "$out2connected" -ne 0 && "$out2displaying" -eq 0 ]]; then
+    xrandr --output "$out1" --auto --primary --output "$out2" --off
     notify-send "$out2 deactivated"
+else
+    notify-send "nothing to do"
+fi
+
+if [[ "$out2connected" -eq 0 ]]; then
+    ~/.config/polybar/run_polybar.sh "$out1" "$out2"
+else
+    ~/.config/polybar/run_polybar.sh "$out1"
 fi
 
 "$HOME/.start_feh" &!
