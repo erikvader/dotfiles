@@ -15,6 +15,7 @@ conky=
 polybar=
 compton=
 screens=
+update=
 
 case "$1" in
     startup)
@@ -37,6 +38,7 @@ case "$1" in
         compton=true
         ;;
     update)
+        update=true
         screens=true
         compton=true
         feh=true
@@ -63,9 +65,11 @@ if [[ "$screens" ]]; then
         notify-send "$out2 deactivated"
     else
         notify-send "nothing to do"
-        compton=
-        feh=
-        polybar=
+        if [[ "$update" ]]; then
+            compton=
+            feh=
+            polybar=
+        fi
     fi
 fi
 
