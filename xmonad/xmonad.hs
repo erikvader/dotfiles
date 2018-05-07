@@ -13,6 +13,7 @@ import XMonad.Actions.UpdatePointer
 import XMonad.Actions.Warp
 
 import XMonad.Util.SpawnOnce
+import XMonad.Util.WorkspaceCompare
 
 import XMonad.Prompt.ConfirmPrompt
 
@@ -81,8 +82,7 @@ myStartupHook =
   spawnOnce "redshift-gtk" <+>
   spawnOnce "blueman-applet" <+>
   spawnOnce "google-chrome-stable" <+>
-  spawnOnce "emacs --daemon" <+>
-  L.initStates lwLimit False True -- limitWindows
+  spawnOnce "emacs --daemon"
 
 -- Do the same thing as XMonad.Actions.UpdatePointer, except that it
 -- also checks whether a mouse button is currently pressed. If one is
@@ -237,7 +237,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     --
     [((m .|. modm, k), windows (f i))
         | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
-        , (f, m) <- [(W.view, 0), (\i -> W.view i . W.shift i, shiftMask), (W.shift, controlMask)]]
+        , (f, m) <- [(W.view, 0), (\i -> W.view i . W.shift i, controlMask .|. shiftMask), (W.shift, controlMask), (W.greedyView, shiftMask)]]
     ++
 
     [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
@@ -252,50 +252,37 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
         | (key, sc) <- zip [xK_F1, xK_F2, xK_F3] [0..]
         , (f, m) <- [(W.view, 0), (\i -> W.view i . W.shift i, shiftMask), (W.shift, controlMask)]]
 
--- limitWindows
-logDetachedHead :: X (Maybe String)
-logDetachedHead =
-  detach <$> L.getCurrentState
-    where detach Nothing = Just ""
-          detach (Just L.LimitState{L.sdetachedOffset=det})
-            | det > 0 = Just $ wrap "%{F#ff00ff}" "%{F-}" "d"
-            | otherwise = Just ""
-
--- limitWindows
-logWindowCount :: X (Maybe String)
-logWindowCount =
-  -- wc <- L.stackSize . W.stack . W.workspace . W.current <$> gets windowset
-  warningNumber <$> L.getCurrentState
+logLimitWindows :: [X (Maybe String)]
+logLimitWindows =
+  map (<$> L.getCurrentState) [windowCount, status, detach]
   where
-    warningNumber Nothing = Just ""
-    warningNumber (Just L.LimitState{L.sfull=full, L.soff=off, L.shidden=hidden})
+    status L.LimitState{L.sfull=True}             = Just "%{F#eeee00}Full %{F-}"
+    status L.LimitState{L.slimit=l, L.soff=False} = Just $ "%{F#eeee00}Limit " ++ show l ++ "%{F-} "
+    status _                                      = Just ""
+
+    windowCount L.LimitState{L.sfull=full, L.soff=off, L.shidden=hidden}
       | (full || not off) && hidden > 0 = Just $ wrap "%{F#ff8c00}" "%{F-}" $ show hidden
       | otherwise = Just ""
 
--- limitWindows
-logWindowStatus :: X (Maybe String)
-logWindowStatus = status <$> L.getCurrentState
-  where
-    status Nothing                                       = Just ""
-    status (Just L.LimitState{L.sfull=True})             = Just "%{F#eeee00}Full %{F-}"
-    status (Just L.LimitState{L.slimit=l, L.soff=False}) = Just $ "%{F#eeee00}Limit " ++ show l ++ "%{F-} "
-    status _                                             = Just ""
+    detach L.LimitState{L.sdetachedOffset=det, L.sfull=full, L.soff=off}
+      | (full || not off) && det > 0 = Just $ wrap "%{F#ff00ff}" "%{F-}" "d"
+      | otherwise = Just ""
 
 -- Override the PP values as you would otherwise, adding colors etc depending
 -- on  the statusbar used
 myLogHook :: D.Client -> PP
--- myLogHook dbus = def { ppOutput = dbusOutput dbus }
 myLogHook dbus = def
     { ppOutput = dbusOutput dbus,
     ppCurrent = wrap "%{B#505050 F#dfdfdf U#ffb52a +u}  " "  %{B- F- -u}",
-    ppVisible = wrap "  " "  ",
+    ppVisible = wrap "%{B#505050 F#dfdfdf U#1e90ff +u}  " "  %{B- F- -u}",
     ppUrgent = wrap "%{B#bd2c40}  " "!  %{B-}",
     ppHidden = wrap "  " "  ",
     ppWsSep = "",
     ppSep = " : ",
     ppTitle = shorten 40,
+    ppSort = getSortByXineramaRule,
     ppOrder = \(w:l:t:lwc:lwf:ldh:_) -> filter (not . null) [w, lwf ++ l, ldh, lwc, t],
-    ppExtras = [logWindowCount, logWindowStatus, logDetachedHead]
+    ppExtras = logLimitWindows
     }
 
 -- Emit a DBus signal on log updates
@@ -317,6 +304,11 @@ baseConfig = desktopConfig {
   keys = myKeys,
   workspaces = myWorkspaces
   }
+
+-- hej :: X ()
+-- hej = do
+--   ss <- W.screens <$> gets windowset
+--   spawn $ "notify-send '" ++ (show $ length ss) ++ "'"
 
 myConfig = baseConfig {
   layoutHook = avoidStruts myLayoutHook,
