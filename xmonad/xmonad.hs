@@ -82,8 +82,7 @@ myStartupHook =
   spawnOnce "redshift-gtk" <+>
   spawnOnce "blueman-applet" <+>
   spawnOnce "google-chrome-stable" <+>
-  spawnOnce "emacs --daemon" <+>
-  spawn "notify-send \"XMonad started/restarted\""
+  spawnOnce "emacs --daemon"
 
 -- Do the same thing as XMonad.Actions.UpdatePointer, except that it
 -- also checks whether a mouse button is currently pressed. If one is
@@ -226,7 +225,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_0), confirmPrompt def "power off?" $ spawn "poweroff"),
 
     -- Restart xmonad
-    ((modm .|. shiftMask, xK_c), spawn "xmonad --recompile; xmonad --restart")
+    ((modm .|. shiftMask, xK_c), spawn "xmonad --recompile && (xmonad --restart; notify-send 'XMonad restarted') || notify-send 'Failed to compile'")
     ]
     ++
 
