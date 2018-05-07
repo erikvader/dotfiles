@@ -7,7 +7,7 @@ module Erik.MyLimitWindows (
 
     LimitWindows,
 
-    getCurrentState,
+    getCurrentState,updateCurrentState,
     LimitState(..),
 
     visible,stackSize,
@@ -190,11 +190,27 @@ instance LayoutModifier LimitWindows a where
         return $ lw { llimit = newLimit }
     | Just LimitToggle <- fromMessage mes = return $ Just $ lw { loff  = not loff }
     | Just LimitFull   <- fromMessage mes = return $ Just $ lw { lfull = not lfull }
-    | Just LimitQuery  <- fromMessage mes = updateCurrentState lw >> return Nothing
+    | Just LimitQuery  <- fromMessage mes = updateCurrentState >> return Nothing
     | otherwise = return Nothing
     where
       pos x   = guard (x>=1)     >> return x
       app f x = guard (f x /= x) >> return (f x)
+      updateCurrentState :: X ()
+      updateCurrentState = do
+        wor <- W.workspace . W.current <$> gets windowset
+        let id = W.tag wor
+            sta = W.stack wor
+            (s, (s1, s2)) = visibleSizes (if lfull then 1 else llimit) sta
+            newState = LimitState { slimit          = llimit,
+                                    sfull           = lfull,
+                                    soff            = loff,
+                                    shidden         = s1 + s2,
+                                    svisible        = s,
+                                    sdetachedOffset = s1}
+        XS.put newState
+          where visibleSizes _ Nothing = (0, (0, 0))
+                visibleSizes n (Just s) = (stackSize (Just h0), (length h1, length h2))
+                  where (h0, (h1, h2)) = visible n s
 
   modifyLayout LimitWindows{..} ws r
     | lfull || not loff = runLayout ws { W.stack = f llimit <$> W.stack ws } r
@@ -203,28 +219,11 @@ instance LayoutModifier LimitWindows a where
             | otherwise = case lstyle of
                             FirstN -> firstN
 
--- returns the state for the current workspace if there is one
 getCurrentState :: X LimitState
-getCurrentState = do
-  sendMessage LimitQuery
-  XS.get
+getCurrentState = XS.get
 
-updateCurrentState :: LimitWindows a -> X ()
-updateCurrentState lw = do
-  wor <- W.workspace . W.current <$> gets windowset
-  let id = W.tag wor
-      sta = W.stack wor
-      (s, (s1, s2)) = visibleSizes (if lfull lw then 1 else llimit lw) sta
-      newState = LimitState { slimit          = llimit lw,
-                              sfull           = lfull lw,
-                              soff            = loff lw,
-                              shidden         = s1 + s2,
-                              svisible        = s,
-                              sdetachedOffset = s1}
-  XS.put newState
-    where visibleSizes _ Nothing = (0, (0, 0))
-          visibleSizes n (Just s) = (stackSize (Just h0), (length h1, length h2))
-            where (h0, (h1, h2)) = visible n s
+updateCurrentState :: X ()
+updateCurrentState = sendMessage LimitQuery
 
 -- converts a normal stack to a HiddenStack, n is the amount of windows that should be visible
 -- on the screen
