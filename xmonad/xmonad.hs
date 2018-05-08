@@ -3,6 +3,7 @@
 import System.Exit
 import Data.Bits (testBit)
 import Control.Monad (unless)
+import Data.List
 
 import Codec.Binary.UTF8.String as UTF8
 
@@ -272,18 +273,27 @@ logLimitWindows =
 -- on  the statusbar used
 myLogHook :: D.Client -> PP
 myLogHook dbus = def
-    { ppOutput = dbusOutput dbus,
-    ppCurrent = wrap "%{B#505050 F#dfdfdf U#ffb52a +u}  " "  %{B- F- -u}",
-    ppVisible = wrap "%{B#505050 F#dfdfdf U#1e90ff +u}  " "  %{B- F- -u}",
-    ppUrgent = wrap "%{B#bd2c40}  " "!  %{B-}",
-    ppHidden = wrap "  " "  ",
-    ppWsSep = "",
-    ppSep = " : ",
-    ppTitle = shorten 40,
-    ppSort = getSortByXineramaRule,
-    ppOrder = \(w:l:t:lwc:lwf:ldh:_) -> filter (not . null) [w, lwf ++ l, ldh, lwc, t],
-    ppExtras = logLimitWindows
+    { ppOutput = dbusOutput dbus . fixXinerama,
+      ppCurrent = wrap "%{B#505050 F#dfdfdf U#ffb52a +u}[  " "  ]%{B- F- -u}",
+      ppVisible = wrap "%{B#505050 F#dfdfdf U#1e90ff +u}[  " "  ]%{B- F- -u}",
+      ppUrgent = wrap "%{B#bd2c40}  " "!  %{B-}",
+      ppHidden = wrap "  " "  ",
+      ppWsSep = "",
+      ppSep = " : ",
+      ppTitle = shorten 40,
+      ppSort = getSortByXineramaRule,
+      ppOrder = \(w:l:t:lwc:lwf:ldh:_) -> filter (not . null) [w, lwf ++ l, ldh, lwc, t],
+      ppExtras = logLimitWindows
     }
+  where
+    fixXinerama :: String -> String
+    fixXinerama s = removeIndices 0 s $ tail . init $ findIndices (\c -> c == '[' || c == ']') $ takeWhile (/= ':') s
+
+    removeIndices :: Int -> String -> [Int] -> String
+    removeIndices _ [] _ = []
+    removeIndices _ ss [] = ss
+    removeIndices c (s:ss) (i:is) | c == i    = removeIndices (c+1) ss is
+                                  | otherwise = s:removeIndices (c+1) ss (i:is)
 
 -- Emit a DBus signal on log updates
 dbusOutput :: D.Client -> String -> IO ()
