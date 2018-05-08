@@ -18,6 +18,7 @@ case "$1" in
         ;;
     "")
         echo "please give argument"
+        exit 1
         ;;
     *)
         if ! [[ -d "$cur" ]]; then
@@ -29,13 +30,16 @@ esac
 
 # change bg
 ln -sf "$cur/feh" "$HOME/.start_feh"
-"$HOME/.start_feh" &!
+# "$HOME/.start_feh" &!
 
 # change lock
 ln -sf "$cur/lock.png" "$HOME/.lock"
 
 # change conky
 ln -sf "$cur/conky" "$HOME/.start_conky"
-pkill conky
-while pgrep -x conky >/dev/null; do sleep 1; done
-"$HOME/.start_conky" &>/dev/null &!
+# pkill conky
+# while pgrep -x conky >/dev/null; do sleep 1; done
+# "$HOME/.start_conky" &>/dev/null &!
+
+display_updater feh conky
+

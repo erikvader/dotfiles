@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# display_updater action
+# display_updater [actions]
 # action can be: startup - restart/start everything and update
 #                update  - check for monitor change and fix everything
 #                feh     - restart/start feh
@@ -17,38 +17,46 @@ compton=
 screens=
 update=
 
-case "$1" in
-    startup)
-        feh=true
-        conky=true
-        polybar=true
-        compton=true
-        screens=true
-        ;;
-    feh)
-        feh=true
-        ;;
-    conky)
-        conky=true
-        ;;
-    polybar)
-        polybar=true
-        ;;
-    compton)
-        compton=true
-        ;;
-    update)
-        update=true
-        screens=true
-        compton=true
-        feh=true
-        polybar=true
-        ;;
-    *)
-        echo "give me an argument :(" 1>&2
-        exit 1
-        ;;
-esac
+if [[ $# < 1 ]]; then
+    echo "Give me some arguments :(" 1>&2
+    exit 1
+fi
+
+while [[ "$1" ]]; do
+    case "$1" in
+        startup)
+            feh=true
+            conky=true
+            polybar=true
+            compton=true
+            screens=true
+            ;;
+        feh)
+            feh=true
+            ;;
+        conky)
+            conky=true
+            ;;
+        polybar)
+            polybar=true
+            ;;
+        compton)
+            compton=true
+            ;;
+        update)
+            update=true
+            screens=true
+            compton=true
+            feh=true
+            polybar=true
+            ;;
+        *)
+            echo "invalid argument \"$1\"" 1>&2
+            exit 1
+            ;;
+    esac
+    shift
+done
 
 out1='eDP1'
 out2='HDMI1'
@@ -88,7 +96,7 @@ fi
 if [[ "$conky" ]]; then
     pkill conky
     while pgrep -x conky >/dev/null; do sleep 1; done
-    "$HOME/.start_conky" &!
+    "$HOME/.start_conky" &>/dev/null &!
 fi
 
 # eftersom en extern monitor blir svart om inte compton startas om
