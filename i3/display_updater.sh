@@ -48,7 +48,7 @@ while [[ "$1" ]]; do
             screens=true
             compton=true
             feh=true
-            polybar=true
+            # polybar=true
             ;;
         *)
             echo "invalid argument \"$1\"" 1>&2
@@ -76,17 +76,17 @@ if [[ "$screens" ]]; then
         if [[ "$update" ]]; then
             compton=
             feh=
-            polybar=
+            # polybar=
         fi
     fi
 fi
 
 if [[ "$polybar" ]]; then
-    if [[ "$out2connected" -eq 0 ]]; then
-        run_polybar "$out1" "$out2"
-    else
+    # if [[ "$out2connected" -eq 0 ]]; then
+    #     run_polybar "$out1" "$out2"
+    # else
         run_polybar "$out1"
-    fi
+    # fi
 fi
 
 if [[ "$feh" ]]; then
