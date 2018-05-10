@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# conky_start -n name -c [args] -t [tags]
+# conky_start metro 
+
+if [[ $# < 1 ]]; then
+    echo "arguments plz :(" >&2
+    exit 1
+fi
+
+conkypath=
+forconky=()
+tags=()
+current=
+
+while [[ "$1" ]]; do
+    case "$1" in
+        -n)
+            shift
+            if [[ "$1" = "metro" ]]; then
+                conkypath="$HOME/.config/conky/eriks_metro"
+            elif [[ "$1" = "system" ]]; then
+                conkypath="$HOME/.config/conky/eriks_system"
+            else
+                echo "weird name" >&2
+                exit 1
+            fi
+            ;;
+        -c)
+            current='c'
+            ;;
+        -t)
+            current='t'
+            ;;
+        *)
+            if [[ "$current" = "c" ]]; then
+                forconky+=( "$1" )
+            elif [[ "$current" = "t" ]]; then
+                tags+=( "$1" )
+            else
+                echo "what is this?" >&2
+                exit 1
+            fi
+            ;;
+    esac
+    shift
+done
+
+# echo "conkypath: $conkypath"
+# echo "forconky: ${forconky[@]}"
+# echo "tags: ${tags[@]}"
+
+# trap 'trap "" TERM EXIT; kill 0; trap - INT TERM; kill -INT $$' INT
+trap '[[ -f "$tempfile" ]] && rm -f "$tempfile"' EXIT
+
+tempfile="$(mktemp)"
+
+# echo "tempfile: $tempfile"
+
+config_slicer "${tags[@]}" > "$tempfile" < "$conkypath"
+
+conky -c "$tempfile" "${forconky[@]}"
+

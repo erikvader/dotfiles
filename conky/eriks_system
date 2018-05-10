@@ -71,15 +71,30 @@ conky.config = {
     -- minimum_width = 450,
     -- minimum_size = 280,
 
-	default_color = '030303',
+    -- border_inner_margin = 50,
+
     default_outline_color = 'white',
     default_shade_color = 'white',
 
-    color0 = 'black',
-    color1 = 'black'
+    ;@@@; black
+	default_color = '030303',
+    color0 = '030303',
+    color1 = '030303'
+    ;/@@@;
+    ;@@@; white
+	default_color = 'ebebeb',
+    color0 = 'ebebeb',
+    color1 = 'ebebeb'
+    ;/@@@;
 }
 
 conky.text = [[
+;@@@; bg-white
+${image ~/.config/conky/conky_bg_white.png -p -5,0}
+;/@@@;
+;@@@; bg-black
+${image ~/.config/conky/conky_bg_black.png -p -5,0}
+;/@@@;
 # ${scroll 30 $nodename - $sysname $kernel on $machine | }
 # $hr
 # ${color}Uptime:$color $uptime

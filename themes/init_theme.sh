@@ -6,7 +6,10 @@
 pic="$(ls -1 "$1" | head -n1)"
 
 # default to black conky
-ln -s "../conky_start_black" "$1/conky"
+echo "#!/bin/bash" > "$1/conky"
+echo "conky_start -n metro -t black &!" >> "$1/conky"
+echo "conky_start -n system -t black &!" >> "$1/conky"
+chmod +x "$1/conky"
 
 # generate feh script
 echo -e '#!/bin/bash\nfeh --bg-fill "$HOME/themes'"/$1/$pic"'"' > "$1/feh"

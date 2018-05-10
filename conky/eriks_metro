@@ -15,7 +15,7 @@ conky.config = {
     own_window_transparent = true,
     own_window_hints = 'undecorated,below,sticky,skip_taskbar,skip_pager',
     
-    border_inner_margin = 0,
+    border_inner_margin = 5,
     border_outer_margin = 0,
     
     alignment = 'top_right',
@@ -27,7 +27,7 @@ conky.config = {
     draw_outline = false,
     draw_borders = false,
     draw_graph_borders = false,
-    
+
     -- Text settings
     use_xft = true,
     xftalpha = 0,
@@ -35,12 +35,23 @@ conky.config = {
     
     uppercase = false,
     
+    ;@@@; black
     default_color = '030303',
+    ;/@@@;
+    ;@@@; white 
+    default_color = 'ebebeb',
+    ;/@@@;
     
     top_cpu_separate = false,
 };
 
 conky.text = [[
+;@@@; bg-white
+${image ~/.config/conky/conky_bg_white.png -p 0,30}
+;/@@@;
+;@@@; bg-black
+${image ~/.config/conky/conky_bg_black.png -p 0,30}
+;/@@@;
 ${alignr}${voffset 10}${font Open Sans Light:size=50}${time %A}${font}${voffset -10}
 ${alignr}${voffset 10}${font Open Sans Light:size=50}${time %e} ${time %B}${font}${voffset -10}
 ${alignr}${voffset 10}${font Open Sans Light:size=100}${time %H:%M}${font}${voffset -10}
