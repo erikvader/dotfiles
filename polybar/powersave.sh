@@ -14,6 +14,8 @@ function isActive {
 }
 
 trap isActive SIGUSR1
+trap 'trap "" TERM EXIT; kill 0; trap - INT TERM; kill -INT $$' INT
+trap "kill 0" EXIT
 
 while true; do
     isActive
