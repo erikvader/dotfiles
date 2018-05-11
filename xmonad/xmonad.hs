@@ -1,5 +1,10 @@
 {-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-missing-signatures #-}
 
+import System.Posix.Files (createNamedPipe)
+import System.Posix.Types (CMode(..))
+import Control.Exception (catch,SomeException)
+import System.Directory (doesFileExist)
+import System.IO
 import System.Exit
 import Data.Bits (testBit)
 import Control.Monad (unless)
@@ -41,9 +46,6 @@ import qualified Erik.MyLimitWindows as L
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
 
-import qualified DBus as D
-import qualified DBus.Client as D
-
 myModMask = mod4Mask
 
 myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer]
@@ -52,7 +54,7 @@ myBaseLayouts = Tall 1 (3/100) (1/2) ||| renamed [Replace "OneBig"] (OneBig (3/4
 myBaseLayoutsNames = ["Tall", "OneBig", "ThreeCol", "Mosaic", "Grid", "Spiral"]
 
 lwLimit :: Int
-lwLimit = 3
+lwLimit = 2
 
 myLayoutHook =
   L.limitWindows lwLimit False True $
@@ -271,9 +273,9 @@ logLimitWindows =
 
 -- Override the PP values as you would otherwise, adding colors etc depending
 -- on  the statusbar used
-myLogHook :: D.Client -> PP
-myLogHook dbus = def
-    { ppOutput = dbusOutput dbus . fixXinerama,
+myLogHook :: Maybe Handle -> PP
+myLogHook mhandle = def
+    { ppOutput = pipeOutput mhandle . fixXinerama,
       ppCurrent = wrap "%{B#505050 F#dfdfdf U#ffb52a +u}[  " "  ]%{B- F- -u}",
       ppVisible = wrap "%{B#505050 F#dfdfdf U#1e90ff +u}[  " "  ]%{B- F- -u}",
       ppUrgent = wrap "%{B#bd2c40}  " "!  %{B-}",
@@ -295,17 +297,9 @@ myLogHook dbus = def
     removeIndices c (s:ss) (i:is) | c == i    = removeIndices (c+1) ss is
                                   | otherwise = s:removeIndices (c+1) ss (i:is)
 
--- Emit a DBus signal on log updates
-dbusOutput :: D.Client -> String -> IO ()
-dbusOutput dbus str = do
-    let signal = (D.signal objectPath interfaceName memberName) {
-            D.signalBody = [D.toVariant $ UTF8.decodeString str]
-        }
-    D.emit dbus signal
-  where
-    objectPath = D.objectPath_ "/org/xmonad/Log"
-    interfaceName = D.interfaceName_ "org.xmonad.Log"
-    memberName = D.memberName_ "Update"
+pipeOutput :: Maybe Handle -> String -> IO ()
+pipeOutput Nothing _ = return ()
+pipeOutput (Just h) s = hPutStrLn h (UTF8.decodeString s) >> hFlush h
 
 baseConfig = desktopConfig {
   modMask = myModMask,
@@ -315,11 +309,6 @@ baseConfig = desktopConfig {
   workspaces = myWorkspaces
   }
 
--- hej :: X ()
--- hej = do
---   ss <- W.screens <$> gets windowset
---   spawn $ "notify-send '" ++ (show $ length ss) ++ "'"
-
 myConfig = baseConfig {
   layoutHook = avoidStruts myLayoutHook,
   manageHook = composeAll [ isDialog --> doCenterFloat ] <+> manageDocks <+> manageHook baseConfig,
@@ -327,15 +316,25 @@ myConfig = baseConfig {
   logHook = logHook baseConfig >> myUpdatePointer
   }
 
+pipeName :: FilePath
+pipeName = "/tmp/XMonadLog"
+
 main :: IO ()
 main = do
-  dbus <- D.connectSession
-  -- Request access to the DBus name
-  D.requestName dbus (D.busName_ "org.xmonad.Log")
-    [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
+
+  -- create pipe
+  mhandle <- catch (do
+                       fs <- doesFileExist pipeName
+                       if fs
+                         then return ()
+                         else createNamedPipe pipeName (CMode 0o666)
+                       Just <$> openFile pipeName ReadWriteMode)
+               (\e -> do
+                        writeStd (show (e :: SomeException))
+                        return Nothing)
 
   xmonad $ ewmh $ myConfig {
-    logHook = logHook myConfig <+> L.updateCurrentState <+> dynamicLogWithPP (myLogHook dbus),
+    logHook = logHook myConfig <+> L.updateCurrentState <+> dynamicLogWithPP (myLogHook mhandle),
     handleEventHook = handleEventHook myConfig <+> fullscreenEventHook
     }
 

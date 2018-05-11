@@ -96,7 +96,7 @@ modules-right = date
 
 [module/xmonad]
 type = custom/script
-exec = xmonad-log
+exec = xmonadLog
 
 tail = true
 

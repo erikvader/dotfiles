@@ -1,10 +1,12 @@
 module Erik.MyStuff (
   rotLastUp, rotLastDown, rotLast',
   rotUp, rotDown,
-  onLayout
+  onLayout,
+  writeStd
   -- pointerDance
 ) where
 
+import System.Directory (getHomeDirectory)
 import XMonad
 import qualified XMonad.StackSet as W
 import qualified Data.Map as M
@@ -74,4 +76,8 @@ onLayout xs def = do
     Just (_, x) -> x
     Nothing -> def
 
-
+-- writes to "stdout"
+writeStd :: String -> IO ()
+writeStd s = do
+  home <- getHomeDirectory
+  appendFile (home ++ "/.xmonad/stdout") (s ++ "\n")
