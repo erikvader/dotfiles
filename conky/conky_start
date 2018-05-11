@@ -51,7 +51,8 @@ done
 # echo "tags: ${tags[@]}"
 
 # trap 'trap "" TERM EXIT; kill 0; trap - INT TERM; kill -INT $$' INT
-trap '[[ -f "$tempfile" ]] && rm -f "$tempfile"' EXIT
+trap 'rm -f "$tempfile"' EXIT
+trap '' TERM
 
 tempfile="$(mktemp)"
 
@@ -60,4 +61,6 @@ tempfile="$(mktemp)"
 config_slicer "${tags[@]}" > "$tempfile" < "$conkypath"
 
 conky -c "$tempfile" "${forconky[@]}"
+
+# rm -f "$tempfile"
 
