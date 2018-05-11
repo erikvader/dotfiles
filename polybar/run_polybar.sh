@@ -9,9 +9,9 @@ while pgrep -x polybar >/dev/null; do sleep 1; done
 # echo $1
 # echo $2
 # Launch bar1 and bar2
-MONITOR=$1 polybar example &
+MONITOR=$1 polybar -r example &
 if [ -n "$2" ]; then
-    MONITOR=$2 polybar nonprimary &
+    MONITOR=$2 polybar -r nonprimary &
 fi
 
 echo "Bars launched..."
