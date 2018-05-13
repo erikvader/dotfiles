@@ -19,6 +19,8 @@ alias autg="tar -zxvf"
 alias amg="gzip"
 alias aug="gunzip"
 
+alias mi="mediainfo"
+
 alias l='ls -A'
 alias ll='ls -lA'
 
