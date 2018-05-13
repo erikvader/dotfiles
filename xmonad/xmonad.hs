@@ -150,6 +150,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_asciicircum), spawn "pkill compton"),
 
     ((modm, xK_minus), spawn "theme_select safe"),
+    ((modm .|. shiftMask, xK_minus), spawn "theme_select -r"),
 
     -- gaps
     ((modm, xK_bracketleft), incSpacing (-1)),
