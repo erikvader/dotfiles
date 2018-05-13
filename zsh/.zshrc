@@ -165,4 +165,5 @@ function ranger-cd {
 
 bindkey -s '^o' "ranger-cd"
 
-which cowfortune &>/dev/null && cowfortune
+# which cowfortune &>/dev/null && cowfortune
+
