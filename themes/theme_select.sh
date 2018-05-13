@@ -1,7 +1,14 @@
 #!/bin/bash
 
+set -e
+
 theme_dir="$HOME/themes"
 cur="$theme_dir/$1"
+cur_theme_file="/tmp/theme_select_cur"
+
+if [[ -f "$cur_theme_file" ]]; then
+    cur_theme="$(cat "$cur_theme_file")"
+fi
 
 case "$1" in
     -s)
@@ -9,7 +16,7 @@ case "$1" in
         exit
         ;;
     -r)
-        "$0" "$(shuf -n1 <<< "$("$0" -l)")"
+        "$0" "$(echo "$("$0" -l)" | sed "/^$cur_theme$/d" | shuf -n1)"
         exit
         ;;
     -l)
@@ -27,6 +34,8 @@ case "$1" in
         fi
         ;;
 esac
+
+echo "$1" > "$cur_theme_file"
 
 # change bg
 ln -sf "$cur/feh" "$HOME/.start_feh"
