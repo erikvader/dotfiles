@@ -2,6 +2,8 @@
 
 # generates a theme folder
 
+set -e
+
 # the picture should already be in the folder
 pic="$(ls -1 "$1" | head -n1)"
 

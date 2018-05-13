@@ -54,13 +54,11 @@ done
 trap 'rm -f "$tempfile"' EXIT
 trap '' TERM
 
+set -e
+
 tempfile="$(mktemp)"
 
-# echo "tempfile: $tempfile"
-
-config_slicer "${tags[@]}" > "$tempfile" < "$conkypath"
+config_slicer "${tags[@]}" > "$tempfile" < "$conkypath" 
 
 conky -c "$tempfile" "${forconky[@]}"
-
-# rm -f "$tempfile"
 
