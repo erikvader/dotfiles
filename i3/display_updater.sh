@@ -90,6 +90,8 @@ if [[ "$polybar" ]]; then
 fi
 
 if [[ "$feh" ]]; then
+    pkill feh_loop
+    while pgrep feh_loop >/dev/null; do sleep 1; done
     "$HOME/.start_feh" &!
 fi
 
