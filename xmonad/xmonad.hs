@@ -82,7 +82,7 @@ myStartupHook =
   -- scrolla in other direction
   spawn "xinput --set-prop 'ELAN0501:00 04F3:3060 Touchpad' 'libinput Natural Scrolling Enabled' 1" <+>
   spawnOnce "dropbox start" <+>
-  spawnOnce "redshift-gtk" <+>
+  -- spawnOnce "redshift-gtk" <+>
   spawnOnce "blueman-applet" <+>
   spawnOnce "google-chrome-stable" <+>
   spawnOnce "emacs --daemon"
@@ -145,7 +145,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- display stuff
     ((modm, xK_plus), spawn "display_updater update"),
-    ((modm, xK_grave), spawn "pkill -USR1 '^redshift$'"),
+    ((modm, xK_grave), spawn "pgrep -x redshift && pkill -USR1 -x redshift || redshift-gtk"),
     ((modm, xK_apostrophe), spawn "xrandr-invert-colors"),
     ((modm, xK_asciicircum), spawn "pkill compton"),
 
