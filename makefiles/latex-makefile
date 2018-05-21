@@ -3,17 +3,22 @@ name=
 .PHONY: all
 all: $(name).pdf
 
+.PHONY: force
+force:
+	touch $(name).tex
+	$(MAKE) --no-print-directory all
+
 $(name).pdf: $(name).tex
 	pdflatex -interaction=nonstopmode $<
 	pdflatex -interaction=nonstopmode $<
 
 .PHONY: show
 show: $(name).pdf
-	xreader $< &> /dev/null &
+	mupdf $< &>/dev/null &
 
-.PHONY: auto
-auto:
-	echo "$(name).tex" | entr sh -c 'make show'
+.PHONY: update
+update: $(name).pdf
+	pkill -HUP -x mupdf
 
 .PHONY: clean
 clean:

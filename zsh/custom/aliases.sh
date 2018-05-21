@@ -28,7 +28,12 @@ alias ec="emacsclient -n -c"
 
 # alias copycmakefile="cp /home/erik/dotfiles/makefiles/c-makefile makefile"
 function copymake {
-    cp -L "/home/erik/dotfiles/makefiles/$1-makefile" ./makefile
+    local f="$HOME/dotfiles/makefiles/$1-makefile"
+    if [[ ! -f "$f" ]]; then
+        echo "\"$f\" doesn't exist" >&2
+        return 1
+    fi
+    cp -L "$f" ./makefile
 }
 
 function mounterik {
