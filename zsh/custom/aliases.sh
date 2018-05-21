@@ -22,7 +22,7 @@ alias aug="gunzip"
 alias mi="mediainfo"
 
 alias l='ls -A'
-alias ll='ls -lA'
+alias ll='ls -lAh'
 
 alias ec="emacsclient -n -c"
 
@@ -60,6 +60,6 @@ function umounterik {
     [[ -z "$(ls -A -1 /media/ERIKRIMSKOG)" ]] && sudo rmdir "/media/ERIKRIMSKOG"
 }
 
-function mkdircd {
+function mc {
     mkdir "$1" && cd "$1"
 }
