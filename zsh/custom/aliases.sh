@@ -22,12 +22,8 @@ alias aug="gunzip"
 alias mi="mediainfo"
 
 alias l='ls -A'
-unalias ll
+alias ll='els'
 alias lll='ls -lAh'
-function ll {
-    # fix OFS
-    ls -lAh --color=always | awk -F' ' -v OFS= 'NR==1 {print}; NR>1 {$1=$1"@"; $2=""; $3=""; $4=""; $6="@("$6; $7=" "$7" "; $8=$8")@"; print}' | column -t -o ' ' -s '@' -R 2,3
-}
 
 alias ec="emacsclient -n -c"
 

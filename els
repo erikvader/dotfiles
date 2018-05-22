@@ -1,0 +1,86 @@
+#!/usr/bin/python3
+
+import sys
+import subprocess as S
+import locale
+import math
+import re
+
+def resetColor():
+   return "\x1b[0m"
+
+def setFG(c):
+   return "\x1b[" + c + "m"
+
+def colorize(s, c):
+   return resetColor() + setFG(c) + s + resetColor()
+
+def formatSize(s):
+   suffs = ["B", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]
+   s = float(s)
+   if s <= 0:
+      out = round(s)
+      mag = 0
+   else:
+      mag = math.floor(math.log(s, 1024))
+      if mag == 0:
+         out = round(s)
+      else:
+         out = round(10*s/(1024**mag))/10
+
+   return str(out) + colorize(suffs[mag], "1;37")
+
+def formatPerms(p):
+   return colorize(p[0], "1;33") + "".join(list(map(lambda x: colorize(x, "1;37") if x == "-" else x, p[1:])))
+
+def formatName(n):
+   if n == "root":
+      newn = colorize(n, "1;31")
+   else:
+      newn = colorize(n, "1;35")
+   return "(" + newn + ")"
+
+def formatLine(l):
+   if len(l) < 9:
+      return l
+   return [formatPerms(l[0]), formatName(l[2]), formatSize(l[4]) + ":"] + l[8:]
+
+def strip_ansi_codes(s):
+   return re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', s)
+
+def actualLen(s):
+   return len(strip_ansi_codes(s))
+
+def align(fs, c):
+   lens = []
+   for l in fs:
+      if c >= len(l):
+         return
+      lens.append(actualLen(l[c]))
+
+   maximum = max(lens)
+
+   for l in fs:
+      l[c] = " "*(maximum - lens[0]) + l[c]
+      lens = lens[1:]
+
+def main():
+   status = S.run(["ls", "-lA", "--color=always"] + sys.argv[1:], stdout=S.PIPE, stderr=S.DEVNULL, stdin=S.DEVNULL, encoding=locale.getpreferredencoding(False))
+
+   if status.returncode != 0:
+      print("Something went wrong :( Exited with: ", str(status.returncode), sep='')
+      exit(1)
+
+   lines = status.stdout.split("\n")
+   lines = lines[1:]
+
+   fields = list(filter(None, map(lambda x: list(filter(None, x.split(" "))), lines)))
+
+   fields = list(map(formatLine, fields))
+   align(fields, 2)
+
+   for l in fields:
+      print(" ".join(l))
+
+if __name__ == "__main__":
+   main()
