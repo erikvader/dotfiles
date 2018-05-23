@@ -5,6 +5,10 @@ import subprocess as S
 import locale
 import math
 import re
+from getpass import getuser
+
+username = getuser()
+showNames = False
 
 def resetColor():
    return "\x1b[0m"
@@ -37,21 +41,47 @@ def formatSize(s):
 def formatPerms(p):
    return colorize(p[0], "1;33") + "".join(list(map(lambda x: colorize(x, "1;37") if x == "-" else x, p[1:])))
 
-def formatName(n, g):
-   if n == "root":
-      newn = colorize(n, "1;31")
-   else:
-      newn = colorize(n, "1;35")
-
+def formatGroup(n, g):
    if n != g:
-      return "(" + newn + "/" + colorize(g, "33") + ")"
+      return colorize("(", "1;37") + colorize(g, "33") + colorize(")", "1;37")
    else:
-      return "(" + newn + ")"
+      return ""
+
+def formatName(n):
+   if not showNames:
+      return ""
+
+   if n == "root":
+      return colorize(n[0], "1;31")
+   elif n == username:
+      return colorize(n[0], "1;35")
+   else:
+      return colorize(n[0], "1;33")
+
+
+def formatArrow(fs):
+   return list(map(lambda x: colorize(x, "1;31") if x == "->" else x, fs))
 
 def formatLine(l):
    if len(l) < 9:
       return l
-   return [formatPerms(l[0]), formatName(l[2], l[3]), formatSize(l[4]) + ":"] + l[8:]
+   return [formatPerms(l[0]), formatName(l[2]), formatSize(l[4]) + ":"] + formatArrow(l[8:]) + [formatGroup(l[2], l[3])]
+
+def checkNames(fs, c):
+   global showNames
+   s = {l[c] for l in fs}
+   if not (len(s) == 1 and username in s):
+      showNames = True
+
+def removeEmptyColumn(fs, c):
+   allEmpty = True
+   for l in fs:
+      if l[c]:
+         allEmpty = False
+         break;
+   if allEmpty:
+      for l in fs:
+         del l[c]
 
 def strip_ansi_codes(s):
    return re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', s)
@@ -86,9 +116,12 @@ def main():
 
    fields = list(filter(None, map(lambda x: list(filter(None, x.split(" "))), lines)))
 
+   checkNames(fields, 2)
    fields = list(map(formatLine, fields))
    align(fields, 2, 1)
-   align(fields, 1, 0)
+   align(fields, 1, 1)
+
+   removeEmptyColumn(fields, 1)
 
    for l in fields:
       print(" ".join(l))
