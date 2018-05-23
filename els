@@ -6,6 +6,7 @@ import locale
 import math
 import re
 from getpass import getuser
+from shutil import which
 
 username = getuser()
 showNames = False
@@ -105,14 +106,20 @@ def align(fs, c, a):
       lens = lens[1:]
 
 def main():
-   status = S.run(["ls", "-lA", "--color=always"] + sys.argv[1:], stdout=S.PIPE, stderr=S.DEVNULL, stdin=S.DEVNULL, encoding=locale.getpreferredencoding(False))
+   status = S.run(["ls", "-lA", "--color=always"] + sys.argv[1:], stdout=S.PIPE, stderr=S.DEVNULL, stdin=S.DEVNULL)
 
    if status.returncode != 0:
       print("Something went wrong :( Exited with: ", str(status.returncode), sep='')
       exit(1)
 
-   lines = status.stdout.split("\n")
-   lines = lines[1:]
+   lines = status.stdout.decode(locale.getpreferredencoding(False)).split("\n")
+   lines = lines[1:-1]
+   if len(lines) <= 0:
+     if which("cowsay"):
+        S.run(["cowsay", "-p", "There's nothing here! omg!"])
+     else:
+        print("There's nothing here...") 
+     return 0
 
    fields = list(filter(None, map(lambda x: list(filter(None, x.split(" "))), lines)))
 
