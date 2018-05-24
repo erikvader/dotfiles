@@ -6,6 +6,11 @@ theme_dir="$HOME/themes"
 cur="$theme_dir/$1"
 cur_theme_file="/tmp/theme_select_cur"
 
+if [[ ! -d "$theme_dir" ]]; then
+    echo "$theme_dir doesn't exist!" >&2
+    exit 1
+fi
+
 if [[ -f "$cur_theme_file" ]]; then
     cur_theme="$(cat "$cur_theme_file")"
 fi
