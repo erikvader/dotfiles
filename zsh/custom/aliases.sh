@@ -21,11 +21,29 @@ alias aug="gunzip"
 
 alias mi="mediainfo"
 
+alias yu='yaourt -Syyua'
+alias ys='yaourt -S'
+alias yqs='yaourt -Qs'
+alias yss='yaourt -Ss'
+alias ysi='yaourt -Si'
+alias yqi='yaourt -Qi'
+alias yfs='yaourt -Fs'
+alias yfl='yaourt -Fl'
+alias yo='yaourt -Qdt'
+alias yl='yaourt -Qet'
+alias yc='yaourt -Sc'
+alias yr='yaourt -Rsn'
+alias yR='yaourt -Rsnc'
+
 alias l='ls -A'
 alias ll='els'
 alias lll='ls -lAh'
 
 alias ec="emacsclient -n -c"
+
+function ediff {
+    emacsclient -n -e '(diff "'"$1"'" "'"$2"'")' >/dev/null
+}
 
 # alias copycmakefile="cp /home/erik/dotfiles/makefiles/c-makefile makefile"
 function copymake {
