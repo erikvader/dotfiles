@@ -157,6 +157,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_bracketright), incSpacing 1),
     ((modm, xK_at), setSpacing 0),
 
+    ((modm, xK_Left), spawn "i3_brightness -dec 1"),
+    ((modm, xK_Right), spawn "i3_brightness -inc 1"),
+
     -- launch a terminal
     ((modm .|. mod1Mask, xK_Return), spawn $ XMonad.terminal conf),
     ((modm, xK_Return), spawn "urxvt"),
@@ -254,7 +257,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     --
     [((m .|. modm, key), screenWorkspace sc >>= flip whenJust (windows . f))
         | (key, sc) <- zip [xK_F1, xK_F2, xK_F3] [0..]
-        , (f, m) <- [(W.view, 0), (\i -> W.view i . W.shift i, shiftMask), (W.shift, controlMask)]]
+        , (f, m) <- [(W.view, 0), (\i -> W.view i . W.shift i, shiftMask .|. controlMask), (W.greedyView, shiftMask), (W.shift, controlMask)]]
 
 logLimitWindows :: [X (Maybe String)]
 logLimitWindows =
@@ -277,8 +280,8 @@ logLimitWindows =
 myLogHook :: Maybe Handle -> PP
 myLogHook mhandle = def
     { ppOutput = pipeOutput mhandle . fixXinerama,
-      ppCurrent = wrap "%{B#505050 F#dfdfdf U#ffb52a +u}[  " "  ]%{B- F- -u}",
-      ppVisible = wrap "%{B#505050 F#dfdfdf U#1e90ff +u}[  " "  ]%{B- F- -u}",
+      ppCurrent = wrap "%{B#505050 U#ffb52a +u}[  " "  ]%{B- -u}",
+      ppVisible = wrap "%{B#505050}[  " "  ]%{B-}",
       ppUrgent = wrap "%{B#bd2c40}  " "!  %{B-}",
       ppHidden = wrap "  " "  ",
       ppWsSep = "",
@@ -322,7 +325,6 @@ pipeName = "/tmp/XMonadLog"
 
 main :: IO ()
 main = do
-
   -- create pipe
   mhandle <- catch (do
                        fs <- doesFileExist pipeName
@@ -331,7 +333,7 @@ main = do
                          else createNamedPipe pipeName (CMode 0o666)
                        Just <$> openFile pipeName ReadWriteMode)
                (\e -> do
-                        writeStd (show (e :: SomeException))
+                        trace (show (e :: SomeException))
                         return Nothing)
 
   xmonad $ ewmh $ myConfig {
