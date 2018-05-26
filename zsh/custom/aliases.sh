@@ -82,6 +82,10 @@ function umounterik {
     sudo umount -lf "/media/ERIKRIMSKOG/$1"
     [[ -z "$(ls -A -1 /media/ERIKRIMSKOG/$1)" ]] && sudo rmdir "/media/ERIKRIMSKOG/$1"
     [[ -z "$(ls -A -1 /media/ERIKRIMSKOG)" ]] && sudo rmdir "/media/ERIKRIMSKOG"
+
+    if echo "$PWD" | grep '/media/ERIKRIMSKOG' &>/dev/null; then
+        cd '/media'
+    fi
 }
 
 function mc {
