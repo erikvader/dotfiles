@@ -7,18 +7,21 @@ import math
 import re
 from getpass import getuser
 from shutil import which
+import os
+import stat
 
 username = getuser()
 showNames = False
+colors = {}
 
 def resetColor():
    return "\x1b[0m"
 
-def setFG(c):
+def setColor(c):
    return "\x1b[" + c + "m"
 
 def colorize(s, c):
-   return resetColor() + setFG(c) + s + resetColor()
+   return setColor(c) + s + resetColor() if c else s
 
 def formatSize(s):
    suffs = ["B ", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]
@@ -45,8 +48,7 @@ def formatPerms(p):
 def formatGroup(n, g):
    if n != g:
       return colorize("(", "1;37") + colorize(g, "33") + colorize(")", "1;37")
-   else:
-      return ""
+   return ""
 
 def formatName(n):
    if not showNames:
@@ -56,17 +58,55 @@ def formatName(n):
       return colorize(n[0], "1;31")
    elif n == username:
       return colorize(n[0], "1;35")
+   return colorize(n[0], "1;33")
+
+
+def formatLink(d):
+   if not d.is_symlink():
+      return []
+   p = os.readlink(d.name)
+   exists = os.path.exists(p)
+   sta = None
+   if exists:
+      sta = os.stat(p)
+
+   if exists and os.path.islink(p):
+      arrow = colorize("->", colors.get("ln"))
    else:
-      return colorize(n[0], "1;33")
+      arrow = colorize("->", "1;31")
 
+   return [arrow, formatPath(p, exists, sta)]
 
-def formatArrow(fs):
-   return list(map(lambda x: colorize(x, "1;31") if x == "->" else x, fs))
+def isExec(mode):
+   imode = stat.S_IMODE(mode)
+   return imode & stat.S_IXUSR or imode & stat.S_IXGRP or imode & stat.S_IXOTH
 
-def formatLine(l):
-   if len(l) < 9:
-      return l
-   return [formatPerms(l[0]), formatName(l[2]), formatSize(l[4]) + ":"] + formatArrow(l[8:]) + [formatGroup(l[2], l[3])]
+def formatPath(p, exists, sta):
+   if not exists:
+      return colorize(p, colors.get("or"))
+
+   mode = sta.st_mode
+   if stat.S_ISDIR(mode):
+      return colorize(p, colors.get("di"))
+
+   elif stat.S_ISLNK(mode):
+      return colorize(p, colors.get("ln"))
+
+   elif stat.S_ISREG(mode) and isExec(mode):
+      return colorize(p, colors.get("ex"))
+
+   elif stat.S_ISREG(mode):
+      _, ext = os.path.splitext(p)
+      return colorize(p, colors.get("*" + ext))
+
+   return p
+
+def formatDirEntry(d):
+   return formatPath(d.name, True, d.stat(follow_symlinks=False))
+
+def formatLine(d):
+   return [formatDirEntry(d)] + formatLink(d)
+   # return [formatPerms(l[0]), formatName(l[2]), formatSize(l[4]) + ":"] + formatArrow(l[8:]) + [formatGroup(l[2], l[3])]
 
 def checkNames(fs, c):
    global showNames
@@ -79,7 +119,7 @@ def removeEmptyColumn(fs, c):
    for l in fs:
       if l[c]:
          allEmpty = False
-         break;
+         break
    if allEmpty:
       for l in fs:
          del l[c]
@@ -106,32 +146,47 @@ def align(fs, c, a):
       lens = lens[1:]
 
 def main():
-   status = S.run(["ls", "-lA", "--color=always"] + sys.argv[1:], stdout=S.PIPE, stderr=S.DEVNULL, stdin=S.DEVNULL)
+   global colors
+   colors_raw = os.environ["LS_COLORS"]
+   if colors_raw:
+      colors = {i[0]: i[1] for i in map(lambda x: x.split("="), filter(None, colors_raw.split(":")))}
+   # status = S.run(["ls", "-lA", "--color=always"] + sys.argv[1:], stdout=S.PIPE, stderr=S.DEVNULL, stdin=S.DEVNULL)
+   ite = os.scandir()
+   def scanSortName(x):
+      x = x.name.lower()
+      if x.startswith("."):
+         return x[1:]
+      return x
 
-   if status.returncode != 0:
-      print("Something went wrong :( Exited with: ", str(status.returncode), sep='')
-      exit(1)
+   fields = map(formatLine, sorted(ite, key=scanSortName))
+   for f in fields:
+      print(" ".join(f))
 
-   lines = status.stdout.decode(locale.getpreferredencoding(False)).split("\n")
-   lines = lines[1:-1]
-   if len(lines) <= 0:
-     if which("cowsay"):
-        S.run(["cowsay", "-p", "There's nothing here! omg!"])
-     else:
-        print("There's nothing here...") 
-     return 0
+   ite.close()
+   # if status.returncode != 0:
+   #    print("Something went wrong :( Exited with: ", str(status.returncode), sep='')
+   #    exit(1)
 
-   fields = list(filter(None, map(lambda x: list(filter(None, x.split(" "))), lines)))
+   # lines = status.stdout.decode(locale.getpreferredencoding(False)).split("\n")
+   # lines = lines[1:-1]
+   # if len(lines) <= 0:
+   #   if which("cowsay"):
+   #      S.run(["cowsay", "-p", "There's nothing here! omg!"])
+   #   else:
+   #      print("There's nothing here...")
+   #   return 0
 
-   checkNames(fields, 2)
-   fields = list(map(formatLine, fields))
-   align(fields, 2, 1)
-   align(fields, 1, 1)
+   # fields = list(filter(None, map(lambda x: list(filter(None, x.split(" "))), lines)))
 
-   removeEmptyColumn(fields, 1)
+   # checkNames(fields, 2)
+   # fields = list(map(formatLine, fields))
+   # align(fields, 2, 1)
+   # align(fields, 1, 1)
 
-   for l in fields:
-      print(" ".join(l))
+   # removeEmptyColumn(fields, 1)
+
+   # for l in fields:
+   #    print(" ".join(l))
 
 if __name__ == "__main__":
    main()
