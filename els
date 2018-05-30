@@ -5,12 +5,12 @@ import subprocess as S
 import locale
 import math
 import re
-from getpass import getuser
 from shutil import which
 import os
 import stat
+import pwd
 
-username = getuser()
+uid = os.getuid()
 showNames = False
 colors = {}
 
@@ -42,24 +42,30 @@ def formatSize(s):
 
    return str(out) + colorize(suffs[mag], "1;37")
 
-def formatPerms(p):
-   return colorize(p[0], "1;33") + "".join(list(map(lambda x: colorize(x, "1;37") if x == "-" else x, p[1:])))
+def formatPerms(d):
+   # return colorize(p[0], "1;33") + "".join(list(map(lambda x: colorize(x, "1;37") if x == "-" else x, p[1:])))
+   sta = d.stat(follow_symlinks=False)
+   perms = stat.filemode(sta.st_mode)
+   return formatStat(perms[0], True, sta) + perms[1:]
 
 def formatGroup(n, g):
    if n != g:
       return colorize("(", "1;37") + colorize(g, "33") + colorize(")", "1;37")
    return ""
 
-def formatName(n):
+def formatName(d):
+   global uid
    if not showNames:
       return ""
 
-   if n == "root":
-      return colorize(n[0], "1;31")
-   elif n == username:
-      return colorize(n[0], "1;35")
-   return colorize(n[0], "1;33")
+   theid = d.stat(follow_symlinks=False).st_uid
+   thename = pwd.getpwuid(theid).pw_name
 
+   if thename == "root" or theid == 0:
+      return colorize(thename[0], "1;31")
+   elif theid == uid:
+      return colorize(thename[0], "1;35")
+   return colorize(thename[0], "1;33")
 
 def formatLink(d):
    if not d.is_symlink():
@@ -75,13 +81,13 @@ def formatLink(d):
    else:
       arrow = colorize("->", "1;31")
 
-   return [arrow, formatPath(p, exists, sta)]
+   return [arrow, formatStat(p, exists, sta)]
 
 def isExec(mode):
    imode = stat.S_IMODE(mode)
    return imode & stat.S_IXUSR or imode & stat.S_IXGRP or imode & stat.S_IXOTH
 
-def formatPath(p, exists, sta):
+def formatStat(p, exists, sta):
    if not exists:
       return colorize(p, colors.get("or"))
 
@@ -102,16 +108,16 @@ def formatPath(p, exists, sta):
    return p
 
 def formatDirEntry(d):
-   return formatPath(d.name, True, d.stat(follow_symlinks=False))
+   return formatStat(d.name, True, d.stat(follow_symlinks=False))
 
 def formatLine(d):
-   return [formatDirEntry(d)] + formatLink(d)
+   return [formatPerms(d), formatName(d), formatDirEntry(d)] + formatLink(d)
    # return [formatPerms(l[0]), formatName(l[2]), formatSize(l[4]) + ":"] + formatArrow(l[8:]) + [formatGroup(l[2], l[3])]
 
-def checkNames(fs, c):
+def checkNames(di):
    global showNames
-   s = {l[c] for l in fs}
-   if not (len(s) == 1 and username in s):
+   s = {d.stat(follow_symlinks=False).st_uid for d in di}
+   if not (len(s) == 1 and uid in s):
       showNames = True
 
 def removeEmptyColumn(fs, c):
@@ -152,13 +158,17 @@ def main():
       colors = {i[0]: i[1] for i in map(lambda x: x.split("="), filter(None, colors_raw.split(":")))}
    # status = S.run(["ls", "-lA", "--color=always"] + sys.argv[1:], stdout=S.PIPE, stderr=S.DEVNULL, stdin=S.DEVNULL)
    ite = os.scandir()
+
    def scanSortName(x):
       x = x.name.lower()
       if x.startswith("."):
          return x[1:]
       return x
 
-   fields = map(formatLine, sorted(ite, key=scanSortName))
+   sort = sorted(ite, key=scanSortName)
+   checkNames(sort)
+
+   fields = map(formatLine, sort)
    for f in fields:
       print(" ".join(f))
 
