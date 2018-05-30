@@ -23,6 +23,7 @@ scripts=("xrandr-invert-colors"
          'notify-send "$(xtitle)"'
          "$HOME/dotfiles/themes/theme_select_rofi.sh"
          "blurlock"
+         "pkill -USR1 -x polybar"
         )
 
 names=("Invert colors"
@@ -48,6 +49,7 @@ names=("Invert colors"
        "Show xtitle"
        "Change theme"
        "Lock"
+       "Refresh Polybar (SIGUSR1)"
       )
 
 # eller printf '%s\n' "${names[@]}"
