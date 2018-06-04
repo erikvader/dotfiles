@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 
-import sys
+# TODO: add documentation
+
 import subprocess as S
-import locale
 import math
-import re
 from shutil import which
 import os
 import stat
 import pwd
+import grp
 
 uid = os.getuid()
 showNames = False
@@ -23,9 +23,9 @@ def setColor(c):
 def colorize(s, c):
    return setColor(c) + s + resetColor() if c else s
 
-def formatSize(s):
+def formatSize(d):
    suffs = ["B ", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]
-   s = float(s)
+   s = float(d.stat(follow_symlinks=False).st_size)
    if s <= 0:
       out = round(s)
       mag = 0
@@ -43,15 +43,49 @@ def formatSize(s):
    return str(out) + colorize(suffs[mag], "1;37")
 
 def formatPerms(d):
-   # return colorize(p[0], "1;33") + "".join(list(map(lambda x: colorize(x, "1;37") if x == "-" else x, p[1:])))
    sta = d.stat(follow_symlinks=False)
    perms = stat.filemode(sta.st_mode)
-   return formatStat(perms[0], True, sta) + perms[1:]
+   imode = stat.S_IMODE(sta.st_mode)
+   permsSplit = None
 
-def formatGroup(n, g):
-   if n != g:
-      return colorize("(", "1;37") + colorize(g, "33") + colorize(")", "1;37")
-   return ""
+   def replace(i, c):
+      nonlocal permsSplit
+      if not permsSplit:
+         permsSplit = list(map(str, perms))
+      permsSplit[i] = colorize(permsSplit[i], c)
+
+   if imode & stat.S_ISUID:
+      replace(3, colors.get("su"))
+
+   if imode & stat.S_ISGID:
+      replace(6, colors.get("sg"))
+
+   if stat.S_ISDIR(sta.st_mode):
+      if imode & stat.S_ISVTX and imode & stat.S_IWOTH:
+         replace(9, colors.get("tw"))
+         replace(8, colors.get("tw"))
+
+      elif not imode & stat.S_ISVTX and imode & stat.S_IWOTH:
+         replace(8, colors.get("ow"))
+
+      elif imode & stat.S_ISVTX and not imode & stat.S_IWOTH:
+         replace(9, colors.get("st"))
+
+   else:
+      if imode & stat.S_ISVTX:
+         replace(9, "30;43")
+
+   if permsSplit:
+      perms = "".join(permsSplit)
+
+   return formatStat(perms[0], True, sta) + "".join(map(lambda x: colorize(x, "1;37") if x == "-" else x, perms[1:]))
+
+def formatGroup(d):
+   sta = d.stat(follow_symlinks=False)
+   grpid = sta.st_gid
+   if grpid != sta.st_uid:
+      return [colorize("(", "1;37") + colorize(grp.getgrgid(grpid).gr_name, "33") + colorize(")", "1;37")]
+   return []
 
 def formatName(d):
    global uid
@@ -76,7 +110,7 @@ def formatLink(d):
    if exists:
       sta = os.stat(p)
 
-   if exists and os.path.islink(p):
+   if os.path.islink(p):
       arrow = colorize("->", colors.get("ln"))
    else:
       arrow = colorize("->", "1;31")
@@ -105,14 +139,25 @@ def formatStat(p, exists, sta):
       _, ext = os.path.splitext(p)
       return colorize(p, colors.get("*" + ext))
 
+   elif stat.S_ISFIFO(mode):
+      return colorize(p, colors.get("pi"))
+
+   elif stat.S_ISSOCK(mode):
+      return colorize(p, colors.get("so"))
+
+   elif stat.S_ISBLK(mode):
+      return colorize(p, colors.get("bd"))
+
+   elif stat.S_ISCHR(mode):
+      return colorize(p, colors.get("cd"))
+
    return p
 
 def formatDirEntry(d):
    return formatStat(d.name, True, d.stat(follow_symlinks=False))
 
 def formatLine(d):
-   return [formatPerms(d), formatName(d), formatDirEntry(d)] + formatLink(d)
-   # return [formatPerms(l[0]), formatName(l[2]), formatSize(l[4]) + ":"] + formatArrow(l[8:]) + [formatGroup(l[2], l[3])]
+   return [formatPerms(d), formatName(d), formatSize(d), formatDirEntry(d)] + formatGroup(d) + formatLink(d)
 
 def checkNames(di):
    global showNames
@@ -130,19 +175,13 @@ def removeEmptyColumn(fs, c):
       for l in fs:
          del l[c]
 
-def strip_ansi_codes(s):
-   return re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', s)
-
-def actualLen(s):
-   return len(strip_ansi_codes(s))
-
 # fields, column index, alignment (0=left, 1=right)
 def align(fs, c, a):
    lens = []
    for l in fs:
       if c >= len(l):
          return
-      lens.append(actualLen(l[c]))
+      lens.append(len(l[c]))
 
    maximum = max(lens)
 
@@ -156,7 +195,7 @@ def main():
    colors_raw = os.environ["LS_COLORS"]
    if colors_raw:
       colors = {i[0]: i[1] for i in map(lambda x: x.split("="), filter(None, colors_raw.split(":")))}
-   # status = S.run(["ls", "-lA", "--color=always"] + sys.argv[1:], stdout=S.PIPE, stderr=S.DEVNULL, stdin=S.DEVNULL)
+
    ite = os.scandir()
 
    def scanSortName(x):
@@ -166,37 +205,27 @@ def main():
       return x
 
    sort = sorted(ite, key=scanSortName)
+
+   if len(sort) <= 0:
+      if which("cowsay"):
+         S.run(["cowsay", "-p", "There's nothing here! omg!"])
+      else:
+         print("There's nothing here...")
+      return 0
+
    checkNames(sort)
 
-   fields = map(formatLine, sort)
+   fields = list(map(formatLine, sort))
+
+   align(fields, 1, 1)
+   align(fields, 2, 1)
+
+   removeEmptyColumn(fields, 1)
+
    for f in fields:
       print(" ".join(f))
 
    ite.close()
-   # if status.returncode != 0:
-   #    print("Something went wrong :( Exited with: ", str(status.returncode), sep='')
-   #    exit(1)
-
-   # lines = status.stdout.decode(locale.getpreferredencoding(False)).split("\n")
-   # lines = lines[1:-1]
-   # if len(lines) <= 0:
-   #   if which("cowsay"):
-   #      S.run(["cowsay", "-p", "There's nothing here! omg!"])
-   #   else:
-   #      print("There's nothing here...")
-   #   return 0
-
-   # fields = list(filter(None, map(lambda x: list(filter(None, x.split(" "))), lines)))
-
-   # checkNames(fields, 2)
-   # fields = list(map(formatLine, fields))
-   # align(fields, 2, 1)
-   # align(fields, 1, 1)
-
-   # removeEmptyColumn(fields, 1)
-
-   # for l in fields:
-   #    print(" ".join(l))
 
 if __name__ == "__main__":
    main()
