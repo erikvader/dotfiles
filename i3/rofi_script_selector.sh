@@ -22,7 +22,7 @@ scripts=("xrandr-invert-colors"
          "$HOME/prog_mode_toggle.sh swetoggle"
          'notify-send "$(xtitle)"'
          "$HOME/dotfiles/themes/theme_select_rofi.sh"
-         "blurlock"
+         "theme_lock"
          "pkill -USR1 -x polybar"
         )
 

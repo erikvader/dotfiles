@@ -2,7 +2,7 @@ alias open="xdg-open"
 alias q="exit"
 alias r="ranger-cd"
 alias p="pcmanfm &!"
-alias lsmnt="findmnt"
+alias lsmnt="findmnt -t ext4,cifs -l"
 
 alias cdiff="colordiff"
 
@@ -22,6 +22,7 @@ alias aug="gunzip"
 alias mi="mediainfo"
 
 alias yu='yaourt -Syyua'
+alias yua='yaourt -Syyua --noconfirm'
 alias ys='yaourt -S'
 alias yqs='yaourt -Qs'
 alias yss='yaourt -Ss'
