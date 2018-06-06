@@ -10,7 +10,7 @@ module Erik.MyLimitWindows (
     getCurrentState,updateCurrentState,
     LimitState(..),
 
-    visible,stackSize,
+    visible,
 
     rotateVisibleDown,rotateVisibleUp,rotateFocHiddenUp,rotateFocHiddenDown,bury
     ) where
@@ -24,7 +24,7 @@ import Control.Applicative((<$>))
 import Data.Maybe(fromJust,isJust,isNothing)
 import qualified XMonad.Util.ExtensibleState as XS
 import qualified Data.Map.Strict as Map
-import Erik.MyStuff (rotUp,rotDown)
+import Erik.MyStuff
 
 -- $usage
 -- To use this module, add the following import to @~\/.xmonad\/xmonad.hs@:
@@ -55,17 +55,8 @@ import Erik.MyStuff (rotUp,rotDown)
 -- |---u---|---l1--|-f-|---l2-|
 type HiddenStack a = (W.Stack a, ([a], [a]))
 
--- class for calculating the size of stacks
-class StackSize a where
-  stackSize :: Maybe a -> Int
-
-instance StackSize (W.Stack a) where
-  stackSize Nothing                = 0
-  stackSize (Just (W.Stack _ u d)) = 1 + length u + length d
-
 instance StackSize (HiddenStack a) where
-  stackSize Nothing              = 0
-  stackSize (Just (s, (l1, l2))) = stackSize (Just s) + length l1 + length l2
+  stackSize (s, (l1, l2)) = stackSize s + length l1 + length l2
 
 -- rotate the currently focused window with all hidden ones
 rotateFocHiddenUp :: X ()
@@ -129,7 +120,7 @@ bury = do
   if f || l == 1
     then return ()
     else do
-       size <- stackSize . W.stack . W.workspace . W.current <$> gets windowset
+       size <- stackSizeM . W.stack . W.workspace . W.current <$> gets windowset
        when o $ setLimit size >> toggleLimit
        when (not o && l > size) $ setLimit size
        modifyHidden putLast
@@ -209,7 +200,7 @@ instance LayoutModifier LimitWindows a where
                                     sdetachedOffset = s1}
         XS.put newState
           where visibleSizes _ Nothing = (0, (0, 0))
-                visibleSizes n (Just s) = (stackSize (Just h0), (length h1, length h2))
+                visibleSizes n (Just s) = (stackSize h0, (length h1, length h2))
                   where (h0, (h1, h2)) = visible n s
 
   modifyLayout LimitWindows{..} ws r

@@ -121,6 +121,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
     ((modm, xK_w), L.bury),
 
+    ((modm, xK_o), focusAnyEmpty),
+
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),
     ((modm, xK_Tab), spawn "rofi -show window"),
@@ -220,6 +222,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- Push window back into tiling
     ((modm, xK_t), withFocused $ windows . W.sink),
+    -- ((modm .|. shiftMask, xK_t), withFocused $ windows . (\a b -> W.float a (W.RationalRect 100 100 100 100) b)),
 
     -- Toggle the status bar gap
     -- Use this binding with avoidStruts from Hooks.ManageDocks.

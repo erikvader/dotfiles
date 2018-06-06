@@ -2,7 +2,9 @@ module Erik.MyStuff (
   rotLastUp, rotLastDown, rotLast',
   rotUp, rotDown,
   onLayout,
-  writeStd
+  writeStd,
+  StackSize(..),
+  focusAnyEmpty
   -- pointerDance
 ) where
 
@@ -11,10 +13,21 @@ import XMonad
 import qualified XMonad.StackSet as W
 import qualified Data.Map as M
 import Data.List (find)
+import Data.Maybe (maybe)
 import Control.Concurrent (threadDelay)
 import XMonad.Actions.Warp
 import Control.Monad
 import System.Random
+
+-- class for calculating the size of stacks
+class StackSize a where
+  stackSizeM :: Maybe a -> Int
+  stackSizeM = maybe 0 stackSize
+
+  stackSize :: a -> Int
+
+instance StackSize (W.Stack a) where
+  stackSize (W.Stack _ u d) = 1 + length u + length d
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
@@ -66,9 +79,7 @@ rotDown :: [a] -> [a]
 rotDown = reverse . rotUp . reverse
 
 -- runs a X command(?) depending on the description of the current
--- layout. Useful for assigning layout specific keybinds. The string
--- "__DEFAULT__" is the default value and is run if no other
--- description is matched.
+-- layout. Useful for assigning layout specific keybinds.
 onLayout :: [(String, X a)] -> X a -> X a
 onLayout xs def = do
   d <- description . W.layout . W.workspace . W.current <$> gets windowset
@@ -81,3 +92,13 @@ writeStd :: String -> IO ()
 writeStd s = do
   home <- getHomeDirectory
   appendFile (home ++ "/.xmonad/stdout") (s ++ "\n")
+
+-- focuses any empty workspace, if there is one
+focusAnyEmpty :: X ()
+focusAnyEmpty = windows (\w -> maybe id W.view (findEmpty w) w)
+  where
+    findEmpty :: WindowSet -> Maybe WorkspaceId
+    findEmpty w = W.tag <$> find ((== 0) . stackSizeM . W.stack) (W.hidden w)
+
+
+
