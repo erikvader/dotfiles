@@ -2,6 +2,7 @@
 
 # TODO: add documentation
 
+import sys
 import subprocess as S
 import math
 from shutil import which
@@ -13,6 +14,8 @@ import grp
 uid = os.getuid()
 showNames = False
 colors = {}
+hasCowsay = which("cowsay")
+listEmpty = False
 
 def resetColor():
    return "\x1b[0m"
@@ -153,8 +156,20 @@ def formatStat(p, exists, sta):
 
    return p
 
+def formatEmptyDir(d):
+   if not listEmpty:
+      return ""
+
+   if not d.is_dir(follow_symlinks=True):
+      return ""
+
+   if not os.listdir(d.path):
+      return "*"
+
+   return ""
+
 def formatDirEntry(d):
-   return formatStat(d.name, True, d.stat(follow_symlinks=False))
+   return formatStat(d.name, True, d.stat(follow_symlinks=False)) + formatEmptyDir(d)
 
 def formatLine(d):
    return [formatPerms(d), formatName(d), formatSize(d), formatDirEntry(d)] + formatGroup(d) + formatLink(d)
@@ -190,13 +205,32 @@ def align(fs, c, a):
       l[c] = " "*dlen*a + l[c] + " "*dlen*abs(a-1)
       lens = lens[1:]
 
+def cowsay(s):
+   if hasCowsay:
+      S.run(["cowsay", "-pn"], input=s, encoding="utf-8")
+   else:
+      print(s)
+
+def parseArguments():
+   global listEmpty
+
+   for a in sys.argv:
+      if a == "-e" or a == "--list-empty":
+         listEmpty = True
+
 def main():
+   parseArguments()
+
    global colors
    colors_raw = os.environ["LS_COLORS"]
    if colors_raw:
       colors = {i[0]: i[1] for i in map(lambda x: x.split("="), filter(None, colors_raw.split(":")))}
 
-   ite = os.scandir()
+   try:
+      ite = os.scandir()
+   except PermissionError as err:
+      cowsay("Can't acces current directory\n" + str(err))
+      return 1
 
    def scanSortName(x):
       x = x.name.lower()
@@ -207,10 +241,7 @@ def main():
    sort = sorted(ite, key=scanSortName)
 
    if len(sort) <= 0:
-      if which("cowsay"):
-         S.run(["cowsay", "-p", "There's nothing here! omg!"])
-      else:
-         print("There's nothing here...")
+      cowsay("There's nothing here...")
       return 0
 
    checkNames(sort)

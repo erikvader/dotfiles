@@ -39,7 +39,7 @@ alias yr='yaourt -Rsn'
 alias yR='yaourt -Rsnc'
 
 alias l='ls -A'
-alias ll='els'
+alias ll='els --list-empty'
 alias lll='ls -lAh'
 
 alias ec="emacsclient -n -c"
