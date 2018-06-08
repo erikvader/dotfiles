@@ -121,7 +121,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
     ((modm, xK_w), L.bury),
 
-    ((modm, xK_o), focusAnyEmpty),
+    ((modm, xK_o), focusLowestEmpty (XMonad.workspaces conf)),
 
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),
@@ -289,7 +289,7 @@ myLogHook mhandle = def
       ppHidden = wrap "  " "  ",
       ppWsSep = "",
       ppSep = " : ",
-      ppTitle = shorten 40,
+      ppTitle = shorten 80,
       ppSort = getSortByXineramaRule,
       ppOrder = \(w:l:t:lwc:lwf:ldh:_) -> filter (not . null) [w, lwf ++ l, ldh, lwc, t],
       ppExtras = logLimitWindows

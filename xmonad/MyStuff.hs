@@ -4,7 +4,7 @@ module Erik.MyStuff (
   onLayout,
   writeStd,
   StackSize(..),
-  focusAnyEmpty
+  focusAnyEmpty,focusLowestEmpty
   -- pointerDance
 ) where
 
@@ -13,7 +13,7 @@ import XMonad
 import qualified XMonad.StackSet as W
 import qualified Data.Map as M
 import Data.List (find)
-import Data.Maybe (maybe)
+import Data.Maybe (maybe,isNothing)
 import Control.Concurrent (threadDelay)
 import XMonad.Actions.Warp
 import Control.Monad
@@ -93,12 +93,20 @@ writeStd s = do
   home <- getHomeDirectory
   appendFile (home ++ "/.xmonad/stdout") (s ++ "\n")
 
--- focuses any empty workspace, if there is one
+-- focuses any empty hidden workspace, if there is one
+-- TODO: generalize
 focusAnyEmpty :: X ()
 focusAnyEmpty = windows (\w -> maybe id W.view (findEmpty w) w)
   where
     findEmpty :: WindowSet -> Maybe WorkspaceId
-    findEmpty w = W.tag <$> find ((== 0) . stackSizeM . W.stack) (W.hidden w)
+    findEmpty w = W.tag <$> find (isNothing . W.stack) (W.hidden w)
 
-
+-- focuses the lowest index empty hidden workspace, if there is one
+focusLowestEmpty :: [String] -> X ()
+focusLowestEmpty order = windows (\w -> maybe id W.view (findLowestEmpty w) w)
+  where
+    findLowestEmpty :: WindowSet -> Maybe WorkspaceId
+    findLowestEmpty w = find f order
+      where
+        f id = maybe False (isNothing . W.stack) $ find ((id ==) . W.tag) (W.hidden w)
 
