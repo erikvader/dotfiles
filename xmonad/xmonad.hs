@@ -17,6 +17,7 @@ import XMonad.Config.Desktop
 
 import XMonad.Actions.UpdatePointer
 import XMonad.Actions.Warp
+import XMonad.Actions.CycleWS (nextScreen)
 
 import XMonad.Util.SpawnOnce
 import XMonad.Util.WorkspaceCompare
@@ -121,13 +122,15 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
     ((modm, xK_w), L.bury),
 
-    ((modm, xK_o), focusLowestEmpty (XMonad.workspaces conf)),
+    ((modm, xK_o), focusLowestEmpty $ XMonad.workspaces conf),
 
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),
-    ((modm, xK_Tab), spawn "rofi -show window"),
+    ((modm .|. shiftMask, xK_Tab), spawn "rofi -show window"),
     ((modm, xK_r), spawn "$HOME/.i3/rofi_script_selector.sh"),
     ((modm .|. shiftMask, xK_r), spawn "rofi -show drun"),
+
+    ((modm, xK_Tab), nextScreen),
 
     -- printscreen
     ((0, xK_Print), spawn "i3-scrot"),
@@ -289,7 +292,7 @@ myLogHook mhandle = def
       ppHidden = wrap "  " "  ",
       ppWsSep = "",
       ppSep = " : ",
-      ppTitle = shorten 80,
+      ppTitle = shorten 60,
       ppSort = getSortByXineramaRule,
       ppOrder = \(w:l:t:lwc:lwf:ldh:_) -> filter (not . null) [w, lwf ++ l, ldh, lwc, t],
       ppExtras = logLimitWindows
