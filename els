@@ -23,8 +23,13 @@ def resetColor():
 def setColor(c):
    return "\x1b[" + c + "m"
 
-def colorize(s, c):
-   return setColor(c) + s + resetColor() if c else s
+def colorize(s, c, blink=False):
+   if not c and not blink:
+      return s
+   b = ""
+   if blink:
+      b = (";" if c else "") + "5"
+   return setColor(c + b) + s + resetColor()
 
 def formatSize(d):
    suffs = ["B ", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]
@@ -114,9 +119,9 @@ def formatLink(d):
       sta = os.stat(p)
 
    if os.path.islink(p):
-      arrow = colorize("->", colors.get("ln"))
+      arrow = colorize("->", colors.get("ln"), blink=not exists)
    else:
-      arrow = colorize("->", "1;31")
+      arrow = colorize("->", "1;31", blink=not exists)
 
    return [arrow, formatStat(p, exists, sta)]
 
