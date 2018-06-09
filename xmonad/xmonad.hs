@@ -17,7 +17,7 @@ import XMonad.Config.Desktop
 
 import XMonad.Actions.UpdatePointer
 import XMonad.Actions.Warp
-import XMonad.Actions.CycleWS (nextScreen)
+import XMonad.Actions.CycleWS (nextScreen, swapNextScreen)
 
 import XMonad.Util.SpawnOnce
 import XMonad.Util.WorkspaceCompare
@@ -126,11 +126,12 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),
-    ((modm .|. shiftMask, xK_Tab), spawn "rofi -show window"),
+    ((modm, xK_Escape), spawn "rofi -show window"),
     ((modm, xK_r), spawn "$HOME/.i3/rofi_script_selector.sh"),
     ((modm .|. shiftMask, xK_r), spawn "rofi -show drun"),
 
     ((modm, xK_Tab), nextScreen),
+    ((modm .|. shiftMask, xK_Tab), swapNextScreen),
 
     -- printscreen
     ((0, xK_Print), spawn "i3-scrot"),
