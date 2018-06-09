@@ -126,10 +126,12 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),
+    ((modm .|. shiftMask, xK_x), spawn "rofi -show drun"),
     ((modm, xK_Escape), spawn "rofi -show window"),
     ((modm, xK_r), spawn "$HOME/.i3/rofi_script_selector.sh"),
-    ((modm .|. shiftMask, xK_r), spawn "rofi -show drun"),
+    ((modm .|. shiftMask, xK_r), spawn "display_updater_rofi"),
 
+    -- screens
     ((modm, xK_Tab), nextScreen),
     ((modm .|. shiftMask, xK_Tab), swapNextScreen),
 

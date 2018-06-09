@@ -14,8 +14,9 @@ feh=
 conky=
 polybar=
 compton=
-screens=
+multihead=
 update=
+external=
 
 if [[ $# < 1 ]]; then
     echo "Give me some arguments :(" 1>&2
@@ -24,12 +25,16 @@ fi
 
 while [[ "$1" ]]; do
     case "$1" in
+        --options)
+            echo -e "update\nexternal\ncompton\npolybar\nconky\nfeh\nstartup"
+            exit 0
+            ;;
         startup)
             feh=true
             conky=true
             polybar=true
             compton=true
-            screens=true
+            multihead=true
             ;;
         feh)
             feh=true
@@ -45,10 +50,16 @@ while [[ "$1" ]]; do
             ;;
         update)
             update=true
-            screens=true
+            multihead=true
             compton=true
             feh=true
-            # polybar=true
+            polybar=true
+            ;;
+        external)
+            external=true
+            feh=true
+            compton=true
+            polybar=true
             ;;
         *)
             echo "invalid argument \"$1\"" 1>&2
@@ -61,32 +72,60 @@ done
 out1='eDP1'
 out2='HDMI1'
 
-out2connected="$(xrandr | grep -qE "^$out2 connected"; echo $?)"
-out2displaying="$(getCRTC "$out2" &>/dev/null; echo $?)"
+function getScreenInfo {
+    out2connected="$(xrandr | grep -qE "^$out2 connected"; echo $?)"
+    out2displaying="$(getCRTC "$out2" &>/dev/null; echo $?)"
+    out1displaying="$(getCRTC "$out1" &>/dev/null; echo $?)"
+}
 
-if [[ "$screens" ]]; then
-    if [[ "$out2connected" -eq 0 && "$out2displaying" -ne 0 ]]; then
+getScreenInfo
+
+if [[ "$multihead" ]]; then
+    if [[ "$out2connected" -eq 0 && ("$out2displaying" -ne 0 || "$out1displaying" -ne 0) ]]; then
         xrandr --output "$out1" --auto --primary --output "$out2" --auto --right-of "$out1"
-        notify-send "$out2 activated"
-    elif [[ "$out2connected" -ne 0 && "$out2displaying" -eq 0 ]]; then
+        notify-send "$out1 activated, $out2 activated"
+        getScreenInfo
+        sleep 3
+    elif [[ ("$out2connected" -ne 0 && "$out2displaying" -eq 0) || "$out1displaying" -ne 0 ]]; then
         xrandr --output "$out1" --auto --primary --output "$out2" --off
-        notify-send "$out2 deactivated"
+        getScreenInfo
+        notify-send "$out1 activated, $out2 deactivated"
+        sleep 3
     else
         notify-send "nothing to do"
         if [[ "$update" ]]; then
             compton=
             feh=
-            # polybar=
+            polybar=
         fi
+    fi
+elif [[ "$external" ]]; then
+    if [[ "$out2connected" -eq 0 ]]; then
+        if [[ "$out1displaying" -eq 0 || "$out2displaying" -ne 0 ]]; then
+            xrandr --output "$out1" --off --output "$out2" --auto --primary
+            getScreenInfo
+            notify-send "external mode activated"
+            sleep 3
+        else
+            notify-send "external already activated, nothing to do"
+            feh=
+            compton=
+            polybar=
+        fi
+    else
+        notify-send "$out2 not even connected..."
+        feh=
+        compton=
+        polybar=
     fi
 fi
 
 if [[ "$polybar" ]]; then
-    # if [[ "$out2connected" -eq 0 ]]; then
-    #     run_polybar "$out1" "$out2"
-    # else
+    if [[ "$out2displaying" -eq 0 && "$out1displaying" -ne 0 ]]; then
+        run_polybar "$out2"
+    else
         run_polybar "$out1"
-    # fi
+    fi
 fi
 
 if [[ "$feh" ]]; then
