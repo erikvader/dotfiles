@@ -2,8 +2,6 @@
 
 scripts=("xrandr-invert-colors"
          "pkill -USR1 '^redshift$'"
-         "display_updater startup"
-         "display_updater update"
          "gksudo ""$HOME/.toggle_audio_powersave.sh"
          "morc_menu"
          "pavucontrol"
@@ -24,12 +22,11 @@ scripts=("xrandr-invert-colors"
          "$HOME/dotfiles/themes/theme_select_rofi.sh"
          "theme_lock"
          "pkill -USR1 -x polybar"
+         "display_updater_rofi"
         )
 
 names=("Invert colors"
        "Toggle redshift"
-       "Display updater: startup"
-       "Display updater: update"
        "Audio powersave toggle"
        "Manjaro i3 menu"
        "PulseAudio Volume Control"
@@ -50,6 +47,7 @@ names=("Invert colors"
        "Change theme"
        "Lock"
        "Refresh Polybar (SIGUSR1)"
+       "Display Updater"
       )
 
 # eller printf '%s\n' "${names[@]}"
