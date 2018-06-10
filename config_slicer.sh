@@ -12,7 +12,7 @@
 tags=( "$@" )
 
 function shouldKeep {
-    read -a words
+    read -ra words
     for w in "${words[@]}"; do
         if [[ ! "$w" = ';@@@;' ]]; then
             for t in "${tags[@]}"; do

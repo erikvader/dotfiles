@@ -3,7 +3,7 @@
 # conky_start -n name -c [args] -t [tags]
 # conky_start metro 
 
-if [[ $# < 1 ]]; then
+if [[ $# -lt 1 ]]; then
     echo "arguments plz :(" >&2
     exit 1
 fi

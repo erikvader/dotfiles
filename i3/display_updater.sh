@@ -18,7 +18,7 @@ multihead=
 update=
 external=
 
-if [[ $# < 1 ]]; then
+if [[ $# -lt 1 ]]; then
     echo "Give me some arguments :(" 1>&2
     exit 1
 fi
@@ -26,7 +26,7 @@ fi
 while [[ "$1" ]]; do
     case "$1" in
         --options)
-            echo -e "update\nexternal\ncompton\npolybar\nconky\nfeh\nstartup"
+            echo -e 'update\nexternal\ncompton\npolybar\nconky\nfeh\nstartup'
             exit 0
             ;;
         startup)

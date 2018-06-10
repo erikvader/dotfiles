@@ -17,7 +17,7 @@ function printStatus {
 trap 'printStatus' USR1
 # samma för SIGQUIT?
 trap 'trap "" TERM EXIT; kill $spid; trap - INT TERM; kill -INT $$' INT
-trap "kill $spid" EXIT
+trap 'kill $spid' EXIT
 
 # doesn't kill itself with INT, but it should
 # trap "exit" INT TERM

@@ -9,7 +9,7 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
         continue
     fi
 
-    if [[ "$found" ]] && ! echo "$line" | grep -qE "^[^ \t]"; then
+    if [[ "$found" ]] && ! echo "$line" | grep -qE '^[^ \t]'; then
         exit 1
     fi
 

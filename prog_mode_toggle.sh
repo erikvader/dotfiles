@@ -4,18 +4,18 @@ status_file="$HOME/.program_mode"
 file_contents="$(cat "$status_file")"
 
 function on {
-    (set -e
-     setxkbmap er nodeadkeys
-     sleep 0.5
-     xmodmap "$HOME/.xmodmap_prog"
-     sleep 0.5
-     xcape -e 'Control_R=Escape'
-     xset r rate 300 35 # keyboard repeat speed
-     echo "on" > "$status_file"
-     notify-send 'Programming keyboard mode' 'on'
-    )
-
-    if [[ $? -ne 0 ]]; then
+    if (set -e
+        setxkbmap er nodeadkeys
+        sleep 0.5
+        xmodmap "$HOME/.xmodmap_prog"
+        sleep 0.5
+        xcape -e 'Control_R=Escape'
+        xset r rate 300 35 # keyboard repeat speed
+        echo "on" > "$status_file"
+       )
+    then
+        notify-send 'Programming keyboard mode' 'on'
+    else
         notify-send 'Programming keyboard mode' 'error turning on :('
         exit 1
     fi
@@ -38,13 +38,14 @@ function sweoff {
 }
 
 function off {
-    (set -e
-     setxkbmap se
-     pkill xcape 2>/dev/null
-     echo "off" > "$status_file"
-     notify-send 'Programming keyboard mode' 'off'
-    )
-    if [[ $? -ne 0 ]]; then
+    if (set -e
+        setxkbmap se
+        pkill xcape 2>/dev/null
+        echo "off" > "$status_file"
+       )
+    then
+        notify-send 'Programming keyboard mode' 'off'
+    else
         notify-send 'Programming keyboard mode' 'error turning off :('
         exit 1
     fi

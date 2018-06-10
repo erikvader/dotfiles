@@ -4,6 +4,8 @@
 # all of these folder are contained in a directory, which is the first
 # argument to this script
 
+set -e
+
 if [[ $# -le 0 ]]; then
     echo "me wants some arguments :("
     exit 1

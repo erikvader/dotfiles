@@ -5,7 +5,7 @@ if ! which cowthink || ! which fortune; then
 fi &>/dev/null;
 
 rand_file="$(ls -1 /usr/share/cows | shuf -n 1)"
-rand_expr="$(echo -e "-b\n-d\n-g\n-p\n-s\n-t\n-w\n-y\n" | shuf -n 1)"
+rand_expr="$(echo -e '-b\n-d\n-g\n-p\n-s\n-t\n-w\n-y\n' | shuf -n 1)"
 fort="$(fortune -as)"
 # echo "$rand_file"
 # echo "$rand_expr"

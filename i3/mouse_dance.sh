@@ -10,11 +10,10 @@ fi
 
 
 # get info of focused window
-res=$(xdotool getactivewindow getwindowgeometry --shell)
-if [[ $? -ne 0 ]]; then
+if ! res=$(xdotool getactivewindow getwindowgeometry --shell); then
     exit $?
 fi
-eval $res
+eval "$res"
 curwindow="$WINDOW"
 curx="$X"
 cury="$Y"
@@ -23,7 +22,7 @@ curh="$HEIGHT"
 
 # move to middle
 function jumpToMiddle {
-    xdotool mousemove --clearmodifiers $(($curx + $curw / 2)) $(($cury + $curh / 2))
+    xdotool mousemove --clearmodifiers $((curx + curw / 2)) $((cury + curh / 2))
 }
 
 jumpToMiddle
@@ -46,11 +45,11 @@ ry=-1
 # getNext old_x old_y
 function moveNext {
     local i=0
-    while [[ $i < 10 ]]; do
-        i=$(($i+1))
-        rx=$(shuf -i $minx-$maxx -n 1)
-        ry=$(shuf -i $miny-$maxy -n 1)
-        if testDist $1 $2 $rx $ry 100; then
+    while [[ $i -lt 10 ]]; do
+        i=$((i+1))
+        rx=$(shuf -i "$minx-$maxx" -n 1)
+        ry=$(shuf -i "$miny-$maxy" -n 1)
+        if testDist "$1" "$2" "$rx" "$ry" 100; then
             break
         fi
     done
@@ -58,8 +57,8 @@ function moveNext {
 
 while true; do
     # move to random within window
-    eval $(xdotool getmouselocation --shell)
-    if [[ $curwindow != $WINDOW ]]; then
+    eval "$(xdotool getmouselocation --shell)"
+    if [[ $curwindow != "$WINDOW" ]]; then
         break
     fi
 
@@ -69,10 +68,10 @@ while true; do
         break
     fi
 
-    moveNext $X $Y
-    xdotool mousemove --clearmodifiers --sync $rx $ry
+    moveNext "$X" "$Y"
+    xdotool mousemove --clearmodifiers --sync "$rx" "$ry"
 
     # sleep
-    sleep $sleep
+    sleep "$sleep"
 
 done

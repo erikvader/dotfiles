@@ -21,7 +21,7 @@ case "$1" in
         exit
         ;;
     -r)
-        "$0" "$(echo "$("$0" -l)" | sed "/^$cur_theme$/d" | shuf -n1)"
+        "$0" "$("$0" -l | sed "/^$cur_theme$/d" | shuf -n1)"
         exit
         ;;
     -l)

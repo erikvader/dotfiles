@@ -241,7 +241,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_0), confirmPrompt def "power off?" $ spawn "poweroff"),
 
     -- Restart xmonad
-    ((modm .|. shiftMask, xK_c), spawn "xmonad --recompile && (xmonad --restart; notify-send 'XMonad restarted') || notify-send 'Failed to compile'")
+    ((modm .|. shiftMask, xK_c), spawn "if xmonad --recompile; then xmonad --restart; notify-send 'XMonad restarted'; else notify-send 'XMonad failed to compile'; fi")
     ]
     ++
 

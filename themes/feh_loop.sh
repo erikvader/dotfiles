@@ -27,18 +27,18 @@ fi
 
 # trap 'kill -- -$$' EXIT
 
-length=$(($ind-1))
+length=$((ind-1))
 ind=$length
 
 while true; do
     if [[ $ind -ge $length ]]; then
-        (IFS=$'\n'; imgs=( $(shuf -e -- "${imgs[@]}") ))
-        # shuf -e -- "${imgs[@]}" | readarray -t imgs
+        # (IFS=$'\n' imgs=( $(shuf -e -- "${imgs[@]}") ))
+        readarray -t imgs < <(shuf -e -- "${imgs[@]}")
         ind=0
     fi
     eval "feh ""${imgs[$ind]}"
-    ind=$(($ind+1))
-    sleep $delay &
+    ind=$((ind+1))
+    sleep "$delay" &
     wait $!
 done
 
