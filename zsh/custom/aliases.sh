@@ -48,9 +48,8 @@ function ediff {
     emacsclient -n -e '(diff "'"$1"'" "'"$2"'")' >/dev/null
 }
 
-# alias copycmakefile="cp /home/erik/dotfiles/makefiles/c-makefile makefile"
 function copymake {
-    local f="$HOME/dotfiles/makefiles/$1-makefile"
+    local f="$HOME/makefiles/$1-makefile"
     if [[ ! -f "$f" ]]; then
         echo "\"$f\" doesn't exist" >&2
         return 1

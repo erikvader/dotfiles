@@ -77,7 +77,7 @@ myStartupHook =
   spawn "ff-theme-util" <+>
   spawn "fix_xcursor" <+>
   spawnOnce "echo off > $HOME/.program_mode" <+>
-  spawnOnce "$HOME/prog_mode_toggle.sh on" <+>
+  spawnOnce "prog_mode_toggle on" <+>
   -- set mouse speed
   spawn "xinput --set-prop 'ELAN0501:00 04F3:3060 Touchpad' 'libinput Accel Speed' 0.9" <+>
   -- scrolla in other direction
@@ -128,7 +128,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_x), spawn "rofi -show run"),
     ((modm .|. shiftMask, xK_x), spawn "rofi -show drun"),
     ((modm, xK_Escape), spawn "rofi -show window"),
-    ((modm, xK_r), spawn "$HOME/.i3/rofi_script_selector.sh"),
+    ((modm, xK_r), spawn "rofi_script_selector"),
     ((modm .|. shiftMask, xK_r), spawn "display_updater_rofi"),
 
     -- screens
@@ -139,17 +139,17 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((0, xK_Print), spawn "i3-scrot"),
     ((modm, xK_Print), spawn "i3-scrot -w"),
     ((modm .|. shiftMask, xK_Print), spawn "i3-scrot -s"),
-    ((controlMask, xK_Print), spawn "$HOME/.i3/scrot_clipboard.sh"),
-    ((modm .|. controlMask, xK_Print), spawn "$HOME/.i3/scrot_clipboard.sh -u"),
-    ((modm .|. shiftMask .|. controlMask, xK_Print), spawn "$HOME/.i3/scrot_clipboard.sh -s"),
-    -- flash
-    -- ((modm, xK_minus), spawn "$HOME/.i3/flasher.sh"),
+    ((controlMask, xK_Print), spawn "scrot_clipboard"),
+    ((modm .|. controlMask, xK_Print), spawn "scrot_clipboard -u"),
+    ((modm .|. shiftMask .|. controlMask, xK_Print), spawn "scrot_clipboard -s"),
 
+    -- flash
+    ((modm .|. shiftMask, xK_z), spawn "flasher"),
     ((modm, xK_z), spawn "mouse_dance"),
 
     -- toggle prog mode
-    ((modm .|. shiftMask, xK_m), spawn "$HOME/prog_mode_toggle.sh"),
-    ((modm, xK_m), spawn "$HOME/prog_mode_toggle.sh swetoggle"),
+    ((modm .|. shiftMask, xK_m), spawn "prog_mode_toggle"),
+    ((modm, xK_m), spawn "prog_mode_toggle swetoggle"),
 
     -- display stuff
     ((modm, xK_plus), spawn "display_updater update"),
