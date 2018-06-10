@@ -253,7 +253,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     --
     [((m .|. modm, k), windows (f i))
         | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
-        , (f, m) <- [(W.view, 0), (\i -> W.view i . W.shift i, controlMask .|. shiftMask), (W.shift, controlMask), (W.greedyView, shiftMask)]]
+        , (f, m) <- [(W.greedyView, 0), (\i -> W.view i . W.shift i, controlMask .|. shiftMask), (W.shift, controlMask), (W.view, shiftMask)]]
     ++
 
     [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
