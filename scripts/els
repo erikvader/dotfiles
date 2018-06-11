@@ -165,11 +165,8 @@ def formatEmptyDir(d):
    if not listEmpty:
       return ""
 
-   if not d.is_dir(follow_symlinks=True):
-      return ""
-
-   if not os.listdir(d.path):
-      return "*"
+   if (d.is_dir(follow_symlinks=True) and not os.listdir(d.path)) or (d.is_file(follow_symlinks=True) and d.stat(follow_symlinks=True).st_size == 0):
+      return colorize("*", "1;33")
 
    return ""
 
