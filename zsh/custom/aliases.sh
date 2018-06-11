@@ -6,18 +6,7 @@ alias lsmnt="findmnt -t ext4,cifs -l"
 
 alias cdiff="colordiff"
 
-alias ao="xarchiver"
-
-# change output dir with -C
-# --keep-old-files, --keep-newer-files
-alias amt="tar -cvf"
-alias aut="tar -xvf"
-alias amtg="tar -zcvf"
-alias autg="tar -zxvf"
-
-# -c to write to stdout and pipe to other file
-alias amg="gzip"
-alias aug="gunzip"
+alias xa="xarchiver"
 
 alias mi="mediainfo"
 
