@@ -4,6 +4,8 @@ alias r="ranger-cd"
 alias p="thunar &!"
 alias lsmnt="findmnt -t ext4,cifs -l"
 
+alias lsnet="sudo nmap -sn 192.168.1.0/24"
+
 alias cdiff="colordiff"
 
 alias xa="xarchiver"
@@ -52,8 +54,8 @@ function mounterik {
         echo "give me arguments plz" 1>&2
         return 1
     fi
-    ip="$(nmblookup ERIKRIMSKOG | grep '192.168.1' | cut -d' ' -f1)"
-    if ! [[ -n "$ip" && "${pipestatus[1]}" -eq 0 ]]; then
+    local ip=
+    if ! ip=$(set -o pipefail; nmblookup ERIKRIMSKOG | grep '192.168.1' | cut -d' ' -f1; exit $?); then
         echo "couldn't find an ip" 1>&2
         return 1
     fi
@@ -69,6 +71,10 @@ function mounterik {
 function umounterik {
     if [[ $# -eq 0 ]]; then
         echo "give me arguments plz" 1>&2
+        return 1
+    fi
+    if [[ ! -d "/media/ERIKRIMSKOG/$1" ]]; then
+        echo "\"$1\" isn't a mounted thing" >&2
         return 1
     fi
     sudo umount -lf "/media/ERIKRIMSKOG/$1"
