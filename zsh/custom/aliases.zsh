@@ -36,6 +36,8 @@ alias lll='ls -lAh'
 
 alias ec="emacsclient -n -c"
 
+alias mountanime='sudo mount -t cifs "//ERIKRIMSKOG/anime" "/media/anime" -o user="erik rimskog",file_mode=0666,dir_mode=0755,uid=erik,gid=erik'
+
 function ediff {
     emacsclient -n -e '(diff "'"$1"'" "'"$2"'")' >/dev/null
 }
@@ -47,43 +49,6 @@ function copymake {
         return 1
     fi
     cp -L "$f" ./makefile
-}
-
-function mounterik {
-    if [[ $# -eq 0 ]]; then
-        echo "give me arguments plz" 1>&2
-        return 1
-    fi
-    local ip=
-    if ! ip=$(set -o pipefail; nmblookup ERIKRIMSKOG | grep '192.168.1' | cut -d' ' -f1; exit $?); then
-        echo "couldn't find an ip" 1>&2
-        return 1
-    fi
-    sudo mkdir -p "/media/ERIKRIMSKOG/$1" &>/dev/null
-    if ! [[ -d "/media/ERIKRIMSKOG/$1" ]]; then
-        echo "failed to create dir" 1>&2
-        return 1
-    fi
-    sudo mount -t cifs "//$ip/$1" "/media/ERIKRIMSKOG/$1" -o user='erik rimskog'
-    cd "/media/ERIKRIMSKOG/$1"
-}
-
-function umounterik {
-    if [[ $# -eq 0 ]]; then
-        echo "give me arguments plz" 1>&2
-        return 1
-    fi
-    if [[ ! -d "/media/ERIKRIMSKOG/$1" ]]; then
-        echo "\"$1\" isn't a mounted thing" >&2
-        return 1
-    fi
-    sudo umount -lf "/media/ERIKRIMSKOG/$1"
-    [[ -z "$(ls -A -1 /media/ERIKRIMSKOG/$1)" ]] && sudo rmdir "/media/ERIKRIMSKOG/$1"
-    [[ -z "$(ls -A -1 /media/ERIKRIMSKOG)" ]] && sudo rmdir "/media/ERIKRIMSKOG"
-
-    if echo "$PWD" | grep '/media/ERIKRIMSKOG' &>/dev/null; then
-        cd '/media'
-    fi
 }
 
 function mc {
