@@ -79,7 +79,7 @@ myStartupHook =
   spawnOnce "echo off > $HOME/.program_mode" <+>
   spawnOnce "prog_mode_toggle on" <+>
   -- set mouse speed
-  spawn "xinput --set-prop 'ELAN0501:00 04F3:3060 Touchpad' 'libinput Accel Speed' 0.9" <+>
+  spawn "xinput --set-prop 'ELAN0501:00 04F3:3060 Touchpad' 'libinput Accel Speed' 0.8" <+>
   -- scrolla in other direction
   spawn "xinput --set-prop 'ELAN0501:00 04F3:3060 Touchpad' 'libinput Natural Scrolling Enabled' 1" <+>
   spawnOnce "dropbox start" <+>
@@ -170,7 +170,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- launch a terminal
     ((modm .|. mod1Mask, xK_Return), spawn $ XMonad.terminal conf),
-    ((modm, xK_Return), spawn "urxvt"),
+    ((modm, xK_Return), spawn "urxvt -e zsh"),
     ((modm .|. shiftMask, xK_Return), spawn "emacsclient -nc"),
     ((modm, xK_BackSpace), spawn "$HOME/.emacs_anywhere/bin/run"),
 
