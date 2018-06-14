@@ -2,7 +2,7 @@ alias open="xdg-open"
 alias q="exit"
 alias r="ranger-cd"
 alias p="thunar &!"
-alias lsmnt="findmnt -t ext4,cifs -l"
+alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk -l"
 
 alias lsnet="sudo nmap -sn 192.168.1.0/24"
 
@@ -36,7 +36,11 @@ alias lll='ls -lAh'
 
 alias ec="emacsclient -n -c"
 
-alias mountanime='sudo mount -t cifs "//ERIKRIMSKOG/anime" "/media/anime" -o user="erik rimskog",file_mode=0666,dir_mode=0755,uid=erik,gid=erik'
+alias mountanime='sudo mount -t cifs "//ERIKRIMSKOG/anime" "/media/anime" -o user="erik rimskog",file_mode=0644,dir_mode=0755,uid="$(id -u)",gid="$(id -g)"'
+
+function mountfat {
+    sudo mount "$1" "$2" -o uid=$(id -u),gid=$(id -g),umask=133,dmask=022
+}
 
 function ediff {
     emacsclient -n -e '(diff "'"$1"'" "'"$2"'")' >/dev/null
