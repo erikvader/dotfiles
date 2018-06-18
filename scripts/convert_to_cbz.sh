@@ -15,7 +15,12 @@ folder="$1"
 
 fs="$(find "$folder" -mindepth 1 -maxdepth 1 -type d)"
 
-while IFS='' read -r line && [[ -n "$line" ]]; do
+if [[ -z "$fs" ]]; then
+    echo "$folder is empty" >&2
+    exit 1
+fi
+
+while IFS='' read -r line || [[ -n "$line" ]]; do
     if [[ -f "$line.cbz" ]]; then
         echo "skipping \"$line\""
         continue
