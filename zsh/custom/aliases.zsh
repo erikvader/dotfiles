@@ -38,12 +38,26 @@ alias ec="emacsclient -n -c"
 
 alias mountanime='sudo mount -t cifs "//ERIKRIMSKOG/anime" "/media/anime" -o user="erik rimskog",file_mode=0644,dir_mode=0755,uid="$(id -u)",gid="$(id -g)"'
 
-function mountfat {
-    sudo mount "$1" "$2" -o uid=$(id -u),gid=$(id -g),umask=133,dmask=022
+function mountsmb {
+    if [[ $# -ne 3 ]]; then
+        echo "Usage: $0 share-location share-name mountpoint" >&2
+        return 1
+    fi
+    sudo mount -t cifs "//$1/$2" "$3" -o user="erik rimskog",file_mode=0644,dir_mode=0755,uid="$(id -u)",gid="$(id -g)"
 }
 
+function mountfat {
+    sudo mount "$1" "$2" -o uid="$(id -u)",gid="$(id -g)",umask=133,dmask=022
+}
+
+alias mountanime='mountsmb ERIKRIMSKOG anime /media/anime'
+
 function ediff {
-    emacsclient -n -e '(diff "'"$1"'" "'"$2"'")' >/dev/null
+    emacsclient -n -c -e '(same-buffer (diff "'"$1"'" "'"$2"'"))' >/dev/null
+}
+
+function magit {
+    emacsclient -n -c -e '(same-buffer (magit-status))' >/dev/null
 }
 
 function copymake {
