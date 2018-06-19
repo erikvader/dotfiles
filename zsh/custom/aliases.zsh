@@ -43,11 +43,15 @@ function mountsmb {
         echo "Usage: $0 share-location share-name mountpoint" >&2
         return 1
     fi
-    sudo mount -t cifs "//$1/$2" "$3" -o user="erik rimskog",file_mode=0644,dir_mode=0755,uid="$(id -u)",gid="$(id -g)"
+    sudo mount -t cifs "//$1/$2" "$3" -o user="erik rimskog",file_mode=0644,dir_mode=0755,uid="$(id -u)",gid="$(id -g)" && cd "$3"
 }
 
 function mountfat {
-    sudo mount "$1" "$2" -o uid="$(id -u)",gid="$(id -g)",umask=133,dmask=022
+    if [[ $# -ne 2 ]]; then
+        echo "Usage: $0 device mountpoint" >&2
+        return 1
+    fi
+    sudo mount "$1" "$2" -o uid="$(id -u)",gid="$(id -g)",umask=133,dmask=022 && cd "$2"
 }
 
 alias mountanime='mountsmb ERIKRIMSKOG anime /media/anime'
