@@ -138,3 +138,31 @@ class toggle_super_zoom(Command):
             # self.fm.settings.collapse_preview = False
             self.fm.settings.preview_files = False
             self.fm.settings.preview_directories = False
+
+class toggle_previews(Command):
+    """
+    """
+    def execute(self):
+        # if any preview is on
+        if (
+            not self.fm.settings.collapse_preview or
+                self.fm.settings.preview_files or
+                self.fm.settings.preview_directories or
+                self.fm.settings.preview_images or
+                self.fm.settings.use_preview_script
+           ):
+            # turn off
+            self.fm.settings.collapse_preview = True
+            self.fm.settings.preview_files = False
+            self.fm.settings.preview_directories = False
+            self.fm.settings.preview_images = False
+            self.fm.settings.use_preview_script = False
+        else:
+            # turn on
+            self.fm.settings.collapse_preview = False
+            self.fm.settings.preview_files = True
+            self.fm.settings.preview_directories = True
+            self.fm.settings.preview_images = True
+            self.fm.settings.use_preview_script = True
+
+
