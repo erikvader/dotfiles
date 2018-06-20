@@ -36,7 +36,7 @@ alias lll='ls -lAh'
 
 alias ec="emacsclient -n -c"
 
-alias mountanime='sudo mount -t cifs "//ERIKRIMSKOG/anime" "/media/anime" -o user="erik rimskog",file_mode=0644,dir_mode=0755,uid="$(id -u)",gid="$(id -g)"'
+alias mountanime="mountsmb ERIKRIMSKOG anime /media/anime"
 
 function mountsmb {
     if [[ $# -ne 3 ]]; then
@@ -53,8 +53,6 @@ function mountfat {
     fi
     sudo mount "$1" "$2" -o uid="$(id -u)",gid="$(id -g)",umask=133,dmask=022 && cd "$2"
 }
-
-alias mountanime='mountsmb ERIKRIMSKOG anime /media/anime'
 
 function ediff {
     emacsclient -n -c -e '(same-buffer (diff "'"$1"'" "'"$2"'"))' >/dev/null
