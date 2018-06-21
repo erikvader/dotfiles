@@ -17,7 +17,8 @@ import XMonad.Config.Desktop
 
 import XMonad.Actions.UpdatePointer
 import XMonad.Actions.Warp
-import XMonad.Actions.CycleWS (nextScreen, swapNextScreen)
+-- import XMonad.Actions.CycleWS (nextScreen, swapNextScreen)
+import XMonad.Actions.PhysicalScreens
 
 import XMonad.Util.SpawnOnce
 import XMonad.Util.WorkspaceCompare
@@ -132,8 +133,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_r), spawn "display_updater_rofi"),
 
     -- screens
-    ((modm, xK_Tab), nextScreen),
-    ((modm .|. shiftMask, xK_Tab), swapNextScreen),
+    ((modm, xK_Tab), onNextNeighbour def W.view),
+    ((modm .|. shiftMask, xK_Tab), onNextNeighbour def W.greedyView),
 
     -- printscreen
     ((0, xK_Print), spawn "i3-scrot"),
@@ -261,7 +262,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     --
     [((m .|. modm, k), windows (f i))
         | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
-        , (f, m) <- [(W.greedyView, 0), (\i -> W.view i . W.shift i, controlMask .|. shiftMask), (W.shift, controlMask)-- , (W.view, shiftMask)
+        , (f, m) <- [(W.greedyView, 0),
+                     (\i -> W.view i . W.shift i, controlMask .|. shiftMask),
+                     (W.shift, controlMask)
+                     -- , (W.view, shiftMask)
                     ]]
     ++
 
@@ -271,9 +275,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ++
 
     -- move to screen with shift+num instead of Fnum
-    [((m .|. modm, key), screenWorkspace sc >>= flip whenJust (windows . f))
+    [((m .|. modm, key), f sc)
         | (key, sc) <- zip [xK_1, xK_2, xK_3] [0..]
-        , (f, m) <- [(W.view, shiftMask)]]
+        , (f, m) <- [(viewScreen def, shiftMask)]]
 
     ++
 
@@ -281,9 +285,13 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- mod-{F1,F2,f3}, Switch to physical/Xinerama screens 1, 2, or 3
     -- mod-shift-{F1,F2,f3}, Move client to screen 1, 2, or 3
     --
-    [((m .|. modm, key), screenWorkspace sc >>= flip whenJust (windows . f))
+    [((m .|. modm, key), f sc)
         | (key, sc) <- zip [xK_F1, xK_F2, xK_F3] [0..]
-        , (f, m) <- [(W.view, 0), (\i -> W.view i . W.shift i, shiftMask .|. controlMask), (W.greedyView, shiftMask), (W.shift, controlMask)]]
+        , (f, m) <- [(viewScreen def, 0),
+                     (\i -> viewScreen def i >> sendToScreen def i, shiftMask .|. controlMask),
+                     (\i -> getScreen def i >>= maybe (return Nothing) screenWorkspace >>= flip whenJust (windows . W.greedyView), shiftMask),
+                     (sendToScreen def, controlMask)
+                    ]]
 
 logLimitWindows :: [X (Maybe String)]
 logLimitWindows =
