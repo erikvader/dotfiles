@@ -12,6 +12,9 @@ alias xa="xarchiver"
 
 alias mi="mediainfo"
 
+alias rst='rsync -avhn --delete'
+alias rs='rsync -avh --delete --progress'
+
 alias y='yaourt'
 alias yy='yaourt -Syy'
 alias yu='yaourt -Syua'
