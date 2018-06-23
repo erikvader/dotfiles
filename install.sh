@@ -32,7 +32,7 @@ scripts=(
     "i3/create-lock-img.sh"
     "i3/display_updater_rofi.sh"
     "i3/rofi_script_selector.sh"
-    "scripts/convert_to_cbz.sh"
+    # "scripts/convert_to_cbz.sh"
     "scripts/flasher.sh"
     "scripts/prog_mode_toggle.sh"
     "scripts/toggle_audio_powersave.sh"
