@@ -44,7 +44,7 @@ function placecp {
         echo "File exists: $2" >&2
         colorize 1 "EXISTS "
     else
-        if cp -i "$1" "$2"; then
+        if cp -iT "$1" "$2"; then
             colorize 2 "OK "
         else
             colorize 1 "FAILED "
