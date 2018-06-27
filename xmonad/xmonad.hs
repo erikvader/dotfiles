@@ -17,8 +17,9 @@ import XMonad.Config.Desktop
 
 import XMonad.Actions.UpdatePointer
 import XMonad.Actions.Warp
--- import XMonad.Actions.CycleWS (nextScreen, swapNextScreen)
+import XMonad.Actions.CycleWS (nextWS, prevWS)
 import XMonad.Actions.PhysicalScreens
+import XMonad.Actions.SwapWorkspaces
 
 import XMonad.Util.SpawnOnce
 import XMonad.Util.WorkspaceCompare
@@ -211,6 +212,14 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- Swap the focused window with the previous window
     ((modm .|. shiftMask, xK_k), windows W.swapUp),
+
+    -- focus next or previous workspace
+    ((modm .|. controlMask, xK_j), nextWS),
+    ((modm .|. controlMask, xK_k), prevWS),
+
+    -- moves workspaces up or down
+    ((modm .|. controlMask .|. shiftMask, xK_j), swapTo Next),
+    ((modm .|. controlMask .|. shiftMask, xK_k), swapTo Prev),
 
     -- Shrink the master area
     ((modm, xK_h), sendMessage Shrink),
