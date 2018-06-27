@@ -87,7 +87,8 @@ myStartupHook =
   spawnOnce "dropbox start" <+>
   -- spawnOnce "redshift-gtk" <+>
   -- spawnOnce "blueman-applet" <+>
-  spawnOnce "google-chrome-stable" <+>
+  -- spawnOnce "google-chrome-stable" <+>
+  spawnOnce "qutebrowser" <+>
   spawnOnce "emacs --daemon"
 
 -- Do the same thing as XMonad.Actions.UpdatePointer, except that it
