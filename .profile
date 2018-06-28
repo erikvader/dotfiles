@@ -19,4 +19,7 @@ export QT_AUTO_SCREEN_SCALE_FACTOR=0
 # smartcase in less
 export LESS=-Ri
 
+# yellow pdf:s in ls
+export LS_COLORS="$LS_COLORS:*.pdf=01;33"
+
 # [[ -f ~/.extend.profile ]] && . ~/.extend.profile
