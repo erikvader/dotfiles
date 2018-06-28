@@ -45,13 +45,15 @@ import Erik.Spacing
 import Erik.MyStuff
 import qualified Erik.MyLimitWindows as L
 -- import XMonad.Layout.LimitWindows
+import Erik.CompactWorkspaces
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
 
 myModMask = mod4Mask
 
-myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer]
+-- myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer]
+myWorkspaces = zipWith (++) (generateWorkspaces 3) ([" \62056", " \61508"] ++ repeat " \61705")
 
 myBaseLayouts = Tall 1 (3/100) (1/2) ||| renamed [Replace "OneBig"] (OneBig (3/4) (3/4)) ||| ThreeColMid 1 (3/100) (1/2) ||| mosaic 1.1 [3,2,2] ||| Grid ||| renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
 myBaseLayoutsNames = ["Tall", "OneBig", "ThreeCol", "Mosaic", "Grid", "Spiral"]
@@ -270,17 +272,23 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- mod-[1..9], Switch to workspace N
     -- mod-shift-[1..9], Move client to workspace N
     --
-    [((m .|. modm, k), windows (f i))
-        | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
-        , (f, m) <- [(W.greedyView, 0),
-                     (\i -> W.view i . W.shift i, controlMask .|. shiftMask),
-                     (W.shift, controlMask)
-                     -- , (W.view, shiftMask)
-                    ]]
-    ++
+    -- [((m .|. modm, k), windows (f i))
+    --     | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
+    --     , (f, m) <- [(W.greedyView, 0),
+    --                  (\i -> W.view i . W.shift i, controlMask .|. shiftMask),
+    --                  (W.shift, controlMask)
+    --                  -- , (W.view, shiftMask)
+    --                 ]]
+
+    [((modm .|. m, k), compWS (1/5) i (windows . f)) |
+      (i, k) <- zip [0..] [xK_1 .. xK_3],
+      (f, m) <- [(W.greedyView, 0),
+                 (\i -> W.view i . W.shift i, controlMask .|. shiftMask),
+                 (W.shift, controlMask)
+                ]]
 
     -- jump to layout
-    [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
+    -- [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
 
     ++
 
@@ -380,7 +388,7 @@ main = do
                         trace (show (e :: SomeException))
                         return Nothing)
 
-  xmonad $ ewmh $ myConfig {
+  xmonad $ ewmh $ compactWindows 3 $ myConfig {
     logHook = logHook myConfig <+> L.updateCurrentState <+> dynamicLogWithPP (myLogHook mhandle),
     handleEventHook = handleEventHook myConfig <+> fullscreenEventHook
     }
