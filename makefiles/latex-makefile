@@ -14,11 +14,7 @@ $(name).pdf: $(name).tex
 
 .PHONY: show
 show: $(name).pdf
-	mupdf $< &>/dev/null &
-
-.PHONY: update
-update: $(name).pdf
-	pkill -HUP -x mupdf
+	zathura $< &>/dev/null &
 
 .PHONY: clean
 clean:
