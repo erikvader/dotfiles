@@ -80,6 +80,7 @@ scripts=(
     "scripts/mouse_dance.sh"
     "scripts/getCRTC.sh"
     "scripts/els"
+    # "scripts/open_downloaded_pdf.sh"
 )
 
 for s in "${scripts[@]}"; do
