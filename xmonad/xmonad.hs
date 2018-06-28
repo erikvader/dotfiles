@@ -173,9 +173,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- launch a terminal
     ((modm .|. mod1Mask, xK_Return), spawn $ XMonad.terminal conf),
-    ((modm, xK_Return), spawn "urxvt -e zsh"),
+    ((modm, xK_Return), spawn "urxvt"),
     ((modm .|. shiftMask, xK_Return), spawn "emacsclient -nc"),
-    ((modm, xK_BackSpace), spawn "$HOME/.emacs_anywhere/bin/run"),
+    -- ((modm, xK_BackSpace), spawn "$HOME/.emacs_anywhere/bin/run"),
 
     -- toggle zoom
     -- ((modm, xK_f), sendMessage $ Toggle FULL),
@@ -215,12 +215,12 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_k), windows W.swapUp),
 
     -- focus next or previous workspace
-    ((modm .|. controlMask, xK_j), nextWS),
-    ((modm .|. controlMask, xK_k), prevWS),
+    ((modm, xK_period), nextWS),
+    ((modm, xK_comma), prevWS),
 
     -- moves workspaces up or down
-    ((modm .|. controlMask .|. shiftMask, xK_j), swapTo Next),
-    ((modm .|. controlMask .|. shiftMask, xK_k), swapTo Prev),
+    ((modm .|. shiftMask, xK_period), swapTo Next),
+    ((modm .|. shiftMask, xK_comma), swapTo Prev),
 
     -- Shrink the master area
     ((modm, xK_h), sendMessage Shrink),
