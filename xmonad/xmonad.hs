@@ -49,14 +49,15 @@ import Erik.CompactWorkspaces
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
+import qualified Data.Set        as S
 
 myModMask = mod4Mask
 
 -- myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer]
-myWorkspaces = zipWith (++) (generateWorkspaces 3) ([" \62056", " \61508"] ++ repeat " \61705")
+myWorkspaces = zipWith (++) (map (concatMap show) $ combinationsSorted [1..3]) ([" \62056", " \61508"] ++ repeat " \61705")
 
 myBaseLayouts = Tall 1 (3/100) (1/2) ||| renamed [Replace "OneBig"] (OneBig (3/4) (3/4)) ||| ThreeColMid 1 (3/100) (1/2) ||| mosaic 1.1 [3,2,2] ||| Grid ||| renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
-myBaseLayoutsNames = ["Tall", "OneBig", "ThreeCol", "Mosaic", "Grid", "Spiral"]
+-- myBaseLayoutsNames = ["Tall", "OneBig", "ThreeCol", "Mosaic", "Grid", "Spiral"]
 
 lwLimit :: Int
 lwLimit = 2
@@ -280,15 +281,20 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     --                  -- , (W.view, shiftMask)
     --                 ]]
 
-    [((modm .|. m, k), compWS (1/5) i (windows . f)) |
-      (i, k) <- zip [0..] [xK_1 .. xK_3],
-      (f, m) <- [(W.greedyView, 0),
-                 (\i -> W.view i . W.shift i, controlMask .|. shiftMask),
-                 (W.shift, controlMask)
-                ]]
+    -- [((modm .|. m, k), compWS (1/5) i (windows . f)) |
+    --   (i, k) <- zip [0..] [xK_1 .. xK_3],
+    --   (f, m) <- [(W.greedyView, 0),
+    --              (\i -> W.view i . W.shift i, controlMask .|. shiftMask),
+    --              (W.shift, controlMask)
+    --             ]]
 
     -- jump to layout
     -- [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
+
+  -- TODO: add the rest of the functions
+    let keys = [xK_1, xK_2, xK_3]
+        order = map S.fromList $ combinationsSorted keys
+    in [((modm, k), compactWorkspace W.view order k [xK_Super_L] keys) | k <- keys]
 
     ++
 
@@ -388,7 +394,7 @@ main = do
                         trace (show (e :: SomeException))
                         return Nothing)
 
-  xmonad $ ewmh $ compactWindows 3 $ myConfig {
+  xmonad $ ewmh $ myConfig {
     logHook = logHook myConfig <+> L.updateCurrentState <+> dynamicLogWithPP (myLogHook mhandle),
     handleEventHook = handleEventHook myConfig <+> fullscreenEventHook
     }
