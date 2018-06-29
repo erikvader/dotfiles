@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-missing-signatures #-}
 module Erik.MyStuff (
   rotLastUp, rotLastDown, rotLast',
   rotUp, rotDown,
@@ -11,13 +12,8 @@ module Erik.MyStuff (
 import System.Directory (getHomeDirectory)
 import XMonad
 import qualified XMonad.StackSet as W
-import qualified Data.Map as M
 import Data.List (find)
 import Data.Maybe (maybe,isNothing)
-import Control.Concurrent (threadDelay)
-import XMonad.Actions.Warp
-import Control.Monad
-import System.Random
 
 -- class for calculating the size of stacks
 class StackSize a where

@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-missing-signatures #-}
 {-# LANGUAGE CPP, RecordWildCards, FlexibleInstances, MultiParamTypeClasses, DeriveDataTypeable, PatternGuards #-}
 
 module Erik.MyLimitWindows (
@@ -19,11 +20,9 @@ import XMonad.Layout.LayoutModifier
 import XMonad
 import XMonad.Operations(sendMessage)
 import qualified XMonad.StackSet as W
-import Control.Monad((<=<),guard,when)
+import Control.Monad(guard,when)
 import Control.Applicative((<$>))
-import Data.Maybe(fromJust,isJust,isNothing)
 import qualified XMonad.Util.ExtensibleState as XS
-import qualified Data.Map.Strict as Map
 import Erik.MyStuff
 
 -- $usage
@@ -189,8 +188,7 @@ instance LayoutModifier LimitWindows a where
       updateCurrentState :: X ()
       updateCurrentState = do
         wor <- W.workspace . W.current <$> gets windowset
-        let id = W.tag wor
-            sta = W.stack wor
+        let sta = W.stack wor
             (s, (s1, s2)) = visibleSizes (if lfull then 1 else llimit) sta
             newState = LimitState { slimit          = llimit,
                                     sfull           = lfull,
