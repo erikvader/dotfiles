@@ -165,5 +165,16 @@ function ranger-cd {
 
 bindkey -s '^o' "ranger-cd"
 
+# smartcase in less
+export LESS=-Ri
+
+# ranger wont load default conf, only user
+export RANGER_LOAD_DEFAULT_RC=FALSE
+
 # which cowfortune &>/dev/null && cowfortune
 
+# use custom dircolors if there are any
+if [[ -f "$HOME/.dircolors" ]]; then
+    eval "$(dircolors -b "$HOME/.dircolors")"
+    zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+fi
