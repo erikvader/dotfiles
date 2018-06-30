@@ -5,7 +5,7 @@
 
 #[[ "$XDG_CURRENT_DESKTOP" == "KDE" ]] || export QT_QPA_PLATFORMTHEME="qt5ct"
 
-export PATH="$HOME/.bin:$PATH"
+export PATH="$HOME/.bin:$HOME/.local/bin:$PATH"
 
 # java doesn't like xmonad
 export _JAVA_AWT_WM_NONREPARENTING=1
