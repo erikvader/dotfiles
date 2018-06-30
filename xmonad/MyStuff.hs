@@ -5,7 +5,8 @@ module Erik.MyStuff (
   onLayout,
   writeStd,
   StackSize(..),
-  focusAnyEmpty,focusLowestEmpty
+  focusAnyEmpty,focusLowestEmpty,
+  shiftView
   -- pointerDance
 ) where
 
@@ -51,6 +52,8 @@ instance StackSize (W.Stack a) where
 --     good (x1, y1) (x2, y2) = ((x1-x2) ** 2) + ((y1-y2) ** 2) < (100 ** 2)
 
 
+shiftView :: WorkspaceId -> WindowSet -> WindowSet
+shiftView i = W.view i . W.shift i
 
 rotLastUp :: X ()
 rotLastUp = windows $ W.modify' (rotLast' rotUp)

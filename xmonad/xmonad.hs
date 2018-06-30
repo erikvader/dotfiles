@@ -291,10 +291,14 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- jump to layout
     -- [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
 
-  -- TODO: add the rest of the functions
     let keys = [xK_1, xK_2, xK_3]
         order = map S.fromList $ combinationsSorted keys
-    in [((modm, k), compactWorkspace W.view order k [xK_Super_L] keys) | k <- keys]
+    in [((modm .|. m, k), compactWorkspace f order k mods keys)
+       | k <- keys,
+         (f, m, mods) <- [(W.view, 0, [xK_Super_L]),
+                          (shiftView, controlMask .|. shiftMask, [xK_Super_L, xK_Control_L, xK_Shift_L]),
+                          (W.shift, controlMask, [xK_Super_L, xK_Control_L])
+                          ]]
 
     ++
 
