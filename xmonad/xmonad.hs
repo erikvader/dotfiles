@@ -218,12 +218,12 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_k), windows W.swapUp),
 
     -- focus next or previous workspace
-    ((modm .|. controlMask, xK_j), nextWS),
-    ((modm .|. controlMask, xK_k), prevWS),
+    ((modm, xK_period), nextWS),
+    ((modm, xK_comma), prevWS),
 
     -- moves workspaces up or down
-    ((modm .|. shiftMask .|. controlMask, xK_j), swapTo Next),
-    ((modm .|. shiftMask .|. controlMask, xK_k), swapTo Prev),
+    ((modm .|. shiftMask, xK_period), swapTo Next),
+    ((modm .|. shiftMask, xK_comma), swapTo Prev),
 
     -- Shrink the master area
     ((modm, xK_h), sendMessage Shrink),
