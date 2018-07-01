@@ -6,7 +6,7 @@ alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk -l"
 
 alias lsnet="sudo nmap -sn 192.168.1.0/24"
 
-alias cdiff="colordiff"
+alias cdiff="diff --color=auto"
 
 alias xa="xarchiver"
 
@@ -26,6 +26,7 @@ alias ysi='yaourt -Si'
 alias yqi='yaourt -Qi'
 alias yfs='yaourt -Fs'
 alias yfl='yaourt -Fl'
+alias ym='yaourt -Qm'
 alias yo='yaourt -Qdt'
 alias yl='yaourt -Qet'
 alias yc='yaourt -Sc'
@@ -59,6 +60,10 @@ function mountfat {
 
 function ediff {
     emacsclient -n -c -e '(same-buffer (diff "'"$1"'" "'"$2"'"))' >/dev/null
+}
+
+function vdiff {
+    emacsclient -n -c -e '(vdiff-files "'"$1"'" "'"$2"'" nil (function vdiff-close-everything))' >/dev/null
 }
 
 function magit {

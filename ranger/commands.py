@@ -149,7 +149,8 @@ class toggle_previews(Command):
                 self.fm.settings.preview_files or
                 self.fm.settings.preview_directories or
                 self.fm.settings.preview_images or
-                self.fm.settings.use_preview_script
+                self.fm.settings.use_preview_script or
+                self.fm.settings.automatically_count_files
            ):
             # turn off
             self.fm.settings.collapse_preview = True
@@ -157,6 +158,7 @@ class toggle_previews(Command):
             self.fm.settings.preview_directories = False
             self.fm.settings.preview_images = False
             self.fm.settings.use_preview_script = False
+            self.fm.settings.automatically_count_files = False
         else:
             # turn on
             self.fm.settings.collapse_preview = False
@@ -164,5 +166,6 @@ class toggle_previews(Command):
             self.fm.settings.preview_directories = True
             self.fm.settings.preview_images = True
             self.fm.settings.use_preview_script = True
+            self.fm.settings.automatically_count_files = True
 
 
