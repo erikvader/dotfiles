@@ -60,7 +60,7 @@ font-4 = fontawesome:pixelsize=10;3
 
 modules-left = xmonad
 modules-center =
-modules-right = powersave volume progmode temperature memory cpu wlan battery date
+modules-right = mounts powersave volume progmode temperature memory cpu wlan battery date
 
 tray-position = center
 tray-padding = 2
@@ -99,6 +99,16 @@ type = custom/script
 exec = xmonadLog
 
 tail = true
+
+[module/mounts]
+type = custom/script
+exec = ~/.config/polybar/mounts.sh
+interval = 60
+
+format-underline = #ff69b4
+format-padding = 2
+; format-margin = 1
+format-prefix-foreground = ${colors.foreground}
 
 [module/progmode]
 type = custom/script
