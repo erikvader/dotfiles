@@ -23,6 +23,7 @@ scripts=("xrandr-invert-colors"
          "theme_lock"
          "pkill -USR1 -x polybar"
          "display_updater_rofi"
+         'open_downloaded_pdf'
         )
 
 names=("Invert colors"
@@ -48,6 +49,7 @@ names=("Invert colors"
        "Lock"
        "Refresh Polybar (SIGUSR1)"
        "Display Updater"
+       "Open Downloaded PDF"
       )
 
 # eller printf '%s\n' "${names[@]}"
