@@ -12,9 +12,16 @@ $(name).pdf: $(name).tex
 	pdflatex -interaction=nonstopmode $<
 	pdflatex -interaction=nonstopmode $<
 
+.PHONY: auto
+auto:
+	@while true; do \
+		inotifywait --event modify $(name).tex &>/dev/null; \
+		$(MAKE) --no-print-directory all; \
+	done
+
 .PHONY: show
 show: $(name).pdf
-	zathura $< &>/dev/null &
+	xdg-open $< &>/dev/null &
 
 .PHONY: clean
 clean:
