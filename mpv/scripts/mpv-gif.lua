@@ -7,22 +7,26 @@ local msg = require 'mp.msg'
 
 -- Set this to the filters to pass into ffmpeg's -vf option.
 -- filters="fps=24,scale=320:-1:flags=lanczos"
--- filters="fps=15,scale=540:-1:flags=lanczos"
-filters="scale=540:-1:flags=lanczos"
+filters_low="fps=15,scale=540:-1:flags=lanczos"
+filters_high="scale=540:-1:flags=lanczos"
 
 start_time = -1
 end_time = -1
 palette="/tmp/palette.png"
 
 function make_gif_with_subtitles()
-    make_gif_internal(true)
+    make_gif_internal(true, filters_high)
 end
 
 function make_gif()
-    make_gif_internal(false)
+    make_gif_internal(false, filters_high)
 end
 
-function make_gif_internal(burn_subtitles)
+function make_gif_low()
+    make_gif_internal(false, filters_low)
+end
+
+function make_gif_internal(burn_subtitles, filters)
     local start_time_l = start_time
     local end_time_l = end_time
     if start_time_l == -1 or end_time_l == -1 or start_time_l >= end_time_l then
@@ -103,4 +107,5 @@ end
 mp.add_key_binding("g", "set_gif_start", set_gif_start)
 mp.add_key_binding("G", "set_gif_end", set_gif_end)
 mp.add_key_binding("Ctrl+g", "make_gif", make_gif)
+mp.add_key_binding("Ctrl+Alt+g", "make_gif_low", make_gif_low)
 mp.add_key_binding("Ctrl+G", "make_gif_with_subtitles", make_gif_with_subtitles)
