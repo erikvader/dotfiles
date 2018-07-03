@@ -2,6 +2,10 @@
 -- Requires ffmpeg.
 -- Adapted from http://blog.pkh.me/p/21-high-quality-gif-with-ffmpeg.html
 -- Usage: "g" to set start frame, "G" to set end frame, "Ctrl+g" to create.
+
+-- Know issues:
+--   - ffmpeg doesn't like ordered chapters on mkv files, --no-ordered-chapters to fix
+
 local utils = require 'mp.utils'
 local msg = require 'mp.msg'
 
@@ -62,7 +66,7 @@ function make_gif_internal(burn_subtitles, filters)
     stream_path = utils.join_path(utils.getcwd(), mp.get_property("path", ""))
     local working_path = get_containing_path(stream_path)
     local filename = mp.get_property("filename/no-ext")
-    local file_path = working_path .. filename
+    local file_path = utils.join_path(working_path, filename)
 
     -- increment filename
     for i=0,999 do
