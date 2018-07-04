@@ -103,6 +103,7 @@ place "$PWD/.profile"      "$HOME/.profile"
 place "$PWD/.xmodmap_prog" "$HOME/.xmodmap_prog"
 place "$PWD/zsh/.zshrc"    "$HOME/.zshrc"
 place "$PWD/makefiles"     "$HOME/makefiles"
+place "$PWD/.Xresources"   "$HOME/.Xresources"
 
 # thing in urxvt that is overridden after each update
 if [[ -f "/usr/lib/urxvt/perl/eval" ]]; then

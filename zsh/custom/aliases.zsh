@@ -4,6 +4,8 @@ alias r="ranger-cd"
 alias p="thunar &!"
 alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk -l"
 
+alias cdm='cd /media'
+
 alias lsnet="sudo nmap -sn 192.168.1.0/24"
 
 alias cdiff="diff --color=auto"
