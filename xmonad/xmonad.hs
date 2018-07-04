@@ -54,7 +54,7 @@ import qualified Data.Set        as S
 myModMask = mod4Mask
 
 -- myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer]
-myWorkspaces = zipWith (++) (map (concatMap show) $ combinationsSorted [1..3]) ([" \62056", " \61508"] ++ repeat " \61705")
+myWorkspaces = zipWith (++) (map (concatMap show) $ combinations [1..3]) ([" \62056", " \61508"] ++ repeat " \61705")
 
 myBaseLayouts = Tall 1 (3/100) (1/2) ||| renamed [Replace "OneBig"] (OneBig (3/4) (3/4)) ||| ThreeColMid 1 (3/100) (1/2) ||| mosaic 1.1 [3,2,2] ||| Grid ||| renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
 -- myBaseLayoutsNames = ["Tall", "OneBig", "ThreeCol", "Mosaic", "Grid", "Spiral"]
@@ -70,11 +70,10 @@ myLayoutHook =
   myBaseLayouts
 
 myStartupHook =
-  spawnOnce "pulseaudio" <+>
-  spawnOnce "pa-applet" <+>
   spawnOnce "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1" <+>
   spawnOnce "display_updater startup" <+>
   -- spawnOnce "compton -b" <+>
+  spawnOnce "sleep 10; pulseaudio --daemonize && (sleep 5; pa-applet)" <+>
   spawnOnce "nm-applet" <+>
   spawnOnce "xfce4-power-manager" <+>
   spawnOnce "pamac-tray" <+>
@@ -292,8 +291,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
 
     let keys = [xK_1, xK_2, xK_3]
-        order = map S.fromList $ combinationsSorted keys
-    in [((modm .|. m, k), compactWorkspace f order k mods keys)
+    in [((modm .|. m, k), compactWorkspaceCombinations f k mods keys)
        | k <- keys,
          (f, m, mods) <- [(W.view, 0, [xK_Super_L]),
                           (shiftView, controlMask .|. shiftMask, [xK_Super_L, xK_Control_L, xK_Shift_L]),
