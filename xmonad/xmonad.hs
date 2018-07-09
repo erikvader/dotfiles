@@ -149,8 +149,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask .|. controlMask, xK_Print), spawn "scrot_clipboard -s"),
 
     -- flash
-    ((modm .|. shiftMask, xK_z), spawn "flasher"),
-    ((modm, xK_z), spawn "mouse_dance"),
+    ((modm, xK_z), spawn "flasher"),
+    ((modm .|. shiftMask, xK_z), spawn "mouse_dance"),
 
     -- toggle prog mode
     ((modm .|. shiftMask, xK_m), spawn "prog_mode_toggle"),
