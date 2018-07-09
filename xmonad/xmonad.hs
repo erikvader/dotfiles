@@ -73,7 +73,7 @@ myStartupHook =
   spawnOnce "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1" <+>
   spawnOnce "display_updater startup" <+>
   -- spawnOnce "compton -b" <+>
-  spawnOnce "sleep 10; pulseaudio --daemonize && (sleep 5; pa-applet)" <+>
+  spawnOnce "pa-applet" <+>
   spawnOnce "nm-applet" <+>
   spawnOnce "xfce4-power-manager" <+>
   spawnOnce "pamac-tray" <+>

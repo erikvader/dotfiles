@@ -155,10 +155,10 @@ function ranger-cd {
 
     ranger --choosedir "$temp"
 
-    content="$(cat $temp 2>/dev/null)" &&
-    if [[ "$content" ]]; then
-        cd "$content"
-    fi
+    content="$(cat "$temp" 2>/dev/null)" &&
+        if [[ "$content" ]]; then
+            cd "$content"
+        fi
 
     rm -f "$temp"
 }
