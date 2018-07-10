@@ -9,8 +9,8 @@ pic="$(ls -1 "$1" | head -n1)"
 
 # default to black conky
 echo "#!/bin/bash" > "$1/conky"
-echo "conky_start -n metro -t black &!" >> "$1/conky"
-echo "conky_start -n system -t black &!" >> "$1/conky"
+echo "conky_start -n metro -t black &" >> "$1/conky"
+echo "conky_start -n system -t black &" >> "$1/conky"
 chmod +x "$1/conky"
 
 # generate feh script

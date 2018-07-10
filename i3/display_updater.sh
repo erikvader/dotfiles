@@ -131,13 +131,13 @@ fi
 if [[ "$feh" ]]; then
     pkill feh_loop
     while pgrep feh_loop >/dev/null; do sleep 1; done
-    "$HOME/.start_feh" &!
+    "$HOME/.start_feh" &
 fi
 
 if [[ "$conky" ]]; then
     pkill conky
     while pgrep -x conky >/dev/null; do sleep 1; done
-    "$HOME/.start_conky" &>/dev/null &!
+    nohup "$HOME/.start_conky" &>/dev/null </dev/null &
 fi
 
 # eftersom en extern monitor blir svart om inte compton startas om
