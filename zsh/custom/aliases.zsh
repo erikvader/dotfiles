@@ -6,6 +6,9 @@ alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk -l"
 
 alias cdm='cd /media'
 
+alias pps='ps -Ho pid,ppid,pgid,comm'
+alias ppss='ps -Ho pid,ppid,pgid,command'
+
 alias lsnet="sudo nmap -sn 192.168.1.0/24"
 
 alias cdiff="diff --color=auto"
@@ -14,7 +17,7 @@ alias xa="xarchiver"
 
 alias mi="mediainfo"
 
-alias rst='rsync -avhn --delete'
+alias rsd='rsync -avhn --delete'
 alias rs='rsync -avh --delete --progress'
 
 alias y='yaourt'
