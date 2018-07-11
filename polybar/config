@@ -286,10 +286,16 @@ card = intel_backlight
 [module/cpu]
 type = internal/cpu
 interval = 2
+format = <ramp-load><label>
 format-prefix = " "
 format-prefix-foreground = ${colors.foreground}
 format-underline = #f90000
 label = %{A1:gnome-system-monitor:}%percentage%%%{A}
+ramp-load-0 =
+ramp-load-1 =
+ramp-load-2 =
+ramp-load-3 = %{F#f5a70a}
+ramp-load-4 = %{F#ff5555}
 
 [module/memory]
 type = internal/memory
@@ -302,8 +308,8 @@ label = %percentage_used%%
 ramp-used-0 =
 ramp-used-1 =
 ramp-used-2 =
-ramp-used-3 = %{F#f5a70a} 
-ramp-used-4 = %{F#ff5555} 
+ramp-used-3 = %{F#f5a70a}
+ramp-used-4 = %{F#ff5555}
 
 [module/wlan]
 type = internal/network
