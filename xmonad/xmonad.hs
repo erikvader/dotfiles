@@ -34,18 +34,16 @@ import XMonad.Hooks.ManageHelpers
 import qualified XMonad.Layout.Dwindle as Dwind
 import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
-import XMonad.Layout.Grid
 import XMonad.Layout.Renamed
 import XMonad.Layout.LayoutCombinators
-import XMonad.Layout.Mosaic
-import XMonad.Layout.ThreeColumns
-import XMonad.Layout.OneBig
+import qualified XMonad.Layout.GridVariants as GV
 
 import Erik.Spacing
 import Erik.MyStuff
 import qualified Erik.MyLimitWindows as L
 -- import XMonad.Layout.LimitWindows
 import Erik.CompactWorkspaces
+import Erik.ThreeColP
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
@@ -56,14 +54,16 @@ myModMask = mod4Mask
 -- myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer]
 myWorkspaces = zipWith (++) (map (concatMap show) $ combinations [1..3]) ([" \62056", " \61508"] ++ repeat " \61705")
 
-myBaseLayouts = Tall 1 (3/100) (1/2) ||| renamed [Replace "OneBig"] (OneBig (3/4) (3/4)) ||| ThreeColMid 1 (3/100) (1/2) ||| mosaic 1.1 [3,2,2] ||| Grid ||| renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
--- myBaseLayoutsNames = ["Tall", "OneBig", "ThreeCol", "Mosaic", "Grid", "Spiral"]
+myBaseLayouts = GV.SplitGrid GV.L 1 1 (1/2) (16/9) (3/100) |||
+                ThreeColMid 1 (3/100) (1/3) (1/2) |||
+                GV.Grid (16/9) |||
+                Tall 1 (3/100) (1/2) |||
+                renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
 
-lwLimit :: Int
-lwLimit = 2
+myBaseLayoutsNames = ["SplitGrid", "ThreeCol", "Grid", "Tall", "Spiral"]
 
 myLayoutHook =
-  L.limitWindows lwLimit False True $
+  L.limitWindows 2 False True $
   renamed [CutWordsLeft 2] $ -- remove smartspacing text
   smartSpacing 3 .
   mkToggle (single MIRROR) $
@@ -231,13 +231,16 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_l), sendMessage Expand),
 
     -- mosaic
-    ((modm, xK_s), sendMessage Reset),
+    -- ((modm, xK_s), sendMessage Reset),
 
     -- Increment the number of windows in the master area
-    ((modm .|. shiftMask , xK_h), onLayout [("Mosaic", sendMessage Taller)] (sendMessage (IncMasterN 1))),
+    ((modm .|. shiftMask, xK_h), onLayout [("SplitGrid", sendMessage $ GV.IncMasterRows 1)] (sendMessage (IncMasterN 1))),
 
     -- Deincrement the number of windows in the master area
-    ((modm .|. shiftMask , xK_l), onLayout [("Mosaic", sendMessage Wider)] (sendMessage (IncMasterN (-1)))),
+    ((modm .|. shiftMask, xK_l), onLayout [("SplitGrid", sendMessage $ GV.IncMasterRows (-1))] (sendMessage (IncMasterN (-1)))),
+
+    ((modm .|. controlMask, xK_h), onLayout [("SplitGrid", sendMessage $ GV.IncMasterCols 1)] (return ())),
+    ((modm .|. controlMask, xK_l), onLayout [("SplitGrid", sendMessage $ GV.IncMasterCols (-1))] (return ())),
 
     -- Push window back into tiling
     ((modm, xK_t), withFocused $ windows . W.sink),
@@ -288,7 +291,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     --             ]]
 
     -- jump to layout
-    -- [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
+    [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
+
+    ++
 
     let keys = [xK_1, xK_2, xK_3]
     in [((modm .|. m, k), compactWorkspaceCombinations f k mods keys)
