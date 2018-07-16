@@ -54,13 +54,13 @@ myModMask = mod4Mask
 -- myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer]
 myWorkspaces = zipWith (++) (map (concatMap show) $ combinations [1..3]) ([" \62056", " \61508"] ++ repeat " \61705")
 
-myBaseLayouts = GV.SplitGrid GV.L 1 1 (1/2) (16/9) (3/100) |||
+myBaseLayouts = Tall 1 (3/100) (1/2) |||
                 ThreeColMid 1 (3/100) (1/3) (1/2) |||
                 GV.Grid (16/9) |||
-                Tall 1 (3/100) (1/2) |||
+                GV.SplitGrid GV.L 1 1 (1/2) (16/9) (3/100) |||
                 renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
 
-myBaseLayoutsNames = ["SplitGrid", "ThreeCol", "Grid", "Tall", "Spiral"]
+myBaseLayoutsNames = ["Tall", "ThreeCol", "Grid", "SplitGrid", "Spiral"]
 
 myLayoutHook =
   L.limitWindows 2 False True $
