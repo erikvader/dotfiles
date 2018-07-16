@@ -81,6 +81,7 @@ scripts=(
     "scripts/getCRTC.sh"
     "scripts/els"
     "scripts/open_downloaded_pdf.sh"
+    "scripts/sxiv_zip.sh"
 )
 
 for s in "${scripts[@]}"; do
