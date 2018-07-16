@@ -43,6 +43,8 @@ alias ll='els'
 alias lle='els --list-empty'
 alias lll='ls -lAh'
 
+alias s='lll | grep'
+
 alias ec="emacsclient -n -c"
 
 alias mountanime="mountsmb ERIKRIMSKOG anime /media/anime"
