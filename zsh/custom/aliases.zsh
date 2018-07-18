@@ -37,6 +37,7 @@ alias yl='yaourt -Qet'
 alias yc='yaourt -Sc'
 alias yr='yaourt -Rsn'
 alias yR='yaourt -Rsnc'
+alias ylibc="yaourt -S --aur --m-arg '--nocheck --skippgpcheck' libc++"
 
 alias l='ls -A'
 alias ll='els'
