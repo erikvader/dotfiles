@@ -2,7 +2,7 @@ alias open="xdg-open"
 alias q="exit"
 alias r="ranger-cd"
 alias p="thunar &!"
-alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk -l"
+alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
 
 alias cdm='cd /media'
 
