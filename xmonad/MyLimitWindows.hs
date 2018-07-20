@@ -54,6 +54,16 @@ import Erik.MyStuff
 -- |---u---|---l1--|-f-|---l2-|
 type HiddenStack a = (W.Stack a, ([a], [a]))
 
+-- class for calculating the size of stacks
+class StackSize a where
+  stackSizeM :: Maybe a -> Int
+  stackSizeM = maybe 0 stackSize
+
+  stackSize :: a -> Int
+
+instance StackSize (W.Stack a) where
+  stackSize (W.Stack _ u d) = 1 + length u + length d
+
 instance StackSize (HiddenStack a) where
   stackSize (s, (l1, l2)) = stackSize s + length l1 + length l2
 

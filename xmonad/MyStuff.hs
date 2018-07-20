@@ -4,7 +4,6 @@ module Erik.MyStuff (
   rotUp, rotDown,
   onLayout,
   writeStd,
-  StackSize(..),
   focusAnyEmpty,focusLowestEmpty,
   shiftView
   -- pointerDance
@@ -15,16 +14,6 @@ import XMonad
 import qualified XMonad.StackSet as W
 import Data.List (find)
 import Data.Maybe (maybe,isNothing)
-
--- class for calculating the size of stacks
-class StackSize a where
-  stackSizeM :: Maybe a -> Int
-  stackSizeM = maybe 0 stackSize
-
-  stackSize :: a -> Int
-
-instance StackSize (W.Stack a) where
-  stackSize (W.Stack _ u d) = 1 + length u + length d
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
