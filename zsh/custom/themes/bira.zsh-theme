@@ -40,8 +40,8 @@ local git_branch='$(git_prompt_info)%{$reset_color%}'
 local vi_prompt='$(vi_mode_prompt_info)%{$reset_color%}'
 local ranger_prompt='$(ranger_prompt_info)%{$reset_color%}'
 
-PROMPT="╭─[${user_host}]──[${current_dir}]${git_branch}${vi_prompt}${ranger_prompt}
-╰─%B${user_symbol}%b "
+PROMPT="┌─[${user_host}]──[${current_dir}]${git_branch}${vi_prompt}${ranger_prompt}
+└─%B${user_symbol}%b "
 #RPS1="%B${return_code}%b"
 
 ZSH_THEME_GIT_PROMPT_PREFIX="──[%{$fg[yellow]%}"
