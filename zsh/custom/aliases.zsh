@@ -5,6 +5,7 @@ alias p="thunar &!"
 alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
 
 alias cdm='cd /media'
+alias findbroken='find . -xtype l'
 
 alias pps='ps -Ho pid,ppid,pgid,comm'
 alias ppss='ps -Ho pid,ppid,pgid,command'
