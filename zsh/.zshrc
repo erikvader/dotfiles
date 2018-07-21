@@ -45,6 +45,11 @@ DISABLE_AUTO_TITLE=true
 # The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
 # HIST_STAMPS="mm/dd/yyyy"
 
+# fzf stuff
+export FZF_DEFAULT_COMMAND='find -L . -mindepth 1 \( -fstype dev -o -fstype proc -o -path "*/.git/*" \) -prune -o -printf "%P\\n" 2>/dev/null'
+export FZF_ALT_C_COMMAND='find -L . -mindepth 1 \( -fstype dev -o -fstype proc -o -path "*/.git/*" \) -prune -o -type d -printf "%P\\n" 2>/dev/null'
+export FZF_CTRL_T_COMMAND=$FZF_DEFAULT_COMMAND
+
 # Would you like to use another custom folder than $ZSH/custom?
 ZSH_CUSTOM=$HOME/.my-oh-my-zsh-custom
 
@@ -52,7 +57,7 @@ ZSH_CUSTOM=$HOME/.my-oh-my-zsh-custom
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git shrink-path)
+plugins=(git shrink-path fzf)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -163,7 +168,7 @@ function ranger-cd {
     rm -f "$temp"
 }
 
-bindkey -s '^o' "ranger-cd"
+bindkey -s '^o' 'ranger-cd\n'
 
 # smartcase in less
 export LESS=-Ri

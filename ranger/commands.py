@@ -180,12 +180,16 @@ class fzf_select(Command):
     """
     def execute(self):
         import subprocess
+        from os import environ
         if self.quantifier:
             # match only directories
-            command=r"find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o -type d -print 2> /dev/null | sed 1d | cut -b3- | fzf +m"
+            command=r"find -L . \( -path '*/.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o -type d -print 2> /dev/null | sed 1d | cut -b3-"
+            command = environ.get("FZF_ALT_C_COMMAND", command)
         else:
             # match files and directories
-            command=r"find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o -print 2> /dev/null | sed 1d | cut -b3- | fzf +m"
+            command=r"find -L . \( -path '*/.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o -print 2> /dev/null | sed 1d | cut -b3-"
+            command = environ.get("FZF_DEFAULT_COMMAND", command)
+        command += " | fzf +m"
         fzf = self.fm.execute_command(command, universal_newlines=True, stdout=subprocess.PIPE)
         stdout, _ = fzf.communicate()
         if fzf.returncode == 0:
