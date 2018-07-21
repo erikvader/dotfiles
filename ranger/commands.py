@@ -149,8 +149,8 @@ class toggle_previews(Command):
                 self.fm.settings.preview_files or
                 self.fm.settings.preview_directories or
                 self.fm.settings.preview_images or
-                self.fm.settings.use_preview_script or
-                self.fm.settings.automatically_count_files
+                self.fm.settings.use_preview_script # or
+                # self.fm.settings.automatically_count_files
            ):
             # turn off
             self.fm.settings.collapse_preview = True
@@ -158,7 +158,7 @@ class toggle_previews(Command):
             self.fm.settings.preview_directories = False
             self.fm.settings.preview_images = False
             self.fm.settings.use_preview_script = False
-            self.fm.settings.automatically_count_files = False
+            # self.fm.settings.automatically_count_files = False
         else:
             # turn on
             self.fm.settings.collapse_preview = False
@@ -166,6 +166,63 @@ class toggle_previews(Command):
             self.fm.settings.preview_directories = True
             self.fm.settings.preview_images = True
             self.fm.settings.use_preview_script = True
-            self.fm.settings.automatically_count_files = True
+            # self.fm.settings.automatically_count_files = True
 
+class fzf_select(Command):
+    """
+    :fzf_select
 
+    Find a file using fzf.
+
+    With a prefix argument select only directories.
+
+    See: https://github.com/junegunn/fzf
+    """
+    def execute(self):
+        import subprocess
+        if self.quantifier:
+            # match only directories
+            command=r"find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o -type d -print 2> /dev/null | sed 1d | cut -b3- | fzf +m"
+        else:
+            # match files and directories
+            command=r"find -L . \( -path '*/\.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o -print 2> /dev/null | sed 1d | cut -b3- | fzf +m"
+        fzf = self.fm.execute_command(command, universal_newlines=True, stdout=subprocess.PIPE)
+        stdout, _ = fzf.communicate()
+        if fzf.returncode == 0:
+            fzf_file = os.path.abspath(stdout.rstrip('\n'))
+            if os.path.isdir(fzf_file):
+                self.fm.cd(fzf_file)
+            else:
+                self.fm.select_file(fzf_file)
+
+class mkcd(Command):
+    """
+    :mkcd <dirname>
+
+    Creates a directory with the name <dirname> and enters it.
+    """
+
+    def execute(self):
+        from os.path import join, expanduser, lexists
+        from os import makedirs
+        import re
+
+        dirname = join(self.fm.thisdir.path, expanduser(self.rest(1)))
+        if not lexists(dirname):
+            makedirs(dirname)
+
+            match = re.search('^/|^~[^/]*/', dirname)
+            if match:
+                self.fm.cd(match.group(0))
+                dirname = dirname[match.end(0):]
+
+            for m in re.finditer('[^/]+', dirname):
+                s = m.group(0)
+                if s == '..' or (s.startswith('.') and not self.fm.settings['show_hidden']):
+                    self.fm.cd(s)
+                else:
+                    ## We force ranger to load content before calling `scout`.
+                    self.fm.thisdir.load_content(schedule=False)
+                    self.fm.execute_console('scout -ae ^{}$'.format(s))
+        else:
+            self.fm.notify("file/directory exists!", bad=True)
