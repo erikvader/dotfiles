@@ -1,6 +1,7 @@
 #!/bin/bash
 
-scripts=("xrandr-invert-colors"
+scripts=("clipit-rofi"
+         "xrandr-invert-colors"
          "pkill -USR1 '^redshift$'"
          "gksudo toggle_audio_powersave"
          "morc_menu"
@@ -26,7 +27,8 @@ scripts=("xrandr-invert-colors"
          'open_downloaded_pdf'
         )
 
-names=("Invert colors"
+names=("Clipit history"
+       "Invert colors"
        "Toggle redshift"
        "Audio powersave toggle"
        "Manjaro i3 menu"
