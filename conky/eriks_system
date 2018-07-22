@@ -105,9 +105,9 @@ $hr
  $color1/$color    $color${fs_used_perc /}%$color1/$color${fs_size /} ${fs_bar 6 /}
  ${color1}data$color $color${fs_used_perc /media/data}%$color1/$color${fs_size /media/data} ${fs_bar 6 /media/data}
 $hr
-${color1}Addr:$color ${addr wlp1s0}
+${color1}ip: $color${addr wlp1s0}${alignr}DNS: ${nameserver 0}
 ${color1}Up:$color ${upspeed wlp1s0}${color}${alignr}${color1}Down:$color ${downspeed wlp1s0}
-${color}    ${totalup wlp1s0}${alignr}${totaldown wlp1s0}
+${color}Total: ${totalup wlp1s0}${alignr}Total: ${totaldown wlp1s0}
 $hr
 ${color}Processes: $processes
 ${color}${alignc}${cpugauge cpu1 30,50}  ${cpugauge cpu2 30,50}  ${cpugauge cpu3 30,50}  ${cpugauge cpu4 30,50}
