@@ -174,30 +174,47 @@ class fzf_select(Command):
 
     Find a file using fzf.
 
-    With a prefix argument select only directories.
-
     See: https://github.com/junegunn/fzf
     """
+    ONLY_DIR    = "d" #only list directories
+    EXECUTE     = "e" #run default action on selected thing
+    RECURSIVE   = "r" #run recursively
+    HIDDEN      = "h" #show hidden files
+    EXECUTE_DIR = "E" #enter if directory
+    def __init__(self, *args, **kwargs):
+        super(fzf_select, self).__init__(*args, **kwargs)
+        self.flags, _ = self.parse_flags()
+
     def execute(self):
         import subprocess
         from os import environ
-        if self.quantifier:
-            # match only directories
-            command=r"find -L . \( -path '*/.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o -type d -print 2> /dev/null | sed 1d | cut -b3-"
-            command = environ.get("FZF_ALT_C_COMMAND", command)
-        else:
-            # match files and directories
-            command=r"find -L . \( -path '*/.*' -o -fstype 'dev' -o -fstype 'proc' \) -prune -o -print 2> /dev/null | sed 1d | cut -b3-"
-            command = environ.get("FZF_DEFAULT_COMMAND", command)
-        command += " | fzf +m"
+
+        command = r"find -L . %s \( -fstype dev -o -fstype proc %s \) -prune -o %s -print 2>/dev/null | sed 1d | cut -b3-"
+        command = environ.get("FZF_BASE_COMMAND", command)
+
+        pftuple = ["", "", ""]
+
+        if self.ONLY_DIR in self.flags:
+            pftuple[2] += "-type d "
+        if self.RECURSIVE not in self.flags:
+            pftuple[0] += "-maxdepth 1 "
+        if self.HIDDEN not in self.flags:
+            pftuple[1] += "-o -path '*/.*' "
+
+        command = command % tuple(pftuple)
+        command += " | fzf +m --reverse"
+        command = command.replace(r"\\", "\\")
+
         fzf = self.fm.execute_command(command, universal_newlines=True, stdout=subprocess.PIPE)
         stdout, _ = fzf.communicate()
         if fzf.returncode == 0:
             fzf_file = os.path.abspath(stdout.rstrip('\n'))
-            if os.path.isdir(fzf_file):
-                self.fm.cd(fzf_file)
-            else:
-                self.fm.select_file(fzf_file)
+            self.fm.select_file(fzf_file)
+            if self.EXECUTE in self.flags:
+                self.fm.move(right=1)
+            elif self.EXECUTE_DIR in self.flags:
+                if os.path.isdir(fzf_file):
+                    self.fm.cd(fzf_file)
 
 class mkcd(Command):
     """
