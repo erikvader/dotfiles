@@ -10,7 +10,7 @@ __fsel() {
     -o -type l -print 2> /dev/null | cut -b3-"}"
   setopt localoptions pipefail 2> /dev/null
   eval "$cmd" | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse $FZF_DEFAULT_OPTS $FZF_CTRL_T_OPTS" $(__fzfcmd) -m "$@" | while read item; do
-    echo -n "${(q)item} "
+    echo -n "${(q)item}"
   done
   local ret=$?
   echo
@@ -27,7 +27,13 @@ __fzfcmd() {
 }
 
 fzf-file-widget() {
-  LBUFFER="${LBUFFER}$(__fsel)"
+  local tokens=(${(z)LBUFFER})
+  local last=
+  if [[ $#tokens -gt 1 && "$LBUFFER" =~ '[^ ]$' ]]; then
+      last=${tokens[-1]}
+      LBUFFER=$(sed -E 's/[^ ]+$//' <<< "$LBUFFER")
+  fi
+  LBUFFER="${LBUFFER}$(__fsel --query="$last")"
   local ret=$?
   zle redisplay
   typeset -f zle-line-init >/dev/null && zle zle-line-init
