@@ -46,9 +46,12 @@ DISABLE_AUTO_TITLE=true
 # HIST_STAMPS="mm/dd/yyyy"
 
 # fzf stuff
-export FZF_DEFAULT_COMMAND='find -L . -mindepth 1 \( -fstype dev -o -fstype proc -o -path "*/.git/*" \) -prune -o -printf "%P\\n" 2>/dev/null'
-export FZF_ALT_C_COMMAND='find -L . -mindepth 1 \( -fstype dev -o -fstype proc -o -path "*/.git/*" \) -prune -o -type d -printf "%P\\n" 2>/dev/null'
-export FZF_CTRL_T_COMMAND=$FZF_DEFAULT_COMMAND
+# $args $ignore_list $restrictions
+export FZF_BASE_COMMAND='find -L . -mindepth 1 %s \\( -fstype dev -o -fstype proc %s \\) -prune -o \\( -name .git \\) -prune -printf "%%P\\n" -o %s -printf "%%P\\n" 2>/dev/null'
+
+export FZF_DEFAULT_COMMAND=$(printf "$FZF_BASE_COMMAND" "" "" "")
+# export FZF_ALT_C_COMMAND=$(printf "$FZF_BASE_COMMAND" "" "" "-type d")
+export FZF_CTRL_T_COMMAND=$(printf "$FZF_BASE_COMMAND" "-maxdepth 1 " "" "")
 
 # Would you like to use another custom folder than $ZSH/custom?
 ZSH_CUSTOM=$HOME/.my-oh-my-zsh-custom
@@ -57,11 +60,14 @@ ZSH_CUSTOM=$HOME/.my-oh-my-zsh-custom
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git shrink-path fzf)
+plugins=(git shrink-path fzf fzf-completion)
 
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
+
+setopt HIST_IGNORE_SPACE
+# unsetopt extended_glob
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
@@ -92,10 +98,10 @@ export EDITOR=vim
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 source $ZSH_CUSTOM/aliases.zsh
 
-source /usr/share/autojump/autojump.zsh
+# source /usr/share/autojump/autojump.zsh
 
 # to make C-S-t work in termite
-source /etc/profile.d/vte*.sh
+# source /etc/profile.d/vte*.sh
 
 ##################################### vim #####################################
 # https://github.com/robbyrussell/oh-my-zsh/blob/master/plugins/vi-mode/vi-mode.plugin.zsh
@@ -168,7 +174,7 @@ function ranger-cd {
     rm -f "$temp"
 }
 
-bindkey -s '^o' 'ranger-cd\n'
+bindkey -s '^o' '\eq ranger-cd\n'
 
 # smartcase in less
 export LESS=-Ri
@@ -183,3 +189,4 @@ if [[ -f "$HOME/.dircolors" ]]; then
     eval "$(dircolors -b "$HOME/.dircolors")"
     zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 fi
+
