@@ -2,6 +2,7 @@
 
 # TODO: add documentation
 
+import re
 import sys
 import subprocess as S
 import math
@@ -234,17 +235,21 @@ def main():
       cowsay("Can't acces current directory\n" + str(err))
       return 1
 
-   def scanSortName(x):
-      x = x.name.lower()
+   reg = re.compile(r"([0-9]+)")
+   def getKeys(f):
+      x = f.name.lower()
       if x.startswith("."):
-         return x[1:]
-      return x
+         x = x[1:]
+      return ([int(y) if y.isdigit() else y for y in reg.split(x)], f)
 
-   sort = sorted(ite, key=scanSortName)
+   sort = [getKeys(x) for x in ite]
 
    if len(sort) <= 0:
       cowsay("There's nothing here...")
       return 0
+
+   sort.sort(key=lambda x: x[0])
+   sort = [x[1] for x in sort]
 
    checkNames(sort)
 

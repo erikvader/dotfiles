@@ -40,10 +40,10 @@ alias yr='yaourt -Rsn'
 alias yR='yaourt -Rsnc'
 alias ylibc="yaourt -S --aur --m-arg '--nocheck --skippgpcheck' libc++"
 
-alias l='ls -A'
+alias l='ls -Av'
 alias ll='els'
 alias lle='els --list-empty'
-alias lll='ls -lAh'
+alias lll='ls -lAhv'
 
 alias s='lll | grep'
 
