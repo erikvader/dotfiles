@@ -21,13 +21,10 @@ function colorize {
 function place {
     if [[ -L "$2" && "$(readlink "$2")" = "$1" ]]; then
         colorize 2 "EXISTS "
-    elif [[ -z "$force" && -e "$2" ]]; then
+    elif [[ -z "$force" && -L "$2" ]]; then
         colorize 1 "EXISTS "
     else
-        if [[ -n "$force" && -e "$2" ]]; then
-            rm -ir "$2"
-        fi
-        if ln -sT "$1" "$2"; then
+        if ln -sTi "$1" "$2"; then
             colorize 2 "OK "
         else
             colorize 1 "FAILED "
