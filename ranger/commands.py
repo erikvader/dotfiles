@@ -247,3 +247,30 @@ class mkcd(Command):
                     self.fm.execute_console('scout -ae ^{}$'.format(s))
         else:
             self.fm.notify("file/directory exists!", bad=True)
+
+class extract_prepare(Command):
+    """
+    Creates a directory with the same name as the selected file, but
+    with the preceding dot and file extension removed and moves the
+    selected file to this new directory.
+    Handy for extracting archive files in their own directories.
+    """
+    def execute(self):
+        import re
+        from os.path import isdir, isfile, join, lexists
+        from os import rename
+
+        zipf = self.fm.thisfile
+        if not isfile(zipf.path):
+            self.fm.notify("this is not a file", bad=True)
+            return
+        mat = re.match(r"^\.?(.+?)(\..+?)*$", zipf.basename)
+        if mat:
+            g = mat.group(1)
+            d = join(self.fm.thisdir.path, g)
+            if not isdir(d) and not lexists(d):
+                self.fm.execute_console("mkcd {}".format(g))
+                rename(zipf.path, join(d, zipf.basename))
+            else:
+                self.fm.notify("something is already named \"{}\", can't create directory".format(g), bad=True)
+                return

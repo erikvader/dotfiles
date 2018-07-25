@@ -81,6 +81,7 @@ scripts=(
     "scripts/sxiv_zip.sh"
     "scripts/clipit-rofi.py"
     "scripts/flac_to_mp3.sh"
+    "scripts/extract.sh"
 )
 
 for s in "${scripts[@]}"; do
