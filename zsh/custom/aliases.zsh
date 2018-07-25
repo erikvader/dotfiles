@@ -101,3 +101,28 @@ function man {
     LESS_TERMCAP_us=$'\e[01;34m' \
     command man "$@"
 }
+
+function cless {
+    pygmentize "$1" | less
+}
+
+function c {
+    locations=(
+        "~/dotfiles"
+        "~/.config/qutebrowser"
+        "~/Videos"
+        "~/Pictures"
+        "~/Downloads"
+        "~/Documents"
+        "~/Documents/manga"
+        "~/Documents/PDFs"
+        "~/.emacs.d"
+        "/media"
+        "/media/anime"
+        "~/Dropbox"
+    )
+    x=$(printf '%s\n' "${locations[@]}" | fzf +m --reverse --query="$1")
+    if [[ -n "$x" ]]; then
+        cd "${x/#\~/$HOME}"
+    fi
+}
