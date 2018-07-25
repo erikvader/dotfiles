@@ -7,7 +7,7 @@ import System.Directory (doesFileExist)
 import System.IO
 import System.Exit
 import Data.Bits (testBit)
-import Control.Monad (unless)
+import Control.Monad (unless, mapM_)
 import Data.List
 
 import Codec.Binary.UTF8.String as UTF8
@@ -196,8 +196,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- Resize viewed windows to the correct size
     ((modm, xK_n), refresh),
 
-    ((modm .|. shiftMask, xK_a), warpToWindow 1 1),
-    ((modm, xK_a), warpToWindow 0.5 0.5),
+    ((modm, xK_a), warpToWindow 1 1),
+    ((modm .|. shiftMask, xK_a), warpToWindow 0.5 0.5),
 
     -- Move focus to the previous window
     ((modm, xK_k), windows W.focusUp),
@@ -258,7 +258,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- Use this binding with avoidStruts from Hooks.ManageDocks.
     -- See also the statusBar function from Hooks.DynamicLog.
     --
-    -- , ((modm              , xK_b     ), sendMessage ToggleStruts)
+    ((modm, xK_s), sendMessage ToggleStruts),
+    -- I want to do this inside xmonad :(
+    ((modm .|. shiftMask, xK_s), spawn "xdotool search --name polybar windowmap %@"),
+    ((modm .|. controlMask, xK_s), spawn "xdotool search --name polybar windowunmap %@"),
 
     -- Quit xmonad
     ((modm .|. shiftMask, xK_0), confirmPrompt def "logout?" $ io exitSuccess),
@@ -367,8 +370,7 @@ myLogHook mhandle = def
                                   | otherwise = s:removeIndices (c+1) ss (i:is)
 
 pipeOutput :: Maybe Handle -> String -> IO ()
-pipeOutput Nothing _ = return ()
-pipeOutput (Just h) s = hPutStrLn h (UTF8.decodeString s) >> hFlush h
+pipeOutput m s = mapM_ (\h -> hPutStrLn h (UTF8.decodeString s) >> hFlush h) m
 
 baseConfig = desktopConfig {
   modMask = myModMask,
@@ -379,8 +381,7 @@ baseConfig = desktopConfig {
   }
 
 myConfig = baseConfig {
-  layoutHook = avoidStruts myLayoutHook,
-  manageHook = composeAll [ isDialog --> doCenterFloat ] <+> manageDocks <+> manageHook baseConfig,
+  manageHook = composeAll [ isDialog --> doCenterFloat ] <+> manageHook baseConfig,
   startupHook = startupHook baseConfig <+> myStartupHook,
   logHook = logHook baseConfig >> myUpdatePointer
   }
@@ -393,16 +394,15 @@ main = do
   -- create pipe
   mhandle <- catch (do
                        fs <- doesFileExist pipeName
-                       if fs
-                         then return ()
-                         else createNamedPipe pipeName (CMode 0o666)
+                       unless fs $ createNamedPipe pipeName (CMode 0o666)
                        Just <$> openFile pipeName ReadWriteMode)
                (\e -> do
                         trace (show (e :: SomeException))
                         return Nothing)
 
-  xmonad $ ewmh $ myConfig {
-    logHook = logHook myConfig <+> L.updateCurrentState <+> dynamicLogWithPP (myLogHook mhandle),
-    handleEventHook = handleEventHook myConfig <+> fullscreenEventHook
+  xmonad $ ewmh $ docks $ myConfig {
+    layoutHook = avoidStruts myLayoutHook,
+    handleEventHook = handleEventHook myConfig <+> fullscreenEventHook,
+    logHook = logHook myConfig <+> L.updateCurrentState <+> dynamicLogWithPP (myLogHook mhandle)
     }
 
