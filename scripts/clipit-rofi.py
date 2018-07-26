@@ -3,12 +3,23 @@
 # rofi clipboard selector for Clipit with the extra feature of having
 # static clipboard items
 
+# needs to have save history enabled for accesing the history
+
 # TODO: add config file for statics
 
 import struct, os
 import subprocess
 
-statics_ = [("shrug", r"¯\_(ツ)_/¯".encode()), ("swastika", r"卐".encode())]
+statics_ = [
+    ("shrug", r"¯\_(ツ)_/¯"),
+    ("swast", r"卐"),
+    ("lenny", r"( ͡° ͜ʖ ͡°)"),
+    ("flip", r"(ノಠ益ಠ)ノ彡┻━┻"),
+    ("hug", r"(づ｡◕‿‿◕｡)づ"),
+    ("flat", r"ಠ_ಠ"),
+    ("glitter", r"(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧"),
+    ("fight", r"ლ(ಠ益ಠლ)")
+]
 
 def readHist():
     homedir  = os.environ['HOME']
@@ -56,8 +67,9 @@ def runRofi(items, statics):
 def main():
 
     items = readHist()
+    statics = [(k, v.encode()) for k,v in statics_]
 
-    selected = runRofi(items, statics_)
+    selected = runRofi(items, statics)
 
     if selected:
         subprocess.run(["xclip", "-i", "-selection", "clipboard"], input=selected)
