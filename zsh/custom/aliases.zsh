@@ -106,22 +106,15 @@ function cless {
     pygmentize "$1" | less
 }
 
+C_LOCATIONS="$HOME/.clocations"
+
+function ca {
+    echo "${PWD/#$HOME/~}" >> "$C_LOCATIONS"
+    sort -u -o "$C_LOCATIONS" "$C_LOCATIONS"
+}
+
 function c {
-    locations=(
-        "~/dotfiles"
-        "~/.config/qutebrowser"
-        "~/Videos"
-        "~/Pictures"
-        "~/Downloads"
-        "~/Documents"
-        "~/Documents/manga"
-        "~/Documents/PDFs"
-        "~/.emacs.d"
-        "/media"
-        "/media/anime"
-        "~/Dropbox"
-    )
-    x=$(printf '%s\n' "${locations[@]}" | fzf +m --reverse --query="$1")
+    x=$(cat "$C_LOCATIONS" | fzf +m --reverse --query="$1")
     if [[ -n "$x" ]]; then
         cd "${x/#\~/$HOME}"
     fi
