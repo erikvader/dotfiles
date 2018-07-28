@@ -8,16 +8,16 @@ import json
 from bs4 import BeautifulSoup
 import os
 
-# TODO: add checks for errors
-
 headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'}
 
 def get_fancy_json(url):
    u = U.Request(url, headers=headers)
    u = U.urlopen(u)
    soup = BeautifulSoup(u.read(), "html.parser")
-   text = soup.find("script", attrs={"data-type": "chapter"}).text
-   return json.loads(text)
+   text = soup.find("script", attrs={"data-type": "chapter"})
+   if not text:
+      raise Exception("Couldn't find the correct script type, are you on the right website?")
+   return json.loads(text.text)
 
 def get_zip_path(data, dest):
    long_chapname = [c["name"] for c in data["other_chapters"] if c["id"] == data["chapter_id"]][0]
@@ -41,6 +41,9 @@ def download_pictures(data, dest):
    zippath = get_zip_path(data, dest)
    urls = generate_urls(data)
 
+   if os.path.exists(zippath):
+      raise Exception("\"{}\" already exists".format(zippath), flush=True)
+
    print("started download of {}".format(os.path.basename(zippath)), flush=True)
    print("{} pictures in total".format(len(urls)), flush=True)
 
@@ -58,10 +61,13 @@ def main():
    parser.add_argument("-o", "--open", action="store_true", help="use rifle to open the downloaded chapter in a new process")
    args = parser.parse_args()
 
+   dest = args.directory
+   if not os.path.isdir(dest):
+      raise Exception("\"{}\" is not a directory".format(dest))
+
    print("fetching chapter data", flush=True)
    data = get_fancy_json(args.url)
 
-   dest = args.directory
    if args.add_to_subdirectory:
       dest = os.path.join(dest, data["manga_title"])
       if not os.path.isdir(dest):
@@ -73,4 +79,9 @@ def main():
       os.execlp("rifle", "rifle", os.path.abspath(zippath))
 
 if __name__ == "__main__":
-   main()
+   try:
+      main()
+      #pylint: disable=broad-except
+   except Exception as e:
+      print(repr(e), flush=True)
+      exit(1)
