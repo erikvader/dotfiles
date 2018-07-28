@@ -82,6 +82,7 @@ scripts=(
     "scripts/clipit-rofi.py"
     "scripts/flac_to_mp3.sh"
     "scripts/extract.sh"
+    "scripts/mangadex_downloader.py"
 )
 
 for s in "${scripts[@]}"; do
