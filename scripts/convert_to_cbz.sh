@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # converts a folder of of png:s and/or jpg:s to cbz-files
-# all of these folder are contained in a directory, which is the first
+# all of these folders are contained in a directory, which is the first
 # argument to this script
 
 set -e
@@ -21,7 +21,7 @@ if [[ -z "$fs" ]]; then
 fi
 
 while IFS='' read -r line || [[ -n "$line" ]]; do
-    if [[ -f "$line.cbz" ]]; then
+    if [[ -e "$line.cbz" ]]; then
         echo "skipping \"$line\""
         continue
     fi
