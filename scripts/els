@@ -11,12 +11,13 @@ import os
 import stat
 import pwd
 import grp
+import argparse
 
 uid = os.getuid()
 showNames = False
 colors = {}
 hasCowsay = which("cowsay")
-listEmpty = False
+args = None
 
 def resetColor():
    return "\x1b[0m"
@@ -163,7 +164,7 @@ def formatStat(p, exists, sta):
    return p
 
 def formatEmptyDir(d):
-   if not listEmpty:
+   if not args.list_empty:
       return ""
 
    if (d.is_dir(follow_symlinks=True) and not os.listdir(d.path)) or (d.is_file(follow_symlinks=True) and d.stat(follow_symlinks=True).st_size == 0):
@@ -214,12 +215,30 @@ def cowsay(s):
    else:
       print(s)
 
-def parseArguments():
-   global listEmpty
+def sort_scandir(ite):
+   if args.version_sort:
+      reg = re.compile(r"([0-9]+)")
+      def getKeys(f):
+         x = f.name.lower()
+         if x.startswith("."):
+            x = x[1:]
+         return ([int(y) if y.isdigit() else y for y in reg.split(x)], f)
 
-   for a in sys.argv:
-      if a == "-e" or a == "--list-empty":
-         listEmpty = True
+      sort = [getKeys(x) for x in ite]
+      sort.sort(key=lambda x: x[0])
+      return [x[1] for x in sort]
+
+   else:
+      return sorted(ite, key=lambda x: x.name)
+
+
+def parseArguments():
+   global args
+
+   parser = argparse.ArgumentParser()
+   parser.add_argument("-e", "--list-empty", action="store_true", help="mark empty directories")
+   parser.add_argument("-s", "--version-sort", action="store_true", help="sort the entries using version sort (see groups of digits as numbers)")
+   args = parser.parse_args()
 
 def main():
    parseArguments()
@@ -235,21 +254,11 @@ def main():
       cowsay("Can't acces current directory\n" + str(err))
       return 1
 
-   reg = re.compile(r"([0-9]+)")
-   def getKeys(f):
-      x = f.name.lower()
-      if x.startswith("."):
-         x = x[1:]
-      return ([int(y) if y.isdigit() else y for y in reg.split(x)], f)
-
-   sort = [getKeys(x) for x in ite]
+   sort = sort_scandir(ite)
 
    if len(sort) <= 0:
       cowsay("There's nothing here...")
       return 0
-
-   sort.sort(key=lambda x: x[0])
-   sort = [x[1] for x in sort]
 
    checkNames(sort)
 

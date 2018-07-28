@@ -41,8 +41,8 @@ alias yR='yaourt -Rsnc'
 alias ylibc="yaourt -S --aur --m-arg '--nocheck --skippgpcheck' libc++"
 
 alias l='ls -Av'
-alias ll='els'
-alias lle='els --list-empty'
+alias ll='els -s'
+alias lle='els -se'
 alias lll='ls -lAhv'
 
 alias s='lll | grep'
