@@ -60,7 +60,7 @@ font-4 = fontawesome:pixelsize=10;3
 
 modules-left = xmonad
 modules-center =
-modules-right = mounts powersave volume progmode temperature memory cpu wlan battery date
+modules-right = mounts transmission volume progmode temperature memory cpu wlan battery date
 
 tray-position = center
 tray-padding = 2
@@ -99,6 +99,17 @@ type = custom/script
 exec = xmonadLog
 
 tail = true
+
+[module/transmission]
+type = custom/script
+exec = ~/.config/polybar/transmission.py
+tail = true
+
+; format-prefix = " "
+format-underline = #4bffdc
+format-padding = 2
+format-margin = 1
+format-prefix-foreground = ${colors.foreground}
 
 [module/mounts]
 type = custom/script
@@ -363,7 +374,7 @@ format-underline = #0a6cf5
 label = %date% %time%
 
 [module/volume]
-type = internal/volume
+type = internal/alsa
 
 ; mapped = true
 
@@ -449,8 +460,8 @@ format-underline = #f50a4d
 format-warn = <ramp> <label-warn>
 format-warn-underline = ${self.format-underline}
 
-label = %temperature%
-label-warn = %temperature%
+label = %temperature-c%
+label-warn = %temperature-c%
 label-warn-foreground = ${colors.secondary}
 
 ramp-0 = 
