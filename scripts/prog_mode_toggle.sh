@@ -14,7 +14,8 @@ function on {
         echo "on" > "$status_file"
        )
     then
-        notify-send 'Programming keyboard mode' 'on'
+        # notify-send 'Programming keyboard mode' 'on'
+        :
     else
         notify-send 'Programming keyboard mode' 'error turning on :('
         exit 1
@@ -44,7 +45,8 @@ function off {
         echo "off" > "$status_file"
        )
     then
-        notify-send 'Programming keyboard mode' 'off'
+        # notify-send 'Programming keyboard mode' 'off'
+        :
     else
         notify-send 'Programming keyboard mode' 'error turning off :('
         exit 1

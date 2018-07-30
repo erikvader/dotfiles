@@ -4,6 +4,8 @@ alias r="ranger-cd"
 alias p="thunar &!"
 alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
 
+alias tr='transmission-remote'
+
 alias cdm='cd /media'
 alias findbroken='find . -xtype l'
 
