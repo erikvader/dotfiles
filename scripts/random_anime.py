@@ -22,5 +22,5 @@ for a in root.iter("anime"):
 r = choice(cand)
 
 print(r["name"])
-print("myanimelist.net/anime/" + r["id"])
+print("http://myanimelist.net/anime/" + r["id"])
 

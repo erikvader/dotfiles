@@ -12,12 +12,12 @@ headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'}
 
 def get_fancy_json(url):
    u = U.Request(url, headers=headers)
-   u = U.urlopen(u)
-   soup = BeautifulSoup(u.read(), "html.parser")
-   text = soup.find("script", attrs={"data-type": "chapter"})
-   if not text:
-      raise Exception("Couldn't find the correct script type, are you on the right website?")
-   return json.loads(text.text)
+   with U.urlopen(u) as u:
+      soup = BeautifulSoup(u.read(), "html.parser")
+      text = soup.find("script", attrs={"data-type": "chapter"})
+      if not text:
+         raise Exception("Couldn't find the correct script type, are you on the right website?")
+      return json.loads(text.text)
 
 def get_zip_path(data, dest):
    long_chapname = [c["name"] for c in data["other_chapters"] if c["id"] == data["chapter_id"]][0]
@@ -31,11 +31,11 @@ def generate_urls(data):
 
 def download_to_zip(url, z, i):
    u = U.Request(url, headers=headers)
-   u = U.urlopen(u)
-   ext = os.path.splitext(urlparse(url).path)[1]
-   filename = "{:03d}{}".format(i, ext)
-   print("downloading {}".format(filename), flush=True)
-   z.writestr(filename, u.read())
+   with U.urlopen(u) as u:
+      ext = os.path.splitext(urlparse(url).path)[1]
+      filename = "{:03d}{}".format(i, ext)
+      print("downloading {}".format(filename), flush=True)
+      z.writestr(filename, u.read())
 
 def download_pictures(data, dest):
    zippath = get_zip_path(data, dest)
