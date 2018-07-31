@@ -7,6 +7,9 @@ URxvt.letterSpace: 0
 ! URxvt.lineSpace: 0
 URxvt.scrollBar: false
 
+URxvt*urgentOnBell: true
+URxvt*visualBell: false
+
 Xft*dpi:       96
 Xft*antialias: True
 Xft*hinting:   Full
@@ -83,7 +86,7 @@ URxvt.clipboard.autocopy: true
 !URxvt.clipboard.pastecmd: xclip -o -selection clipboard
 
 !perl!
-URxvt.perl-ext-common: default,resize-font,keyboard-select,clipboard
+URxvt.perl-ext-common: default,resize-font,keyboard-select,clipboard,url-select
 
 URxvt.keysym.M-Escape: perl:keyboard-select:activate
 URxvt.keysym.M-s:      perl:keyboard-select:search
@@ -92,13 +95,17 @@ URxvt.keysym.C-V:      perl:clipboard:paste
 ! URxvt.keysym.M-C-v:    perl:clipboard:paste_escaped
 URxvt.keysym.M-k:      eval:scroll_up 1
 URxvt.keysym.M-j:      eval:scroll_down 1
-URxvt.keysym.M-y:      eval:scroll_up 1
-URxvt.keysym.M-e:      eval:scroll_down 1
+! URxvt.keysym.M-y:      eval:scroll_up 1
+! URxvt.keysym.M-e:      eval:scroll_down 1
 URxvt.keysym.M-u:      eval:scroll_up_pages 0.5
 URxvt.keysym.M-d:      eval:scroll_down_pages 0.5
 URxvt.keysym.M-b:      eval:scroll_up_pages 1
 URxvt.keysym.M-f:      eval:scroll_down_pages 1
 URxvt.keysym.M-g:      eval:scroll_to_bottom
+
+URxvt.keysym.M-l: perl:url-select:select_next
+URxvt.url-select.launcher: /usr/bin/xdg-open
+URxvt.url-select.underline: true
 
 !XTERM
 xterm.termName: xterm-256color
