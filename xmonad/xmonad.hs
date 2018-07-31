@@ -30,6 +30,7 @@ import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.ManageHelpers
+import XMonad.Hooks.UrgencyHook
 
 import qualified XMonad.Layout.Dwindle as Dwind
 import XMonad.Layout.MultiToggle
@@ -301,7 +302,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     let keys = [xK_1, xK_2, xK_3]
     in [((modm .|. m, k), compactWorkspaceCombinations f k mods keys)
        | k <- keys,
-         (f, m, mods) <- [(W.view, 0, [xK_Super_L]),
+         (f, m, mods) <- [(W.greedyView, 0, [xK_Super_L]),
                           (shiftView, controlMask .|. shiftMask, [xK_Super_L, xK_Control_L, xK_Shift_L]),
                           (W.shift, controlMask, [xK_Super_L, xK_Control_L])
                           ]]
@@ -350,12 +351,12 @@ myLogHook mhandle = def
     { ppOutput = pipeOutput mhandle . fixXinerama,
       ppCurrent = wrap "%{B#505050 U#ffb52a +u}[  " "  ]%{B- -u}",
       ppVisible = wrap "%{B#505050}[  " "  ]%{B-}",
-      ppUrgent = wrap "%{B#bd2c40}  " "!  %{B-}",
+      ppUrgent = wrap " %{B#bd2c40} " "! %{B-} ",
       ppHidden = wrap "  " "  ",
       ppWsSep = "",
       ppSep = " : ",
       ppTitle = shorten 60,
-      ppSort = getSortByXineramaRule,
+      ppSort = getSortByXineramaPhysicalRule def,
       ppOrder = \(w:l:t:lwc:lwf:ldh:_) -> filter (not . null) [w, lwf ++ l, ldh, lwc, t],
       ppExtras = logLimitWindows
     }
@@ -400,7 +401,7 @@ main = do
                         trace (show (e :: SomeException))
                         return Nothing)
 
-  xmonad $ ewmh $ docks $ myConfig {
+  xmonad $ withUrgencyHook NoUrgencyHook $ ewmh $ docks $ myConfig {
     layoutHook = avoidStruts myLayoutHook,
     handleEventHook = handleEventHook myConfig <+> fullscreenEventHook,
     logHook = logHook myConfig <+> L.updateCurrentState <+> dynamicLogWithPP (myLogHook mhandle)
