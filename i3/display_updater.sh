@@ -17,6 +17,7 @@ compton=
 multihead=
 update=
 external=
+primary=
 
 if [[ $# -lt 1 ]]; then
     echo "Give me some arguments :(" 1>&2
@@ -26,7 +27,7 @@ fi
 while [[ "$1" ]]; do
     case "$1" in
         --options)
-            echo -e 'update\nexternal\ncompton\npolybar\nconky\nfeh\nstartup'
+            echo -e 'update\nexternal\nprimary\ncompton\npolybar\nconky\nfeh\nstartup'
             exit 0
             ;;
         startup)
@@ -53,13 +54,19 @@ while [[ "$1" ]]; do
             multihead=true
             compton=true
             feh=true
-            polybar=true
+            # polybar=true
             ;;
         external)
             external=true
             feh=true
             compton=true
-            polybar=true
+            # polybar=true
+            ;;
+        primary)
+            primary=true
+            feh=true
+            compton=true
+            # polybar=true
             ;;
         *)
             echo "invalid argument \"$1\"" 1>&2
@@ -96,7 +103,7 @@ if [[ "$multihead" ]]; then
         if [[ "$update" ]]; then
             compton=
             feh=
-            polybar=
+            # polybar=
         fi
     fi
 elif [[ "$external" ]]; then
@@ -110,15 +117,40 @@ elif [[ "$external" ]]; then
             notify-send "external already activated, nothing to do"
             feh=
             compton=
-            polybar=
+            # polybar=
         fi
     else
         notify-send "$out2 not even connected..."
         feh=
         compton=
-        polybar=
+        # polybar=
+    fi
+elif [[ "$primary" ]]; then
+    if [[ "$out2displaying" -eq 0 || "$out1displaying" -ne 0 ]]; then
+        xrandr --output "$out1" --auto --primary --output "$out2" --off
+        getScreenInfo
+        notify-send "primary mode activated"
+        sleep 3
+    else
+        notify-send "primary already activated, nothing to do"
+        feh=
+        compton=
+        # polybar=
     fi
 fi
+
+function run_polybar {
+    pkill polybar
+
+    # Wait until the processes have been shut down
+    while pgrep -x polybar >/dev/null; do sleep 1; done
+
+    # Launch bar1 and bar2
+    MONITOR=$1 setsid polybar -r example &>/dev/null </dev/null &
+    if [[ -n "$2" ]]; then
+        MONITOR=$2 setsid polybar -r nonprimary &>/dev/null </dev/null &
+    fi
+}
 
 if [[ "$polybar" ]]; then
     if [[ "$out2displaying" -eq 0 && "$out1displaying" -ne 0 ]]; then
@@ -131,19 +163,19 @@ fi
 if [[ "$feh" ]]; then
     pkill feh_loop
     while pgrep feh_loop >/dev/null; do sleep 1; done
-    "$HOME/.start_feh" &
+    setsid "$HOME/.start_feh" &>/dev/null </dev/null &
 fi
 
 if [[ "$conky" ]]; then
     pkill conky
     while pgrep -x conky >/dev/null; do sleep 1; done
-    nohup "$HOME/.start_conky" &>/dev/null </dev/null &
+    setsid "$HOME/.start_conky" &>/dev/null </dev/null &
 fi
 
 # eftersom en extern monitor blir svart om inte compton startas om
 if [[ "$compton" ]]; then
     pkill compton
     while pgrep -x compton >/dev/null; do sleep 1; done
-    compton -b
+    setsid compton &>/dev/null </dev/null &
 fi
 
