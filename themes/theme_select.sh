@@ -55,5 +55,6 @@ ln -sf "$cur/conky" "$HOME/.start_conky"
 # while pgrep -x conky >/dev/null; do sleep 1; done
 # "$HOME/.start_conky" &>/dev/null &!
 
-display_updater feh conky
+display_updater conky
+display_updater feh
 

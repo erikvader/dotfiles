@@ -8,6 +8,8 @@ from copy import deepcopy
 from time import sleep
 from traceback import print_exc
 
+from relation import Relation
+
 CONFIG_FILE=os.path.join(os.environ["HOME"], ".display_updaterc")
 
 class DisplayException(Exception):
@@ -44,6 +46,18 @@ class Outputs:
    def get(self, name):
       return self._outputs.get(name, None)
 
+   def get_relations(self):
+      return self._get_mirrors()
+
+   def _get_mirrors(self):
+      rel = Relation()
+      ms = self.outputs
+      for i in range(len(ms)):
+         for j in range(i+1, len(ms)):
+            if ms[i].is_mirroring(ms[j]):
+               rel.relate(ms[i].name, ms[j].name, "mirror")
+      return rel
+
    def all_connected(self, outs):
       for o in outs:
          if not self.get(o).connected:
@@ -63,6 +77,16 @@ class Outputs:
 
    def get_all_dead(self):
       return [o.name for o in self.outputs if o.is_dead()]
+
+   # get xrandr arguments to disable all dead outputs and to disable non-wanted outputs.
+   # be_on is a list if wanted outputs (their names). If it is None, then return only args for dead outputs.
+   def get_comp_xrandr_args(self, be_on):
+      all_other = self.get_all_dead()
+      all_other += self.get_other_alive(be_on) if be_on is not None else []
+      xrandr_args = []
+      for d in all_other:
+         xrandr_args += ["--output", d, "--off"]
+      return xrandr_args
 
 class Output:
    def __init__(self, output, d, timestamp):
@@ -113,17 +137,54 @@ class Mode:
       self.no_xrandr = False
       self.programs = []
       self.delay = conf.get("programs_delay", 0)
-      self.mirror = []
+      self.relations = Relation()
 
       if "modes" not in conf:
          raise DisplayException("missing required field 'modes'")
       rest = self._parse_mode(conf, mode)
 
-      if not ((not self.xrandr and not self.outputs and self.no_xrandr) or
-              (self.xrandr and self.outputs and not self.no_xrandr)):
-         raise DisplayException("missing required or invalid combination. (no_xrandr | (xrandr & outputs))")
+      if not ((not self.xrandr and self.no_xrandr) or
+              (self.xrandr and not self.no_xrandr)):
+         raise DisplayException("missing required key or invalid combination. (no_xrandr | xrandr)")
+
+      if not self.no_xrandr:
+         self._parse_xrandr(self.xrandr)
+         if not self.outputs:
+            raise DisplayException("xrandr list didn't produce any outputs")
 
       self._parse_programs(conf, rest)
+
+   def _parse_xrandr(self, xrandr):
+      flag_re = re.compile(r"^--")
+      def is_flag(s):
+         return flag_re.match(s)
+
+      waiting_out = False
+      waiting_same = False
+      for x in xrandr:
+         if waiting_out:
+            waiting_out = False
+            if is_flag(x):
+               raise DisplayException("xrandr parse error: didn't expect a flag after --output")
+            self.outputs.append(x)
+         elif waiting_same:
+            waiting_same = False
+            if is_flag(x):
+               raise DisplayException("xrandr parse error: didn't expect a flag after --same-as")
+            if not self.outputs:
+               raise DisplayException("xrandr parse error: --same-as on nothing?")
+            self.relations.relate(self.outputs[-1], x, "mirror")
+         # elif not is_flag(x):
+         #    raise DisplayException("xrandr parse error: is expecting a flag")
+         elif x == "--output":
+            waiting_out = True
+         elif x == "--off":
+            raise DisplayException("xrandr parse error: why use --off? it's not needed")
+         elif x == "--same-as":
+            waiting_same = True
+
+      if waiting_out or waiting_same:
+         raise DisplayException("xrandr parse error: list ended with trailing --output or --same-as")
 
    def _parse_programs(self, conf, rest):
       if "run_programs" not in rest:
@@ -168,12 +229,8 @@ class Mode:
          return False
       if not outputs.all_only_alive(self.outputs):
          return False
-      for ms in self.mirror:
-         for i in range(len(ms)):
-            for j in range(i+1, len(ms)):
-               if not outputs.get(ms[i]).is_mirroring(outputs.get(ms[j])):
-                  return False
-      return True
+      rel = outputs.get_relations()
+      return rel == self.relations
 
    def _is_cant_apply(self, outputs):
       if self.no_xrandr:
@@ -181,20 +238,16 @@ class Mode:
       return not outputs.all_connected(self.outputs)
 
    def apply(self, outputs, force=False, dry=False):
+      if self._is_cant_apply(outputs):
+         return Mode.CANT_APPLY
       if not force and self._is_already_applied(outputs):
          return Mode.ALREADY_APPLIED
-      if not force and self._is_cant_apply(outputs):
-         return Mode.CANT_APPLY
 
       if not self.no_xrandr or force:
-         all_dead = outputs.get_all_dead()
-         all_other = outputs.get_other_alive(self.outputs)
-         xrandr_args = self.xrandr.copy()
-         for d in all_dead + all_other:
-            xrandr_args += ["--output", d, "--off"]
-         start_internal("xrandr", xrandr_args, dry=dry)
+         xrandr_args = outputs.get_comp_xrandr_args(self.outputs)
+         start_internal("xrandr", self.xrandr + xrandr_args, dry=dry, hate_non_zero=True)
 
-      if self.delay:
+      if self.delay and not self.no_xrandr:
          sleep(self.delay)
 
       for p in self.programs:
@@ -204,10 +257,14 @@ class Mode:
          while not dry and pgrep(p["name"]):
             c += 1
             if c > 15:
-               notify_send("{} didn't die".format(p["name"]))
+               asd = "{} didn't die".format(p["name"])
+               notify_send(asd)
+               print(asd, flush=True, file=sys.stderr)
                break
             sleep(0.3)
          else:
+            if "file" not in p:
+               raise DisplayException("some program is missing required field \"file\"")
             start_external(p["file"], p.get("args"), p.get("env"), dry)
 
    def __str__(self):
@@ -237,12 +294,14 @@ def start_external(file, args=None, env=None, dry=False):
    env = {**os.environ, **env} if env else os.environ
    os.execvpe(eu, [eu] + args, env)
 
-def start_internal(file, args=None, dry=False):
+def start_internal(file, args=None, dry=False, hate_non_zero=False):
    if dry:
       print("{} {}".format(file, args))
       return
    args = args if args else []
    res = S.run([file] + args)
+   if hate_non_zero and res.returncode != 0:
+      raise DisplayException("{} exited with exit status {}".format(file, res.returncode))
    return res.returncode
 
 def notify_send(*msg):
@@ -265,7 +324,8 @@ def main():
    parser = A.ArgumentParser()
    group = parser.add_mutually_exclusive_group(required=True)
    group.add_argument("-l", "--list", action="store_true", help="list all modes")
-   group.add_argument("-m", "--mode", help="what mode to apply")
+   group.add_argument("-c", "--cleanup", action="store_true", help="only kill dead outputs")
+   group.add_argument("mode", nargs="?", help="what mode to apply")
    parser.add_argument("-f", "--force", action="store_true", help="always apply mode regardless of state. BE CAREFUL!")
    parser.add_argument("-d", "--dry-run", action="store_true", help="do everything except actually spawning programs and running xrandr")
    parser.add_argument("-k", "--keep-dead", action="store_true", help="don't disable dead outputs if mode can't be applied or is already applied (default is to kill)")
@@ -279,8 +339,13 @@ def main():
       for k in conf["modes"]:
          print(k, flush=True)
       return
-   elif args.mode:
+   else:
       outs = Outputs(display.Display())
+      def kill_dead():
+         xrandr_dead = outs.get_comp_xrandr_args(None)
+         if xrandr_dead:
+            start_internal("xrandr", xrandr_dead, dry=args.dry_run, hate_non_zero=False)
+            notify_send("killed dead outputs")
       def run_mode(mode):
          mod = Mode(conf, mode)
          res = mod.apply(outs, args.force, args.dry_run)
@@ -296,14 +361,12 @@ def main():
                notify_send("I literally can't even")
 
          if res != Mode.APPLY_SUCCESS and not args.keep_dead:
-            all_dead = outs.get_all_dead()
-            if all_dead:
-               xrandr_args = []
-               for d in all_dead:
-                  xrandr_args += ["--output", d, "--off"]
-               start_internal("xrandr", xrandr_args, dry=args.dry_run)
-               notify_send("killed dead outputs")
-      run_mode(args.mode)
+            kill_dead()
+
+      if args.cleanup:
+         kill_dead()
+      else:
+         run_mode(args.mode)
 
 if __name__ == "__main__":
    #pylint: disable=broad-except

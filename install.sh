@@ -65,7 +65,7 @@ scripts=(
     "i3/i3_brightness.sh"
     "i3/create-lock-img.sh"
     "i3/rofi_script_selector.sh"
-    "display_updater/display_updater.sh"
+    "display_updater/display_updater.py"
     "display_updater/display_updater_rofi.sh"
     # "scripts/convert_to_cbz.sh"
     "scripts/flasher.sh"
