@@ -14,6 +14,6 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 export QT_AUTO_SCREEN_SCALE_FACTOR=0
 
 # no more __pycache__
-# export PYTHONDONTWRITEBYTECODE="t"
+export PYTHONDONTWRITEBYTECODE=1
 
 # [[ -f ~/.extend.profile ]] && . ~/.extend.profile

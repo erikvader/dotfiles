@@ -87,7 +87,7 @@ myStartupHook =
   spawn "xinput --set-prop 'ELAN0501:00 04F3:3060 Touchpad' 'libinput Accel Speed' 0.8" <+>
   -- scrolla in other direction
   spawn "xinput --set-prop 'ELAN0501:00 04F3:3060 Touchpad' 'libinput Natural Scrolling Enabled' 1" <+>
-  spawnOnce "dropbox start" <+>
+  spawnOnce "dropbox" <+>
   -- spawnOnce "redshift-gtk" <+>
   -- spawnOnce "blueman-applet" <+>
   -- spawnOnce "google-chrome-stable" <+>
