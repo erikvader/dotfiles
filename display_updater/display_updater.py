@@ -143,10 +143,6 @@ class Mode:
          raise DisplayException("missing required field 'modes'")
       rest = self._parse_mode(conf, mode)
 
-      if not ((not self.xrandr and self.no_xrandr) or
-              (self.xrandr and not self.no_xrandr)):
-         raise DisplayException("missing required key or invalid combination. (no_xrandr | xrandr)")
-
       if not self.no_xrandr:
          self._parse_xrandr(self.xrandr)
          if not self.outputs:
@@ -220,7 +216,7 @@ class Mode:
       self.default   = m.get("default")
       self.outputs   = m.get("outputs", [])
       self.xrandr    = m.get("xrandr", [])
-      self.no_xrandr = m.get("no_xrandr", False)
+      self.no_xrandr = not bool(self.xrandr)
       self.mirror    = m.get("mirror", [])
       return m
 
@@ -230,7 +226,13 @@ class Mode:
       if not outputs.all_only_alive(self.outputs):
          return False
       rel = outputs.get_relations()
-      return rel == self.relations
+      if self.relations.filter("mirror") != rel.filter("mirror"):
+         return False
+      # works because we know at this point that all_only_alive is true
+      # and this is needed because outputs.get_relations() returns more relations than self.relations has
+      # if not self.relations.filter("right", "left", "osv") <= rel.filter("right", "left", "osv"):
+      #    return False
+      return True
 
    def _is_cant_apply(self, outputs):
       if self.no_xrandr:
