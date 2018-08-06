@@ -6,20 +6,23 @@ class Relation:
 
    def _add_relation(self, a, b, name):
       if a not in self.rel:
-         self.rel[a] = {name: b}
+         self.rel[a] = {name: {b}}
+      elif name not in self.rel[a]:
+         self.rel[a][name] = {b}
       else:
-         self.rel[a][name] = b
+         self.rel[a][name].add(b)
 
    def relate(self, a, b, name, reverse_name=None):
       self._add_relation(a, b, name)
-      self._add_relation(b, a, reverse_name if reverse_name else name)
+      if a != b:
+         self._add_relation(b, a, reverse_name if reverse_name else name)
 
    def areRelated(self, a, b, name):
       if a not in self.rel:
          return False
       if name not in self.rel[a]:
          return False
-      return self.rel[a][name] == b
+      return b in self.rel[a][name]
 
    def __eq__(self, other):
       if not isinstance(other, Relation):
@@ -38,7 +41,7 @@ class Relation:
       return True
 
    def __bool__(self):
-      return True if self.rel else False
+      return bool(self.rel)
 
    def filter(self, *names):
       newRel = Relation()
@@ -62,7 +65,8 @@ class Relation:
 
    def __iter__(self):
       for a in self.rel:
-         for n,b in self.rel[a].items():
-            yield (a,b,n)
+         for n in self.rel[a]:
+            for b in self.rel[a][n]:
+               yield (a,b,n)
 
 

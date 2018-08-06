@@ -18,24 +18,29 @@ class DisplayException(Exception):
 class Outputs:
    #pylint: disable=protected-access
 
-   def __init__(self, dis):
-      self._d = dis
-      self._s = self._d.screen()
-      self._r = self._s.root
-
+   def __init__(self):
       self.outputs = []
       self._outputs = {}
+      self.primary = None
 
-      self.primary = self._r.xrandr_get_output_primary()._data["output"]
+   @classmethod
+   def fromDisplay(cls, dis):
+      self = cls()
+      _d = dis
+      _s = _d.screen()
+      _r = _s.root
 
-      resources = self._r.xrandr_get_screen_resources()._data
+      self.primary = _r.xrandr_get_output_primary()._data["output"]
+
+      resources = _r.xrandr_get_screen_resources()._data
       timestamp = resources["config_timestamp"]
       for output in resources["outputs"]:
-         o = Output(output, self._d, timestamp)
+         o = Output.fromDisplay(output, _d, timestamp)
          if output == self.primary:
             o.primary = True
          self.outputs.append(o)
          self._outputs[o.name] = o
+      return self
 
    def __iter__(self):
       return self.outputs.__iter__()
@@ -89,7 +94,12 @@ class Outputs:
       return xrandr_args
 
 class Output:
-   def __init__(self, output, d, timestamp):
+   def __init__(self):
+      self.name = self.connected = self.displaying = self.crtc = self.primary = self.rotation = self.mode = self.x = self.y = self.w = self.h = None
+
+   @classmethod
+   def fromDisplay(cls, output, d, timestamp):
+      self = cls()
       #pylint: disable=protected-access
       info = d.xrandr_get_output_info(output, timestamp)._data
       self.name = info["name"]
@@ -108,6 +118,7 @@ class Output:
          self.h = info2["height"]
       else:
          self.rotation = self.mode = self.x = self.y = self.w = self.h = None
+      return self
 
    def is_mirroring(self, output2):
       if not self.displaying or not output2.displaying:
@@ -328,6 +339,7 @@ def main():
    group.add_argument("-l", "--list", action="store_true", help="list all modes")
    group.add_argument("-c", "--cleanup", action="store_true", help="only kill dead outputs")
    group.add_argument("mode", nargs="?", help="what mode to apply")
+   group.add_argument("-s", "--state", action="store_true", help="print current state and exit")
    parser.add_argument("-f", "--force", action="store_true", help="always apply mode regardless of state. BE CAREFUL!")
    parser.add_argument("-d", "--dry-run", action="store_true", help="do everything except actually spawning programs and running xrandr")
    parser.add_argument("-k", "--keep-dead", action="store_true", help="don't disable dead outputs if mode can't be applied or is already applied (default is to kill)")
@@ -342,7 +354,7 @@ def main():
          print(k, flush=True)
       return
    else:
-      outs = Outputs(display.Display())
+      outs = Outputs.fromDisplay(display.Display())
       def kill_dead():
          xrandr_dead = outs.get_comp_xrandr_args(None)
          if xrandr_dead:
@@ -365,7 +377,9 @@ def main():
          if res != Mode.APPLY_SUCCESS and not args.keep_dead:
             kill_dead()
 
-      if args.cleanup:
+      if args.state:
+         print(outs)
+      elif args.cleanup:
          kill_dead()
       else:
          run_mode(args.mode)

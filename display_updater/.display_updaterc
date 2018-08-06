@@ -1,61 +1,40 @@
 // -*- mode: javascript; -*-
+// template for display_updater.py
+// ~/.display_updaterc
+// comments are ok, but only whole lines comments (^[ \t]*//)
 {
    "programs": {
+      // internal name
       "polybar": {
-         "file": "polybar",
+         // program in PATH or path to program
+         "file": "run_polybar",
+         // optional arguments
          "args": ["-r", "example"],
-         "name": "polybar"
-      },
-      "compton": {
-         "file": "compton",
-         "name": "compton"
-      },
-      "feh": {
-         "file": "~/.start_feh",
-         "name": "feh_loop"
-      },
-      "conky": {
-         "file": "~/.start_conky",
-         "name": "conky"
+         // name used by pkill and pgrep to kill any running instances
+         "name": "polybar",
+         // optional environment variables
+         "env" : {"MONITOR": "eDP1"}
       }
    },
+   // delay between xrandr finishing and programs in "programs" starting
    "programs_delay": 3,
    "modes": {
+      // name of mode
       "startup": {
-         "inherit": "primary",
+         // what programs to run. Can be true for all programs, or a list with program names
+         "run_programs": ["polybar"],
+         // inherit all keys from another mode
+         "inherit": "other_mode",
+         // mode to run if this one can't be applied
+         "default": "yet_another_mode",
+         // arguments to give to xrandr
+         // will be parsed for outputs and their relations to each other
+         // uses very simple syntax checking
+         "xrandr": ["--output", "eDP1", "--auto", "--primary", "--output", "HDMI1", "--auto", "--right-of", "eDP1"],
+         // override keys in "programs"
          "programs": {
-            "polybar": {"env": {"MONITOR": "eDP1"}}
-         },
-         "run_programs": true
-      },
-      "all": {
-         "default": "primary",
-         "outputs": ["eDP1", "HDMI1"],
-         "run_programs": ["feh", "compton"],
-         "xrandr": ["--output", "eDP1", "--auto", "--primary", "--output", "HDMI1", "--auto", "--right-of", "eDP1"]
-      },
-      "primary": {
-         "outputs": ["eDP1"],
-         "run_programs": ["feh", "compton"],
-         "xrandr": ["--output", "eDP1", "--auto", "--primary"]
-      },
-      "external": {
-         "outputs": ["HDMI1"],
-         "run_programs": ["feh", "compton"],
-         "xrandr": ["--output", "HDMI1", "--auto", "--primary"]
-      },
-      "mirror": {
-         "outputs": ["eDP1", "HDMI1"],
-         "mirror": [["eDP1", "HDMI1"]],
-         "run_programs": ["feh", "compton"],
-         "xrandr": ["--output", "eDP1", "--auto", "--primary", "--output", "HDMI1", "--auto", "--right-of", "eDP1", "--same-as", "eDP1"]
-      },
-      "polybar": {
-         "no_xrandr": true,
-         "programs": {
-            "polybar": {"env": {"MONITOR": "eDP1"}}
-         },
-         "run_programs": ["polybar"]
+            "polybar": {"file": "polybar"}
+         }
       }
    }
 }
