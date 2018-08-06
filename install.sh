@@ -83,6 +83,7 @@ scripts=(
     "scripts/flac_to_mp3.sh"
     "scripts/extract.sh"
     "scripts/mangadex_downloader.py"
+    "scripts/run_polybar.sh"
 )
 
 for s in "${scripts[@]}"; do
