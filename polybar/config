@@ -71,7 +71,7 @@ tray-background = #383838
 ; tray-maxsize=10
 
 ;wm-restack = bspwm
-wm-restack = i3
+; wm-restack = i3
 
 i3-focused-underline = ${colors.primary}
 
