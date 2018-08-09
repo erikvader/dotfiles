@@ -2,31 +2,45 @@
 
 set -e
 
-fold=
-
 function print_help {
     echo "usage:" >&2
     echo "  sxiv_zip -h" >&2
-    echo "  sxiv_zip [--] zipfile" >&2
-    echo "  sxiv_zip -d [--] dir" >&2
+    echo "  sxiv_zip [--] zipfile | rarfile | directory" >&2
+    # echo "  sxiv_zip -d [--] dir" >&2
 }
 
-function open_zip {
-    if [[ $# -ne 1 ]]; then
-        echo "I want exactly one zip file ty" >&2
-        print_help
-        exit 0
-    fi
+while [[ "$1" ]]; do
+    case "$1" in
+        # -d) fold=true ;;
+        -h) print_help; exit 0 ;;
+        --) shift; break ;;
+        *) break ;;
+    esac
+    shift
+done
 
-    targ=$1
-    if [[ ! -f $targ ]]; then
-        echo "\"$targ\" does not exist or is not a file ?? What are you even doing?" >&2
-        exit 1
-    fi
+if [[ $# -ne 1 ]]; then
+    echo "too many arguments? too few?" >&2
+    print_help
+    exit 0
+fi
 
-    temp=$(mktemp -d --tmpdir 'sxiv_zip.XXXXXXXXXX')
-    trap 'rm -rf "$temp"' EXIT
+targ=$1
+if [[ ! -e $targ ]]; then
+    echo "\"$targ\" does not exist" >&2
+    exit 1
+fi
 
+temp=$(mktemp -d --tmpdir 'sxiv_zip.XXXXXXXXXX')
+trap 'rm -rf "$temp"' EXIT
+
+if [[ -d $targ ]]; then
+    while IFS='' read -r line || [[ -n "$line" ]]; do
+        if file -b --mime-type "$line" | grep -q '^image/'; then
+            cp -t "$temp" "$line"
+        fi
+    done <<< "$(find "$1" -mindepth 1 -maxdepth 1)"
+elif [[ -f $targ ]]; then
     ext=${targ##*.}
     case ${ext,,} in
         zip|cbz)
@@ -35,52 +49,20 @@ function open_zip {
                 exit 1
             fi
             ;;
+        rar|cbr)
+            if ! unrar x "$targ" "$temp" &>/dev/null; then
+                echo "unrar failed, is this really a rar file?" >&2
+                exit 1
+            fi
+            ;;
         *)
             echo "\"$targ\" doesn't seem to be a zip/cbz file, hmmm.." >&2
             exit 1
             ;;
     esac
-
-    sxiv -- "$temp"
-}
-
-function open_fold {
-    if [[ $# -ne 1 ]]; then
-        echo "expected exactly one directory" >&2
-        print_help
-        exit 0
-    fi
-
-    if [[ ! -d $1 ]]; then
-        echo "\"$1\" doesn't exist or is not a directory" >&2
-        exit 1
-    fi
-
-    temp=$(mktemp -d --tmpdir 'sxiv_zip.XXXXXXXXXX')
-    trap 'rm -rf "$temp"' EXIT
-
-    while IFS='' read -r line || [[ -n "$line" ]]; do
-        if file -b --mime-type "$line" | grep -q '^image/'; then
-            cp -t "$temp" "$line"
-        fi
-    done <<< "$(find "$1" -mindepth 1 -maxdepth 1)"
-
-    sxiv -- "$temp"
-}
-
-while [[ "$1" ]]; do
-    case "$1" in
-        -d) fold=true ;;
-        -h) print_help; exit 0 ;;
-        --) shift; break ;;
-        *) break ;;
-    esac
-    shift
-done
-
-if [[ "$fold" ]]; then
-    open_fold "$@"
 else
-    open_zip "$@"
+    echo "expected a file or directory" >&2
+    exit 1
 fi
 
+sxiv -- "$temp"
