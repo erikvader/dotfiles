@@ -250,7 +250,7 @@ class Mode:
          return False
       return not outputs.all_connected(self.outputs)
 
-   def apply(self, outputs, force=False, dry=False):
+   def apply(self, outputs, force=False, dry=False, output=False):
       if self._is_cant_apply(outputs):
          return Mode.CANT_APPLY
       if not force and self._is_already_applied(outputs):
@@ -278,7 +278,7 @@ class Mode:
          else:
             if "file" not in p:
                raise DisplayException("some program is missing required field \"file\"")
-            start_external(p["file"], p.get("args"), p.get("env"), dry)
+            start_external(p["file"], p.get("args"), p.get("env"), dry, output)
 
    def __str__(self):
       return "default: {}, outputs: {}, xrandr: {}, no_xrandr: {}, programs: {}, delay: {}".format(self.default, self.outputs, self.xrandr, self.no_xrandr, self.programs, self.delay)
@@ -290,7 +290,7 @@ def pgrep(name):
    r = S.run(["pgrep", "-x", name], stdin=S.DEVNULL, stderr=S.DEVNULL, stdout=S.DEVNULL)
    return r.returncode == 0
 
-def start_external(file, args=None, env=None, dry=False):
+def start_external(file, args=None, env=None, dry=False, output=False):
    if dry:
       print("{} {} {}".format(file, args, env))
       return
@@ -300,8 +300,9 @@ def start_external(file, args=None, env=None, dry=False):
    os.setsid()
    with open(os.devnull, "r") as r, open(os.devnull, "w") as w:
       os.dup2(r.fileno(), sys.stdin.fileno())
-      os.dup2(w.fileno(), sys.stdout.fileno())
-      os.dup2(w.fileno(), sys.stderr.fileno())
+      if not output:
+         os.dup2(w.fileno(), sys.stdout.fileno())
+         os.dup2(w.fileno(), sys.stderr.fileno())
    eu = os.path.expanduser(file)
    args = args if args else []
    env = {**os.environ, **env} if env else os.environ
@@ -343,6 +344,7 @@ def main():
    parser.add_argument("-f", "--force", action="store_true", help="always apply mode regardless of state. BE CAREFUL!")
    parser.add_argument("-d", "--dry-run", action="store_true", help="do everything except actually spawning programs and running xrandr")
    parser.add_argument("-k", "--keep-dead", action="store_true", help="don't disable dead outputs if mode can't be applied or is already applied (default is to kill)")
+   parser.add_argument("-q", "--quiet", action="store_true", help="close stdout and stderr for forked programs")
    args = parser.parse_args()
 
    conf = read_config()
@@ -362,7 +364,7 @@ def main():
             notify_send("killed dead outputs")
       def run_mode(mode):
          mod = Mode(conf, mode)
-         res = mod.apply(outs, args.force, args.dry_run)
+         res = mod.apply(outs, args.force, args.dry_run, not args.quiet)
          if res == Mode.APPLY_SUCCESS:
             notify_send("success")
          elif res == Mode.ALREADY_APPLIED:
