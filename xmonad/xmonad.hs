@@ -2,12 +2,13 @@
 
 import System.Posix.Files (createNamedPipe)
 import System.Posix.Types (CMode(..))
+import System.Posix.IO (dupTo,closeFd,createFile,stdError)
 import Control.Exception (catch,SomeException)
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist,removeFile)
 import System.IO
 import System.Exit
 import Data.Bits (testBit)
-import Control.Monad (unless, mapM_)
+import Control.Monad (unless, mapM_, when)
 import Data.List
 
 import Codec.Binary.UTF8.String as UTF8
@@ -389,9 +390,12 @@ myConfig = baseConfig {
 pipeName :: FilePath
 pipeName = "/tmp/XMonadLog"
 
+errorFile :: FilePath
+errorFile = "/tmp/xmonad-error"
+
 main :: IO ()
 main = do
-  -- create pipe
+  -- create pipe (doesn't close fd on restarts)
   mhandle <- catch (do
                        fs <- doesFileExist pipeName
                        unless fs $ createNamedPipe pipeName (CMode 0o666)
@@ -399,6 +403,16 @@ main = do
                (\e -> do
                         trace (show (e :: SomeException))
                         return Nothing)
+
+  -- custom .xsession-error
+  catch (do
+            closeFd stdError
+            fs <- doesFileExist errorFile
+            when fs $ removeFile errorFile
+            fd <- createFile errorFile (CMode 0o666)
+            dupTo fd stdError
+            return ())
+    (\e -> trace (show (e :: SomeException)))
 
   xmonad $ withUrgencyHook NoUrgencyHook $ ewmh $ docks $ myConfig {
     layoutHook = avoidStruts myLayoutHook,
