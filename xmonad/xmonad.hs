@@ -48,12 +48,11 @@ import Erik.ThreeColP
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
-import qualified Data.Set        as S
 
 myModMask = mod4Mask
 
 -- myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer]
-myWorkspaces = zipWith (++) (map (concatMap show) $ combinations [1..3]) ([" \62056", " \61508"] ++ repeat " \61705")
+myWorkspaces = zipWith (++) (map (concatMap show) $ combinations [1..3 :: Integer]) ([" \62056", " \61508"] ++ repeat " \61705")
 
 myBaseLayouts = Tall 1 (3/100) (1/2) |||
                 ThreeColMid 1 (3/100) (1/3) (1/2) |||
@@ -70,29 +69,28 @@ myLayoutHook =
   mkToggle (single MIRROR) $
   myBaseLayouts
 
-myStartupHook =
-  spawnOnce "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1" <+>
-  spawnOnce "display_updater startup" <+>
+myStartupHook = spawnOnce "[[ -f $HOME/.xmonad_startup ]] && \"$HOME/.xmonad_startup\""
+  -- spawnOnce "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1" <+>
+  -- spawnOnce "display_updater startup" <+>
   -- spawnOnce "compton -b" <+>
-  spawnOnce "pa-applet" <+>
-  spawnOnce "nm-applet" <+>
-  spawnOnce "xfce4-power-manager" <+>
-  spawnOnce "pamac-tray" <+>
-  spawnOnce "clipit" <+>
-  spawn "ff-theme-util" <+>
-  spawn "fix_xcursor" <+>
-  spawnOnce "echo off > $HOME/.program_mode" <+>
-  spawnOnce "prog_mode_toggle on" <+>
+  -- spawnOnce "pa-applet" <+>
+  -- spawnOnce "nm-applet" <+>
+  -- spawnOnce "xfce4-power-manager" <+>
+  -- spawnOnce "pamac-tray" <+>
+  -- spawnOnce "clipit --no-icon" <+>
+  -- spawn "fix_xcursor" <+>
+  -- spawnOnce "echo off > $HOME/.program_mode" <+>
+  -- spawnOnce "prog_mode_toggle on" <+>
   -- set mouse speed
-  spawn "xinput --set-prop 'ELAN0501:00 04F3:3060 Touchpad' 'libinput Accel Speed' 0.8" <+>
+  -- spawn "xinput --set-prop 'ELAN0501:00 04F3:3060 Touchpad' 'libinput Accel Speed' 0.8" <+>
   -- scrolla in other direction
-  spawn "xinput --set-prop 'ELAN0501:00 04F3:3060 Touchpad' 'libinput Natural Scrolling Enabled' 1" <+>
-  spawnOnce "dropbox" <+>
+  -- spawn "xinput --set-prop 'ELAN0501:00 04F3:3060 Touchpad' 'libinput Natural Scrolling Enabled' 1" <+>
+  -- spawnOnce "dropbox" <+>
   -- spawnOnce "redshift-gtk" <+>
   -- spawnOnce "blueman-applet" <+>
   -- spawnOnce "google-chrome-stable" <+>
-  spawnOnce "qutebrowser" <+>
-  spawnOnce "emacs --daemon"
+  -- spawnOnce "qutebrowser" <+>
+  -- spawnOnce "emacs --daemon"
 
 -- Do the same thing as XMonad.Actions.UpdatePointer, except that it
 -- also checks whether a mouse button is currently pressed. If one is
@@ -377,7 +375,7 @@ pipeOutput m s = mapM_ (\h -> hPutStrLn h (UTF8.decodeString s) >> hFlush h) m
 baseConfig = desktopConfig {
   modMask = myModMask,
   borderWidth = 0,
-  terminal = "termite",
+  terminal = "urxvt",
   keys = myKeys,
   workspaces = myWorkspaces
   }
