@@ -34,10 +34,10 @@ alias ysi='yaourt -Si'
 alias yqi='yaourt -Qi'
 alias yfs='yaourt -Fs'
 alias yfl='yaourt -Fl'
-alias ym='yaourt -Qm'
-alias yo='yaourt -Qdt'
-alias yl='yaourt -Qet'
-alias yc='yaourt -Sc'
+alias ym='yaourt -Qm' # foreign
+alias yo='yaourt -Qdt' # list orphans
+alias yl='yaourt -Qet' # list explicit, non-dependencies
+alias yc='yaourt -Sc' # clear cache from no longer installed
 alias yr='yaourt -Rsn'
 alias yR='yaourt -Rsnc'
 alias ylibc="yaourt -S --aur --m-arg '--nocheck --skippgpcheck' libc++"
@@ -66,7 +66,7 @@ function mountfat {
         echo "Usage: $0 device mountpoint" >&2
         return 1
     fi
-    sudo mount "$1" "$2" -o uid="$(id -u)",gid="$(id -g)",umask=133,dmask=022 && cd "$2"
+    sudo mount "$1" "$2" -o uid="$(id -u)",gid="$(id -g)",umask=033,dmask=022 && cd "$2"
 }
 
 function ediff {
