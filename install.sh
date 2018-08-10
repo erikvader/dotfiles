@@ -5,10 +5,15 @@
 # script is stored in (the root of the dotfiles folder)
 
 force=
+tag=
 
-if [[ $1 = -f ]]; then
-    force=true
-fi
+while [[ "$1" ]]; do
+    case "$1" in
+        -f) force=true ;;
+        *) tag=$1 ;;
+    esac
+    shift
+done
 
 function colorize {
     tput bold
@@ -18,19 +23,29 @@ function colorize {
 }
 
 # wrapper for ln
+# place src dstdir dstname tag
 function place {
-    if [[ -L "$2" && "$(readlink "$2")" = "$1" ]]; then
+    if [[ ! "$4" = "$tag" && ! "$tag" = all ]]; then
+        return
+    fi
+    mkdir -p "$2"
+    if [[ -z "$3" ]]; then
+        dst=$2/$(basename "$1")
+    else
+        dst=$2/$3
+    fi
+    if [[ -L "$dst" && "$(readlink "$dst")" = "$1" ]]; then
         colorize 2 "EXISTS "
-    elif [[ -z "$force" && -L "$2" ]]; then
+    elif [[ -z "$force" && -L "$dst" ]]; then
         colorize 1 "EXISTS "
     else
-        if ln -sTi "$1" "$2"; then
+        if ln -sTi "$1" "$dst"; then
             colorize 2 "OK "
         else
             colorize 1 "FAILED "
         fi
     fi
-    printf "%s l-> %s\\n" "$1" "$2"
+    printf "%s l-> %s\\n" "$1" "$dst"
 }
 
 # only for files
@@ -89,28 +104,31 @@ scripts=(
 for s in "${scripts[@]}"; do
     ss=${s%.*}
     ss=${ss##*/}
-    place "$PWD/$s" "$bin_location/$ss"
+    place "$PWD/$s" "$bin_location" "$ss" scripts
 done
 
 # some more links in .config
-# ln -sf "$PWD/i3" "$HOME/.i3"
-place "$PWD/conky"         "$HOME/.config/conky"
-place "$PWD/polybar"       "$HOME/.config/polybar"
-place "$PWD/mpv"           "$HOME/.config/mpv"
-place "$PWD/zathura"       "$HOME/.config/zathura"
-place "$PWD/sxiv/sxiv"     "$HOME/.config/sxiv"
-place "$PWD/.compton.conf" "$HOME/.config/compton.conf"
-place "$PWD/redshift.conf" "$HOME/.config/redshift.conf"
-place "$PWD/zsh/custom"    "$HOME/.my-oh-my-zsh-custom"
-place "$PWD/.profile"      "$HOME/.profile"
-place "$PWD/.xmodmap_prog" "$HOME/.xmodmap_prog"
-place "$PWD/zsh/.zshrc"    "$HOME/.zshrc"
-place "$PWD/makefiles"     "$HOME/makefiles"
-place "$PWD/.Xresources"   "$HOME/.Xresources"
+place "$PWD/conky"              "$HOME/.config"        "" conky
+place "$PWD/polybar"            "$HOME/.config"        "" polybar
+place "$PWD/mpv"                "$HOME/.config"        "" mpv
+place "$PWD/zathura"            "$HOME/.config"        "" zathura
+place "$PWD/sxiv/sxiv"          "$HOME/.config"        "" sxiv
+place "$PWD/.compton.conf"      "$HOME/.config"        "" compton
+place "$PWD/redshift.conf"      "$HOME/.config"        "" redshift
+place "$PWD/zsh/custom"         "$HOME"                "" zsh
+place "$PWD/zsh/.zshrc"         "$HOME"                "" zsh
+place "$PWD/.profile"           "$HOME"                "" profile
+place "$PWD/.xmodmap_prog"      "$HOME"                "" xmodmap
+place "$PWD/makefiles"          "$HOME"                "" makefiles
+place "$PWD/.Xresources"        "$HOME"                "" xresources
+place "$PWD/ranger/commands.py" "$HOME/.config/ranger" "" ranger
+place "$PWD/ranger/rc.conf"     "$HOME/.config/ranger" "" ranger
+place "$PWD/ranger/rifle.conf"  "$HOME/.config/ranger" "" ranger
+place "$PWD/ranger/scope.sh"    "$HOME/.config/ranger" "" ranger
 
 # thing in urxvt that is overridden after each update
-if [[ -f "/usr/lib/urxvt/perl/eval" ]]; then
+# if [[ -f "/usr/lib/urxvt/perl/eval" ]]; then
     # urxvt is installed
-    sudo bash -c "$declares; placecp \"$PWD/urxvt/eval\" \"/usr/lib/urxvt/perl/eval\""
-fi
+    # sudo bash -c "$declares; placecp \"$PWD/urxvt/eval\" \"/usr/lib/urxvt/perl/eval\""
+# fi
 
