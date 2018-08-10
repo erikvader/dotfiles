@@ -26,6 +26,7 @@ scripts=("clipit-rofi"
          "pkill -USR1 -x polybar"
          "display_updater_rofi"
          'open_downloaded_pdf'
+         "systemctl suspend"
         )
 
 names=("Clipit history"
@@ -54,6 +55,7 @@ names=("Clipit history"
        "Refresh Polybar (SIGUSR1)"
        "Display Updater"
        "Open Downloaded PDF"
+       "Suspend"
       )
 
 # eller printf '%s\n' "${names[@]}"
