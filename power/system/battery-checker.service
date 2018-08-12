@@ -3,5 +3,6 @@ Description=suspends if low battery
 
 [Service]
 Type=oneshot
-ExecStart=/bin/battery-checker user
+User=root
+ExecStart=/bin/battery-checker
 

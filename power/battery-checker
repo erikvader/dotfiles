@@ -1,14 +1,19 @@
 #!/bin/sh
+user=$1
 acpi -b | awk -F'[,:%]' '{print $2, $3}' | {
-	read -r status capacity
+    read -r status capacity
 
-	if [ "$status" = Discharging ]; then
-		if [ "$capacity" -lt 15 ]; then
-			notify-send 'Battery-checker' 'low battery warning, force suspend on 10%'
-		elif [ "$capacity" -lt 10 ]; then
-		        notify-send 'Battery-checker' 'CRITICAL! SUSPENDING'
-			systemctl suspend
-		fi
-	fi
+    if [ "$status" = Discharging ]; then
+        if [ "$capacity" -lt 15 ]; then
+            if [ -n "$user" ]; then
+                notify-send 'Battery-checker' 'low battery warning, force suspend on 10%'
+            fi
+        elif [ "$capacity" -lt 10 ]; then
+            if [ -n "$user" ]; then
+                notify-send 'Battery-checker' 'CRITICAL! SUSPENDING'
+            else
+                systemctl suspend
+            fi
+        fi
+    fi
 }
-
