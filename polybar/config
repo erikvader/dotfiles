@@ -61,7 +61,7 @@ font-4 = fontawesome:pixelsize=10;3
 
 modules-left = xmonad
 modules-center =
-modules-right = mounts transmission volume progmode temperature memory cpu wlan battery date
+modules-right = screenmng mounts transmission volume progmode temperature memory cpu wlan battery date
 
 tray-position = center
 tray-padding = 2
@@ -100,6 +100,14 @@ type = custom/script
 exec = xmonadLog
 
 tail = true
+
+[module/screenmng]
+type = custom/script
+exec = ~/.config/polybar/screenmng_polybar.sh
+tail = true
+
+format-underline = #ff69b4
+format-padding = 2
 
 [module/transmission]
 type = custom/script

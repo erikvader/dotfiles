@@ -22,11 +22,13 @@ scripts=("clipit-rofi"
          "prog_mode_toggle swetoggle"
          'notify-send "$(xtitle)"'
          "theme_select_rofi"
-         "theme_lock"
+         "screenmng lock"
+         'theme_lock'
          "pkill -USR1 -x polybar"
          "display_updater_rofi"
          'open_downloaded_pdf'
-         "systemctl suspend"
+         'systemctl suspend'
+         'screenmng toggle'
         )
 
 names=("Clipit history"
@@ -51,11 +53,13 @@ names=("Clipit history"
        "Program mode swedish toggle"
        "Show xtitle"
        "Change theme"
+       "Lock and Screen"
        "Lock"
        "Refresh Polybar (SIGUSR1)"
        "Display Updater"
        "Open Downloaded PDF"
        "Suspend"
+       'Presentation Mode toggle'
       )
 
 # eller printf '%s\n' "${names[@]}"

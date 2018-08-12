@@ -11,6 +11,8 @@ import Data.Bits (testBit)
 import Control.Monad (unless, mapM_, when)
 import Data.List
 
+import Graphics.X11.ExtraTypes.XF86
+
 import Codec.Binary.UTF8.String as UTF8
 
 import XMonad hiding ( (|||) )
@@ -171,8 +173,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_bracketright), incSpacing 1),
     ((modm, xK_at), setSpacing 0),
 
-    ((modm, xK_Left), spawn "i3_brightness -dec 1"),
-    ((modm, xK_Right), spawn "i3_brightness -inc 1"),
+    ((modm, xK_Left), spawn "i3_brightness -steps 1 -dec 1"),
+    ((modm, xK_Right), spawn "i3_brightness -steps 1 -inc 1"),
+    ((0, xF86XK_MonBrightnessUp), spawn "i3_brightness -steps 1 -inc 10"),
+    ((0, xF86XK_MonBrightnessDown), spawn "i3_brightness -steps 1 -dec 10"),
 
     -- launch a terminal
     ((modm .|. mod1Mask, xK_Return), spawn $ XMonad.terminal conf),

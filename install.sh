@@ -99,6 +99,7 @@ scripts=(
     "scripts/extract.sh"
     "scripts/mangadex_downloader.py"
     "scripts/run_polybar.sh"
+    "power/screenmng.sh"
 )
 
 for s in "${scripts[@]}"; do
