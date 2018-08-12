@@ -1,8 +1,7 @@
 #!/bin/bash
 
 function on {
-    xset s noblank
-    xset s 420 60
+    xset s noblank s 420 60 -dpms dpms 0 0 0
 }
 
 function off {
