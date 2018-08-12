@@ -32,9 +32,9 @@ fn=${targ%.*}
 
 if [[ -f $targ ]]; then
     case "$targ" in
-        *.tar.bz2|*.tar.gz|*.tar|*.tbz2|*.tgz)
+        *.tar.xz|*.tar.bz2|*.tar.gz|*.tar|*.tbz2|*.tgz)
             case "$targ" in
-                *.tar.gz|*.tar.bz2) fn=${fn%.*} ;;
+                *.tar.xz|*.tar.gz|*.tar.bz2) fn=${fn%.*} ;;
             esac
             maybeMkdir "$fn"
             tar -axvf "$targ" ${fold:+-C "$fn"} ;;
