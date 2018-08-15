@@ -1,41 +1,36 @@
 #!/bin/bash
 
 function on {
-    xset s noblank s 420 60 -dpms dpms 0 0 0
+    xset s 420 60 dpms 0 0 485
 }
 
 function off {
-    xset s 0 0
+    xset s 0 0 dpms 0 0 0 -dpms
 }
 
 function xss {
-    setsid xss-lock -l -n 'notify-send lock \#soon' -- screenmng lock </dev/null >/dev/null &
-}
-
-function lock_suspend {
-    theme_lock {XSS_SLEEP_LOCK_FD}<&-
-    exec {XSS_SLEEP_LOCK_FD}<&-
-}
-
-function lock_saver {
-    if pgrep -x i3lock; then
-        return
-    fi
-    theme_lock
-    xset dpms force off
+    # lock might get called twice
+    setsid xss-lock -n 'notify-send lock \#soon' -- theme_lock </dev/null >/dev/null &
 }
 
 function lock {
-    if [[ -e /dev/fd/${XSS_SLEEP_LOCK_FD:--1} ]]; then
-        lock_suspend
-    else
-        lock_saver
-    fi
+    xset s activate dpms force off
 }
 
 function is_on {
-    ! grep -qE 'timeout: +0 +cycle: +0' < <(xset q)
-    return $?
+    state=$(xset q)
+    grep -qE 'timeout: +0 +cycle: +0' <<< "$state"
+    grep1=$?
+    grep -qE 'Standby: +0 +Suspend: +0 +Off: +0' <<< "$state"
+    grep2=$?
+
+    if [[ $grep1 -eq 0 && $grep2 -eq 0 ]]; then
+        return 1
+    elif [[ $grep2 -ne 0 && $grep2 -ne 0 ]]; then
+        return 0
+    else
+        return 2
+    fi
 }
 
 case "$1" in
@@ -55,11 +50,8 @@ case "$1" in
         xss
         ;;
     ison)
-        if is_on; then
-            echo yes
-        else
-            echo no
-        fi
+        is_on
+        exit $?
         ;;
 esac
 

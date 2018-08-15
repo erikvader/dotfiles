@@ -1,8 +1,0 @@
-[Unit]
-Description=suspends if low battery
-
-[Service]
-Type=oneshot
-User=root
-ExecStart=/bin/battery-checker
-

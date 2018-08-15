@@ -1,9 +1,0 @@
-[Unit]
-Description=run battery-checker on timer
-
-[Timer]
-OnBootSec=1m
-OnUnitActiveSec=3m
-
-[Install]
-WantedBy=timers.target

@@ -10,4 +10,6 @@
 # i3lock -i "$SCREEN"
 # rm "$SCREEN"
 
-i3lock -t -i "$HOME/.lock"
+if ! pgrep -x i3lock; then
+    i3lock -t -i "$HOME/.lock"
+fi

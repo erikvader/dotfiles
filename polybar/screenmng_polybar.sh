@@ -1,21 +1,22 @@
 #!/bin/bash
 
 function update {
-    if [[ $(screenmng ison) = yes ]]; then
+    screenmng ison
+    r=$?
+    if [[ $r -eq 1 ]]; then
+        echo "PM"
+    elif [[ $r -eq 0 ]]; then
         echo ""
     else
-        echo "PM"
+        echo '????'
     fi
 }
 
-update
 trap 'update' USR1
 
-sleep infinity &
-spid=$!
-trap 'kill $spid' EXIT
-
-while ps -p $spid &>/dev/null; do
-    wait $spid &>/dev/null
+while true; do
+    update
+    sleep 60 &
+    wait $! &>/dev/null
 done
 
