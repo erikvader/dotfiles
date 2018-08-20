@@ -95,8 +95,8 @@ URxvt.keysym.C-V:      perl:clipboard:paste
 ! URxvt.keysym.M-C-v:    perl:clipboard:paste_escaped
 URxvt.keysym.M-k:      eval:scroll_up 1
 URxvt.keysym.M-j:      eval:scroll_down 1
-! URxvt.keysym.M-y:      eval:scroll_up 1
-! URxvt.keysym.M-e:      eval:scroll_down 1
+URxvt.keysym.M-y:      eval:scroll_up 1
+URxvt.keysym.M-e:      eval:scroll_down 1
 URxvt.keysym.M-u:      eval:scroll_up_pages 0.5
 URxvt.keysym.M-d:      eval:scroll_down_pages 0.5
 URxvt.keysym.M-b:      eval:scroll_up_pages 1
