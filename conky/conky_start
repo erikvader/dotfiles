@@ -17,11 +17,8 @@ while [[ "$1" ]]; do
     case "$1" in
         -n)
             shift
-            if [[ "$1" = "metro" ]]; then
-                conkypath="$HOME/.config/conky/eriks_metro"
-            elif [[ "$1" = "system" ]]; then
-                conkypath="$HOME/.config/conky/eriks_system"
-            else
+            conkypath="$HOME/.config/conky/eriks_$1"
+            if [[ ! -f $conkypath ]]; then
                 echo "weird name" >&2
                 exit 1
             fi
