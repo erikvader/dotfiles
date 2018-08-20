@@ -10,7 +10,7 @@ function off {
 
 function xss {
     # lock might get called twice
-    setsid xss-lock -n 'notify-send lock \#soon' -- theme_lock </dev/null >/dev/null &
+    setsid xss-lock -n 'notify-send lock \#soon' -- lock </dev/null >/dev/null &
 }
 
 function lock {

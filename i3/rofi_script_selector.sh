@@ -23,7 +23,7 @@ scripts=("clipit-rofi"
          'notify-send "$(xtitle)"'
          "theme_select_rofi"
          "screenmng lock"
-         'theme_lock'
+         'lock'
          "pkill -USR1 -x polybar"
          "display_updater_rofi"
          'open_downloaded_pdf'
