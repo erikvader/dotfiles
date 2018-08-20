@@ -1,10 +1,10 @@
 #!/bin/bash
 
 function printStatus {
-    contents="$(cat "$HOME/.program_mode")"
-    if [ "$contents" == "on" ]; then
+    contents=$(prog_mode_toggle status)
+    if [[ "$contents" = on ]]; then
         echo "P"
-    elif [ "$contents" == "swe" ]; then
+    elif [[ "$contents" = swe ]]; then
         # echo "%{F#ff6347}ÅÄÖ%{F-}"
         echo "ÅÄÖ"
     else

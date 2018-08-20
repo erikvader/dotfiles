@@ -1,17 +1,36 @@
 #!/bin/bash
 
-status_file="$HOME/.program_mode"
-file_contents="$(cat "$status_file")"
+# needs to have $status_file initialized beforehand
+# start as off with making the caps lock into a control+escape with xcape enabled
+#   echo off > status_file
+# a second non-empty word means that xcape should not be enabled
+#   echo off 1 > status_file
+
+status_file="/tmp/program_mode"
+
+if [[ "$1" = init ]]; then
+    echo off ${2:+1} > "$status_file"
+    exit 0
+fi
+
+read -r -a arr < "$status_file"
+status=${arr[0]}
+no_caps=${arr[1]}
 
 function on {
     if (set -e
-        setxkbmap er nodeadkeys
+        setxkbmap se nodeadkeys
         sleep 0.5
         xmodmap "$HOME/.xmodmap_prog"
-        sleep 0.5
-        xcape -e 'Control_R=Escape'
+        if [[ -f $HOME/.xmodmap_prog.local ]]; then
+            xmodmap "$HOME/.xmodmap_prog.local"
+        fi
+        if [[ -z $no_caps ]]; then
+            xmodmap -e 'keycode 66 = Control_R' -e 'add control = Control_R'
+            xcape -e 'Control_R=Escape'
+        fi
         xset r rate 300 35 # keyboard repeat speed
-        echo "on" > "$status_file"
+        echo on $no_caps > "$status_file"
        )
     then
         # notify-send 'Programming keyboard mode' 'on'
@@ -26,7 +45,7 @@ function sweon {
     xmodmap -e 'keycode 47 = odiaeresis Odiaeresis' \
             -e 'keycode 48 = adiaeresis Adiaeresis' \
             -e 'keycode 34 = aring Aring' &&
-    echo "swe" > "$status_file"
+    echo swe $no_caps > "$status_file"
     # notify-send 'åäö mode' 'on'
 }
 
@@ -34,7 +53,7 @@ function sweoff {
     xmodmap -e 'keycode 47 = bracketleft braceleft odiaeresis Odiaeresis odiaeresis Odiaeresis' \
             -e 'keycode 48 = bracketright braceright adiaeresis Adiaeresis adiaeresis Adiaeresis' \
             -e 'keycode 34 = at backslash aring Aring aring Aring' &&
-    echo "on" > "$status_file"
+    echo on $no_caps > "$status_file"
     # notify-send 'åäö mode' 'off'
 }
 
@@ -42,7 +61,7 @@ function off {
     if (set -e
         setxkbmap se
         pkill xcape 2>/dev/null
-        echo "off" > "$status_file"
+        echo off $no_caps > "$status_file"
        )
     then
         # notify-send 'Programming keyboard mode' 'off'
@@ -61,7 +80,7 @@ case "$1" in
         on
         ;;
     swetoggle)
-        case "$file_contents" in
+        case "$status" in
             swe)
                 sweoff
                 ;;
@@ -75,7 +94,7 @@ case "$1" in
         esac
         ;;
     "")
-        case "$file_contents" in
+        case "$status" in
             on | swe)
                 off
                 ;;
@@ -87,6 +106,10 @@ case "$1" in
                 exit 1
                 ;;
         esac
+        ;;
+    status)
+        echo "$status"
+        exit 0
         ;;
     *)
         echo "your argument is wrong" >&2
