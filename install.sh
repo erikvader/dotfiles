@@ -109,23 +109,34 @@ for s in "${scripts[@]}"; do
 done
 
 # some more links in .config
-place "$PWD/conky"              "$HOME/.config"        "" conky
-place "$PWD/polybar"            "$HOME/.config"        "" polybar
-place "$PWD/mpv"                "$HOME/.config"        "" mpv
-place "$PWD/zathura"            "$HOME/.config"        "" zathura
-place "$PWD/sxiv/sxiv"          "$HOME/.config"        "" sxiv
-place "$PWD/.compton.conf"      "$HOME/.config"        "" compton
-place "$PWD/redshift.conf"      "$HOME/.config"        "" redshift
-place "$PWD/zsh/custom"         "$HOME"                "" zsh
-place "$PWD/zsh/.zshrc"         "$HOME"                "" zsh
-place "$PWD/.profile"           "$HOME"                "" profile
-place "$PWD/.xmodmap_prog"      "$HOME"                "" xmodmap
-place "$PWD/makefiles"          "$HOME"                "" makefiles
-place "$PWD/.Xresources"        "$HOME"                "" xresources
-place "$PWD/ranger/commands.py" "$HOME/.config/ranger" "" ranger
-place "$PWD/ranger/rc.conf"     "$HOME/.config/ranger" "" ranger
-place "$PWD/ranger/rifle.conf"  "$HOME/.config/ranger" "" ranger
-place "$PWD/ranger/scope.sh"    "$HOME/.config/ranger" "" ranger
+place "$PWD/conky"                       "$HOME/.config"          ""                     conky
+place "$PWD/polybar"                     "$HOME/.config"          ""                     polybar
+place "$PWD/mpv"                         "$HOME/.config"          ""                     mpv
+place "$PWD/zathura"                     "$HOME/.config"          ""                     zathura
+place "$PWD/sxiv/sxiv"                   "$HOME/.config"          ""                     sxiv
+place "$PWD/.compton.conf"               "$HOME/.config"          "compton.conf"         compton
+place "$PWD/redshift.conf"               "$HOME/.config"          ""                     redshift
+place "$PWD/zsh/custom"                  "$HOME"                  ".my-oh-my-zsh-custom" zsh
+place "$PWD/zsh/.zshrc"                  "$HOME"                  ""                     zsh
+place "$PWD/.profile"                    "$HOME"                  ""                     profile
+place "$PWD/.xmodmap_prog"               "$HOME"                  ""                     xmodmap
+place "$PWD/makefiles"                   "$HOME"                  ""                     makefiles
+place "$PWD/.Xresources"                 "$HOME"                  ""                     xresources
+place "$PWD/ranger/commands.py"          "$HOME/.config/ranger"   ""                     ranger
+place "$PWD/ranger/rc.conf"              "$HOME/.config/ranger"   ""                     ranger
+place "$PWD/ranger/rifle.conf"           "$HOME/.config/ranger"   ""                     ranger
+place "$PWD/ranger/scope.sh"             "$HOME/.config/ranger"   ""                     ranger
+place "$PWD/dunstrc"                     "$HOME/.config/dunst"    ""                     dunst
+
+place "$PWD/xmonad/xmonad.hs"            "$HOME/.xmonad"          ""                     xmonad
+
+place "$PWD/xmonad/CompactWorkspaces.hs" "$HOME/.xmonad/lib/Erik" ""                     xmonad
+place "$PWD/xmonad/MyLimitWindows.hs"    "$HOME/.xmonad/lib/Erik" ""                     xmonad
+place "$PWD/xmonad/MyStuff.hs"           "$HOME/.xmonad/lib/Erik" ""                     xmonad
+place "$PWD/xmonad/Spacing.hs"           "$HOME/.xmonad/lib/Erik" ""                     xmonad
+place "$PWD/xmonad/ThreeColP.hs"         "$HOME/.xmonad/lib/Erik" ""                     xmonad
+
+place "$PWD/rofi"                        "$HOME/.config"          ""                     rofi
 
 # thing in urxvt that is overridden after each update
 # if [[ -f "/usr/lib/urxvt/perl/eval" ]]; then
