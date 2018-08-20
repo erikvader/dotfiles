@@ -3,7 +3,7 @@
 #
 #
 
-#[[ "$XDG_CURRENT_DESKTOP" == "KDE" ]] || export QT_QPA_PLATFORMTHEME="qt5ct"
+export QT_QPA_PLATFORMTHEME='qt5ct'
 
 export PATH="$HOME/.bin:$HOME/.local/bin:$PATH"
 
@@ -16,4 +16,6 @@ export QT_AUTO_SCREEN_SCALE_FACTOR=0
 # no more __pycache__
 export PYTHONDONTWRITEBYTECODE=1
 
-# [[ -f ~/.extend.profile ]] && . ~/.extend.profile
+export EDITOR='/usr/bin/vim'
+
+[[ -f $HOME/.profile.local ]] && . "$HOME/.profile.local"
