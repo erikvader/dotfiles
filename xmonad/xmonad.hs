@@ -41,8 +41,8 @@ import XMonad.Layout.MultiToggle.Instances
 import XMonad.Layout.Renamed
 import XMonad.Layout.LayoutCombinators
 import qualified XMonad.Layout.GridVariants as GV
+import XMonad.Layout.Spacing
 
-import Erik.Spacing
 import Erik.MyStuff
 import qualified Erik.MyLimitWindows as L
 -- import XMonad.Layout.LimitWindows
@@ -67,8 +67,8 @@ myBaseLayoutsNames = ["Tall", "ThreeCol", "Grid", "SplitGrid", "Spiral"]
 
 myLayoutHook =
   L.limitWindows 2 False True $
-  renamed [CutWordsLeft 2] $ -- remove smartspacing text
-  smartSpacing 3 .
+  renamed [CutWordsLeft 1] $ -- remove smartspacing text
+  spacingRaw True (Border 3 3 3 3) True (Border 3 3 3 3) True $
   mkToggle (single MIRROR) $
   myBaseLayouts
 
@@ -169,9 +169,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_minus), spawn "theme_select -r"),
 
     -- gaps
-    ((modm, xK_bracketleft), incSpacing (-1)),
-    ((modm, xK_bracketright), incSpacing 1),
-    ((modm, xK_at), setSpacing 0),
+    ((modm, xK_bracketleft), decScreenWindowSpacing 1),
+    ((modm, xK_bracketright), incScreenWindowSpacing 1),
+    ((modm, xK_at), toggleScreenSpacingEnabled >> toggleWindowSpacingEnabled),
 
     ((modm, xK_Left), spawn "i3_brightness -steps 1 -dec 1"),
     ((modm, xK_Right), spawn "i3_brightness -steps 1 -inc 1"),

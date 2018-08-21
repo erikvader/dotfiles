@@ -133,7 +133,6 @@ place "$PWD/xmonad/xmonad.hs"            "$HOME/.xmonad"          ""            
 place "$PWD/xmonad/CompactWorkspaces.hs" "$HOME/.xmonad/lib/Erik" ""                     xmonad
 place "$PWD/xmonad/MyLimitWindows.hs"    "$HOME/.xmonad/lib/Erik" ""                     xmonad
 place "$PWD/xmonad/MyStuff.hs"           "$HOME/.xmonad/lib/Erik" ""                     xmonad
-place "$PWD/xmonad/Spacing.hs"           "$HOME/.xmonad/lib/Erik" ""                     xmonad
 place "$PWD/xmonad/ThreeColP.hs"         "$HOME/.xmonad/lib/Erik" ""                     xmonad
 
 place "$PWD/rofi"                        "$HOME/.config"          ""                     rofi
