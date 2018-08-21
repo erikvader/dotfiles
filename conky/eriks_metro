@@ -1,4 +1,6 @@
-
+define(`FG_COLOR', ifdef(`white', `ebebeb', `030303'))dnl
+define(`BG_PATH', ifdef(`bg-white', `~/.config/conky/conky_bg_white.png', ifdef(`bg-black', `~/.config/conky/conky_bg_black.png')))dnl
+undefine(`white', `black', `bg-black', `bg-white')dnl
 conky.config = {
     background = false,
     update_interval = 1,
@@ -35,23 +37,14 @@ conky.config = {
     
     uppercase = false,
     
-    ;@@@; black
-    default_color = '030303',
-    ;/@@@;
-    ;@@@; white 
-    default_color = 'ebebeb',
-    ;/@@@;
+    default_color = 'FG_COLOR',
     
     top_cpu_separate = false,
 };
 
 conky.text = [[
-;@@@; bg-white
-${image ~/.config/conky/conky_bg_white.png -p 0,30}
-;/@@@;
-;@@@; bg-black
-${image ~/.config/conky/conky_bg_black.png -p 0,30}
-;/@@@;
+ifelse(BG_PATH, `', `', ${image BG_PATH -p -5`,'0}
+)dnl
 ${alignr}${voffset 10}${font Open Sans Light:size=50}${time %A}${font}${voffset -10}
 ${alignr}${voffset 10}${font Open Sans Light:size=50}${time %e} ${time %B}${font}${voffset -10}
 ${alignr}${voffset 10}${font Open Sans Light:size=100}${time %H:%M}${font}${voffset -10}

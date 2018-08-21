@@ -1,3 +1,6 @@
+define(`FG_COLOR', ifdef(`white', `ebebeb', `030303'))dnl
+define(`BG_PATH', ifdef(`bg-white', `~/.config/conky/conky_bg_white.png', ifdef(`bg-black', `~/.config/conky/conky_bg_black.png')))dnl
+undefine(`white', `black', `bg-black', `bg-white')dnl
 --[[
 Conky, a system monitor, based on torsmo
 
@@ -76,25 +79,14 @@ conky.config = {
     default_outline_color = 'white',
     default_shade_color = 'white',
 
-    ;@@@; black
-	default_color = '030303',
-    color0 = '030303',
-    color1 = '030303'
-    ;/@@@;
-    ;@@@; white
-	default_color = 'ebebeb',
-    color0 = 'ebebeb',
-    color1 = 'ebebeb'
-    ;/@@@;
+    default_color = 'FG_COLOR',
+    color0 = 'FG_COLOR',
+    color1 = 'FG_COLOR'
 }
 
 conky.text = [[
-;@@@; bg-white
-${image ~/.config/conky/conky_bg_white.png -p -5,0}
-;/@@@;
-;@@@; bg-black
-${image ~/.config/conky/conky_bg_black.png -p -5,0}
-;/@@@;
+ifelse(BG_PATH, `', `', ${image BG_PATH -p -5`,'0}
+)dnl
 # ${scroll 30 $nodename - $sysname $kernel on $machine | }
 # $hr
 # ${color}Uptime:$color $uptime

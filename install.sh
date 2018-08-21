@@ -75,6 +75,7 @@ scripts=(
     "themes/feh_loop.sh"
     "themes/init_theme.sh"
     "conky/conky_start"
+    "scripts/m4_start.sh"
     "i3/scrot_clipboard.sh"
     "i3/lock.sh"
     "i3/i3_brightness.sh"
