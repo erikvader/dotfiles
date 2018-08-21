@@ -22,6 +22,5 @@ keycode 13 = 4 dollar currency cent currency cent currency cent
 keycode 34 = at backslash aring Aring aring Aring aring Aring
 keycode 48 = bracketright braceright adiaeresis Adiaeresis adiaeresis Adiaeresis adiaeresis Adiaeresis
 keycode 47 = bracketleft braceleft odiaeresis Odiaeresis odiaeresis Odiaeresis odiaeresis Odiaeresis
-!TODO: figure out the right keycode
-!keycode any = bar section at paragraph at paragraph at paragraph
+keycode 49 = bar section at paragraph at paragraph at paragraph
 
