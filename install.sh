@@ -91,7 +91,6 @@ scripts=(
     # "scripts/config_slicer.sh"
     "scripts/cowfortune"
     "scripts/mouse_dance.sh"
-    "scripts/getCRTC.sh"
     "scripts/els"
     "scripts/open_downloaded_pdf.sh"
     "scripts/sxiv_zip.sh"
