@@ -88,7 +88,7 @@ def formatPerms(d):
    if permsSplit:
       perms = "".join(permsSplit)
 
-   return formatStat(perms[0], True, sta) + "".join(map(lambda x: colorize(x, "1;37") if x == "-" else x, perms[1:]))
+   return formatStat(perms[0], True, sta, ext=os.path.splitext(d.name)[1]) + "".join(map(lambda x: colorize(x, "1;37") if x == "-" else x, perms[1:]))
 
 def formatGroup(d):
    sta = d.stat(follow_symlinks=False)
@@ -131,23 +131,27 @@ def isExec(mode):
    imode = stat.S_IMODE(mode)
    return imode & stat.S_IXUSR or imode & stat.S_IXGRP or imode & stat.S_IXOTH
 
-def formatStat(p, exists, sta):
+def formatStat(p, exists, sta, ext=None):
    if not exists:
       return colorize(p, colors.get("or"))
 
    mode = sta.st_mode
+   if not ext:
+      _, ext = os.path.splitext(p)
+
    if stat.S_ISDIR(mode):
       return colorize(p, colors.get("di"))
 
    elif stat.S_ISLNK(mode):
       return colorize(p, colors.get("ln"))
 
-   elif stat.S_ISREG(mode) and isExec(mode):
-      return colorize(p, colors.get("ex"))
-
    elif stat.S_ISREG(mode):
-      _, ext = os.path.splitext(p)
-      return colorize(p, colors.get("*" + ext))
+      if "*" + ext in colors:
+         return colorize(p, colors.get("*" + ext))
+      elif isExec(mode):
+         return colorize(p, colors.get("ex"))
+      else:
+         return p
 
    elif stat.S_ISFIFO(mode):
       return colorize(p, colors.get("pi"))
