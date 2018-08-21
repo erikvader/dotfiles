@@ -20,8 +20,9 @@ alias xa="xarchiver"
 
 alias mi="mediainfo"
 
-alias rsd='rsync -avhn --delete'
-alias rs='rsync -avh --delete --progress'
+alias rsd='rsync -avhsn --delete'
+alias rs='rsync -avhs --delete --progress'
+alias rc='rsync -avhs --progress'
 
 alias y='yaourt'
 alias yy='yaourt -Syy'
@@ -52,6 +53,35 @@ alias s='lll | grep'
 alias ec="emacsclient -n -c"
 
 alias mountanime="mountsmb ERIKRIMSKOG anime /media/anime"
+
+REPOS=( "$HOME/.emacs.d" "$HOME/dotfiles" "$HOME/.config/qutebrowser" )
+function repos_cmd {
+    local sssh=
+    local outfile=/dev/fd/1
+    if [[ "$1" = q ]]; then
+        sssh=1
+        outfile=/dev/null
+        shift
+    fi
+    for re in "${REPOS[@]}"; do
+        if [[ ! -d "$re/.git" ]]; then
+            echo "\"$re\" is not a git repo" >&2
+            continue
+        fi
+        if [[ -z $sssh ]]; then
+            tput setaf 6
+            echo "-----$(basename "$re")-----"
+            tput sgr0
+        fi
+        git --git-dir="$re/.git" --work-tree="$re" "$@" > "$outfile" 2>&1
+        if [[ -z $sssh ]]; then
+            echo
+        fi
+    done
+}
+
+alias repos_check='repos_cmd q fetch; repos_cmd status'
+alias repos_pull='repos_cmd pull'
 
 function mountsmb {
     if [[ $# -ne 3 ]]; then
