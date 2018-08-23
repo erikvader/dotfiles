@@ -37,7 +37,7 @@ alias yfs='yaourt -Fs'
 alias yfl='yaourt -Fl'
 alias ym='yaourt -Qm' # foreign
 alias yo='yaourt -Qdt' # list orphans
-alias yl='yaourt -Qet' # list explicit, non-dependencies
+alias yl='yaourt -Qe' # list explicit
 alias yc='yaourt -Sc' # clear cache from no longer installed
 alias yr='yaourt -Rsn'
 alias yR='yaourt -Rsnc'
@@ -56,32 +56,22 @@ alias mountanime="mountsmb ERIKRIMSKOG anime /media/anime"
 
 REPOS=( "$HOME/.emacs.d" "$HOME/dotfiles" "$HOME/.config/qutebrowser" )
 function repos_cmd {
-    local sssh=
-    local outfile=/dev/fd/1
-    if [[ "$1" = q ]]; then
-        sssh=1
-        outfile=/dev/null
-        shift
-    fi
     for re in "${REPOS[@]}"; do
         if [[ ! -d "$re/.git" ]]; then
             echo "\"$re\" is not a git repo" >&2
             continue
         fi
-        if [[ -z $sssh ]]; then
-            tput setaf 6
-            echo "-----$(basename "$re")-----"
-            tput sgr0
-        fi
-        git --git-dir="$re/.git" --work-tree="$re" "$@" > "$outfile" 2>&1
-        if [[ -z $sssh ]]; then
-            echo
-        fi
+        tput setaf 6
+        echo "-----$(basename "$re")-----"
+        tput sgr0
+        git --git-dir="$re/.git" --work-tree="$re" "$@"
+        echo
     done
 }
 
-alias repos_check='repos_cmd q fetch; repos_cmd status'
+alias repos_check='repos_cmd fetch &>/dev/null; repos_cmd status'
 alias repos_pull='repos_cmd pull'
+alias repos_status='repos_cmd status'
 
 function mountsmb {
     if [[ $# -ne 3 ]]; then
