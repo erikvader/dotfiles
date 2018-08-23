@@ -94,9 +94,10 @@ ifelse(BG_PATH, `', `', ${image BG_PATH -p -5`,'0}
 ${alignc}$kernel
 ${alignc}${uptime}
 $hr
- $color1/$color    $color${fs_used_perc /}%$color1/$color${fs_size /} ${fs_bar 6 /}
- ${color1}home $color${fs_used_perc /home}%$color1/$color${fs_size /home} ${fs_bar 6 /home}
- ${color1}3TB  $color${fs_used_perc /media/3TB}%$color1/$color${fs_size /media/3TB} ${fs_bar 6 /media/3TB}
+ $color1/$color       $color${fs_used_perc /}%$color1/$color${fs_size /} ${fs_bar 6 /}
+ ${color1}home    $color${fs_used_perc /home}%$color1/$color${fs_size /home} ${fs_bar 6 /home}
+ ${color1}3TB     $color${fs_used_perc /media/3TB}%$color1/$color${fs_size /media/3TB} ${fs_bar 6 /media/3TB}
+ ${color1}freecom $color${fs_used_perc /media/freecom}%$color1/$color${fs_size /media/freecom} ${fs_bar 6 /media/freecom}
 $hr
 ${color1}ip: $color${addr enp4s0}${alignr}DNS: ${nameserver 0}
 ${color1}Up:$color ${upspeed enp4s0}${color}${alignr}${color1}Down:$color ${downspeed enp4s0}
