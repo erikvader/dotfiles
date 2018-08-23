@@ -1,7 +1,8 @@
 #!/bin/bash
 
 function on {
-    xset s 420 60 dpms 0 0 485
+    local t=420
+    xset s $t 0 s blank dpms $t $t $t
 }
 
 function off {
@@ -9,12 +10,11 @@ function off {
 }
 
 function xss {
-    # lock might get called twice
-    setsid xss-lock -n 'notify-send lock \#soon' -- lock </dev/null >/dev/null &
+    setsid xss-lock -- lock </dev/null >/dev/null &
 }
 
 function lock {
-    xset s activate dpms force off
+    xset dpms force off
 }
 
 function is_on {
