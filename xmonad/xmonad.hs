@@ -178,6 +178,11 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((0, xF86XK_MonBrightnessUp), spawn "i3_brightness -steps 1 -inc 10"),
     ((0, xF86XK_MonBrightnessDown), spawn "i3_brightness -steps 1 -dec 10"),
 
+    -- media buttons
+    ((0, xF86XK_AudioPlay), spawn "playerctl play-pause"),
+    ((0, xF86XK_AudioNext), spawn "playerctl next"),
+    ((0, xF86XK_AudioPrev), spawn "playerctl previous"),
+
     -- launch a terminal
     ((modm .|. mod1Mask, xK_Return), spawn $ XMonad.terminal conf),
     ((modm, xK_Return), spawn "urxvt"),
