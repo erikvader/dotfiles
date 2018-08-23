@@ -1,5 +1,5 @@
 define(`FG_COLOR', ifdef(`white', `ebebeb', `030303'))dnl
-define(`BG_PATH', ifdef(`bg-white', `~/.config/conky/conky_bg_white.png', ifdef(`bg-black', `~/.config/conky/conky_bg_black.png')))dnl
+define(`BG_PATH', ifdef(`bg-white', `~/.config/conky/conky_bg_white.png', ifdef(`bg-black', ``~/.config/conky/conky_bg_black.png'')))dnl
 undefine(`white', `black', `bg-black', `bg-white')dnl
 --[[
 Conky, a system monitor, based on torsmo

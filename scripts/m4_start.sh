@@ -31,10 +31,16 @@ while [[ "$1" ]]; do
     : $((i++))
 done
 
-echo "$conf"
-echo "$cmd"
-echo "${cmdflags[@]}"
-echo "${tags[@]}"
+# echo "$conf"
+# echo "$cmd"
+# echo "${cmdflags[@]}"
+# echo "${tags[@]}"
+
+m4tags=()
+
+for t in "${tags[@]}"; do
+    m4tags+=( "-D" "$t" )
+done
 
 if [[ -z "$conf" || -z "$cmd" ]]; then
     echo "conf or cmd wasn't set" >&2
@@ -48,6 +54,6 @@ set -e
 
 tempfile=$(mktemp --tmpdir 'm4_start.XXXXXXXXX')
 
-m4 -D "${tags[@]}" > "$tempfile" < "$conf"
+m4 "${m4tags[@]}" > "$tempfile" < "$conf"
 
 $cmd "${cmdflags[@]}" "$tempfile"
