@@ -99,6 +99,7 @@ scripts=(
     "scripts/extract.sh"
     "scripts/mangadex_downloader.py"
     "scripts/run_polybar.sh"
+    "scripts/run_polybar_many.sh"
     "power/screenmng.sh"
 )
 

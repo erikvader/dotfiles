@@ -87,10 +87,10 @@ i3-focused-underline = ${colors.primary}
 [bar/nonprimary]
 inherit = bar/example
 monitor = ${env:MONITOR}
-monitor-strict = true
+; monitor-strict = true
 tray-position =
 
-i3-focused-underline = #008b8b
+; i3-focused-underline = #008b8b
 
 modules-left = xmonad
 modules-center =
