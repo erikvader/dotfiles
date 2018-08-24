@@ -1,6 +1,5 @@
 {-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-missing-signatures #-}
 
-import System.Posix.Files (createNamedPipe)
 import System.Posix.Types (CMode(..))
 import System.Posix.IO (dupTo,closeFd,createFile,stdError)
 import Control.Exception (catch,SomeException)
@@ -51,6 +50,9 @@ import Erik.ThreeColP
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
+
+import qualified DBus as D
+import qualified DBus.Client as D
 
 myModMask = mod4Mask
 
@@ -355,9 +357,9 @@ logLimitWindows =
 
 -- Override the PP values as you would otherwise, adding colors etc depending
 -- on  the statusbar used
-myLogHook :: Maybe Handle -> PP
-myLogHook mhandle = def
-    { ppOutput = pipeOutput mhandle . fixXinerama,
+myLogHook :: D.Client -> PP
+myLogHook dbus = def
+    { ppOutput = dbusOutput dbus . fixXinerama,
       ppCurrent = wrap "%{B#505050 U#ffb52a +u}[  " "  ]%{B- -u}",
       ppVisible = wrap "%{B#505050}[  " "  ]%{B-}",
       ppUrgent = wrap " %{B#bd2c40} " "! %{B-} ",
@@ -379,9 +381,6 @@ myLogHook mhandle = def
     removeIndices c (s:ss) (i:is) | c == i    = removeIndices (c+1) ss is
                                   | otherwise = s:removeIndices (c+1) ss (i:is)
 
-pipeOutput :: Maybe Handle -> String -> IO ()
-pipeOutput m s = mapM_ (\h -> hPutStrLn h (UTF8.decodeString s) >> hFlush h) m
-
 baseConfig = desktopConfig {
   modMask = myModMask,
   borderWidth = 0,
@@ -396,22 +395,25 @@ myConfig = baseConfig {
   logHook = logHook baseConfig >> myUpdatePointer
   }
 
-pipeName :: FilePath
-pipeName = "/tmp/XMonadLog"
+dbusOutput :: D.Client -> String -> IO ()
+dbusOutput dbus str = do
+    let signal = (D.signal objectPath interfaceName memberName) {
+            D.signalBody = [D.toVariant $ UTF8.decodeString str]
+        }
+    D.emit dbus signal
+  where
+    objectPath = D.objectPath_ "/org/xmonad/Log"
+    interfaceName = D.interfaceName_ "org.xmonad.Log"
+    memberName = D.memberName_ "Update"
 
 errorFile :: FilePath
 errorFile = "/tmp/xmonad-error"
 
 main :: IO ()
 main = do
-  -- create pipe (doesn't close fd on restarts)
-  mhandle <- catch (do
-                       fs <- doesFileExist pipeName
-                       unless fs $ createNamedPipe pipeName (CMode 0o666)
-                       Just <$> openFile pipeName ReadWriteMode)
-               (\e -> do
-                        trace (show (e :: SomeException))
-                        return Nothing)
+  dbus <- D.connectSession
+      -- Request access to the DBus name
+  D.requestName dbus (D.busName_ "org.xmonad.Log") [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
 
   -- custom .xsession-error
   catch (do
@@ -426,6 +428,6 @@ main = do
   xmonad $ withUrgencyHook NoUrgencyHook $ ewmh $ docks $ myConfig {
     layoutHook = avoidStruts myLayoutHook,
     handleEventHook = handleEventHook myConfig <+> fullscreenEventHook,
-    logHook = logHook myConfig <+> L.updateCurrentState <+> dynamicLogWithPP (myLogHook mhandle)
+    logHook = logHook myConfig <+> L.updateCurrentState <+> dynamicLogWithPP (myLogHook dbus)
     }
 
