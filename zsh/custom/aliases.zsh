@@ -6,6 +6,8 @@ alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
 
 alias tr='transmission-remote'
 
+alias youtube-dl-mkv='youtube-dl --merge-output-format mkv'
+
 alias cdm='cd /media'
 alias findbroken='find . -xtype l'
 
@@ -39,8 +41,9 @@ alias ym='yaourt -Qm' # foreign
 alias yo='yaourt -Qdt' # list orphans
 alias yl='yaourt -Qe' # list explicit
 alias yc='yaourt -Sc' # clear cache from no longer installed
-alias yr='yaourt -Rsn'
-alias yR='yaourt -Rsnc'
+alias yr='yaourt -Rn'
+alias yrr='yaourt -Rsn'
+alias yrrr='yaourt -Rsnc'
 alias ylibc="yaourt -S --aur --m-arg '--nocheck --skippgpcheck' libc++"
 
 alias l='ls -Av'
