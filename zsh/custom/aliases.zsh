@@ -53,6 +53,8 @@ alias lll='ls -lAhv'
 
 alias s='lll | grep'
 
+alias gl='glola'
+
 alias ec="emacsclient -n -c"
 
 alias mountanime="mountsmb ERIKRIMSKOG anime /media/anime"
