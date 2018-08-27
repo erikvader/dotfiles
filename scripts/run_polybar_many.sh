@@ -3,9 +3,14 @@
 # runs one bar with $1 on env MONITOR
 # and runs $2 on all the rest
 
-OTHERS=$(polybar -m | sed -nE -e "/^$MONITOR:.*\$/d" -e 's/^(.+?):.*$/\1/p')
-for o in "${OTHERS[@]}"; do
-    MONITOR="$o" run_polybar "$2" &
-done
-exec run_polybar "$1"
+prim=$1
+seco=$2
+shift
+shift
+
+while IFS='' read -r line || [[ -n "$line" ]]; do
+    MONITOR="$line" polybar "$seco" &
+done < <(comm -23 <(polybar -m | cut -d':' -f1 | sort) <(printf '%s\n' "$@" | sort))
+
+exec run_polybar "$prim" -- "$@"
 
