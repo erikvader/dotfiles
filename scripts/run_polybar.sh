@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # wrapper for polybar
-# spawns one bar with automatic MONITORBACKUP
+# run_polybar [args..] -- [outputs..]
+# runs polybar on all outputs with args.
+# all outputs that doesn't exist (doesn't appear in polybar -m) will be ignored
 
 polybar_args=()
 
