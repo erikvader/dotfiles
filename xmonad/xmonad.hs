@@ -43,6 +43,7 @@ import qualified XMonad.Layout.GridVariants as GV
 import XMonad.Layout.Spacing
 
 import Erik.MyStuff
+import Erik.IndiPP
 import qualified Erik.MyLimitWindows as L
 -- import XMonad.Layout.LimitWindows
 import Erik.CompactWorkspaces
@@ -71,7 +72,7 @@ myLayoutHook =
   L.limitWindows 2 False True $
   renamed [CutWordsLeft 1] $ -- remove smartspacing text
   spacingRaw True (Border 3 3 3 3) True (Border 3 3 3 3) True $
-  mkToggle (single MIRROR) $
+  mkToggle (single MIRROR)
   myBaseLayouts
 
 myStartupHook = spawnOnce "[[ -f $HOME/.xmonad_startup ]] && \"$HOME/.xmonad_startup\""
@@ -355,12 +356,10 @@ logLimitWindows =
       | (full || not off) && det > 0 = Just $ wrap "%{F#ff00ff}" "%{F-}" "d"
       | otherwise = Just ""
 
--- Override the PP values as you would otherwise, adding colors etc depending
--- on  the statusbar used
-myLogHook :: D.Client -> PP
-myLogHook dbus = def
-    { ppOutput = dbusOutput dbus . fixXinerama,
-      ppCurrent = wrap "%{B#505050 U#ffb52a +u}[  " "  ]%{B- -u}",
+myFocusPPXin :: PP
+myFocusPPXin = def
+    {
+      ppCurrent = wrap "%{B#505050 u#ffb52a +u}[  " "  ]%{B- -u}",
       ppVisible = wrap "%{B#505050}[  " "  ]%{B-}",
       ppUrgent = wrap " %{B#bd2c40} " "! %{B-} ",
       ppHidden = wrap "  " "  ",
@@ -371,7 +370,33 @@ myLogHook dbus = def
       ppOrder = \(w:l:t:lwc:lwf:ldh:_) -> filter (not . null) [w, lwf ++ l, ldh, lwc, t],
       ppExtras = logLimitWindows
     }
+
+myNonfocusPPXin :: PP
+myNonfocusPPXin = myFocusPPXin {
+  ppCurrent = wrap "%{B#505050 u#00ace6 +u}[  " "  ]%{B- -u}"
+  }
+
+myFocusPP :: PP
+myFocusPP = myFocusPPXin
+    {
+      ppCurrent = wrap "%{B#505050 u#ffb52a +u}  " "  %{B- -u}",
+      ppVisible = wrap "%{B#505050 u#00bfff +u}  " "  %{B- -u}",
+      ppSort = ppSort def
+    }
+
+myNonfocusPP :: PP
+myNonfocusPP = myFocusPP {
+  ppCurrent = wrap "%{u#e69500 +u}  " "  %{-u}",
+  ppVisible = wrap "%{u#0086b3 +u}  " "  %{-u}"
+  }
+
+multiPrepare :: D.Client -> String -> PP -> X PP
+multiPrepare dbus output pp = do
+  L.updateCurrentState
+  return $ pp {ppOutput = dbusOutput dbus . prependOutput . fixXinerama}
   where
+    prependOutput = (output ++)
+
     fixXinerama :: String -> String
     fixXinerama s = removeIndices 0 s $ tail . init $ findIndices (\c -> c == '[' || c == ']') $ takeWhile (/= ':') s
 
@@ -425,9 +450,9 @@ main = do
             return ())
     (\e -> trace (show (e :: SomeException)))
 
-  xmonad $ withUrgencyHook NoUrgencyHook $ ewmh $ docks $ myConfig {
+  xmonad $ indiPP $ withUrgencyHook NoUrgencyHook $ ewmh $ docks $ myConfig {
     layoutHook = avoidStruts myLayoutHook,
     handleEventHook = handleEventHook myConfig <+> fullscreenEventHook,
-    logHook = logHook myConfig <+> L.updateCurrentState <+> dynamicLogWithPP (myLogHook dbus)
+    logHook = logHook myConfig <+> multiPP myFocusPPXin myNonfocusPPXin (multiPrepare dbus)
     }
 
