@@ -4,7 +4,7 @@ alias r="ranger-cd"
 alias p="thunar &!"
 alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
 
-alias tr='transmission-remote'
+alias tra='transmission-remote'
 
 alias youtube-dl-mkv='youtube-dl --merge-output-format mkv'
 
