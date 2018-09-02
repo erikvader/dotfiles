@@ -1,6 +1,6 @@
 #!/bin/bash
 
-scripts=("clipit-rofi"
+scripts=("rofi -modi 'clipboard:greenclip print' -show clipboard -run-command '{cmd}'"
          "xrandr-invert-colors"
          "pkill -USR1 '^redshift$'"
          "gksudo toggle_audio_powersave"
@@ -31,7 +31,7 @@ scripts=("clipit-rofi"
          'screenmng toggle'
         )
 
-names=("Clipit history"
+names=("Clipboard history"
        "Invert colors"
        "Toggle redshift"
        "Audio powersave toggle"
