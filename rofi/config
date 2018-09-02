@@ -3,3 +3,7 @@ rofi.bw: 0
 ##State:           ´bg´,      ´fg´,    ´bgalt´,   ´hlbg´,  ´hlfg´
 rofi.color-normal: #00000000, #f3f4f5, #00000000, #ff69b4, #f3f4f5
 rofi.color-window: #d8000000, #ff69b4
+
+rofi.kb-row-first: Alt+less
+rofi.kb-row-last:  Alt+greater
+
