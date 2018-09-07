@@ -1,72 +1,41 @@
 #!/bin/bash
 
-scripts=("rofi -modi 'clipboard:greenclip print' -show clipboard -run-command '{cmd}'"
-         "xrandr-invert-colors"
-         "pkill -USR1 '^redshift$'"
-         "gksudo toggle_audio_powersave"
-         "morc_menu"
-         "manjaro-settings-manager"
-         "pavucontrol"
-         "terminal -e bmenu"
-         "pkill compton"
-         "display_updater compton"
-         "i3-scrot -d 1"
-         "i3-scrot -w 1"
-         "i3-scrot -s"
-         "scrot_clipboard -d 1"
-         "scrot_clipboard -u -d 1"
-         "scrot_clipboard -s"
-         "transset-df -a 0.99"
-         "transset-df -a 1"
-         "prog_mode_toggle"
-         "prog_mode_toggle swetoggle"
-         'notify-send "$(xtitle)"'
-         "theme_select_rofi"
-         "screenmng lock"
-         'lock'
-         "pkill -USR1 -x polybar"
-         "display_updater_rofi"
-         'open_downloaded_pdf'
-         'systemctl suspend'
-         'screenmng toggle'
-        )
+declare -A scripts
 
-names=("Clipboard history"
-       "Invert colors"
-       "Toggle redshift"
-       "Audio powersave toggle"
-       "Manjaro i3 menu"
-       "Manjaro Settings Manager"
-       "PulseAudio Volume Control"
-       "bmenu"
-       "Kill compton"
-       "Start/restart compton"
-       "Screenshot whole screen"
-       "Screenshot window"
-       "Screenshot selection"
-       "Screenshot clipboard whole screen"
-       "Screenshot clipboard window"
-       "Screenshot clipboard selection"
-       "Set transparency to 99%"
-       "Set transparency to 100%"
-       "Program mode toggle"
-       "Program mode swedish toggle"
-       "Show xtitle"
-       "Change theme"
-       "Lock and turn off screen"
-       "Lock"
-       "Refresh Polybar (SIGUSR1)"
-       "Display Updater"
-       "Open Downloaded PDF"
-       "Suspend"
-       'Presentation Mode toggle'
-      )
+scripts["Clipboard history"]="rofi -modi 'clipboard:greenclip print' -show clipboard -run-command '{cmd}'"
+scripts["Invert colors"]="xrandr-invert-colors"
+scripts["Toggle redshift"]="pkill -USR1 '^redshift$'"
+scripts["Audio powersave toggle"]="gksudo toggle_audio_powersave"
+scripts["Manjaro i3 menu"]="morc_menu"
+scripts["Manjaro Settings Manager"]="manjaro-settings-manager"
+scripts["PulseAudio Volume Control"]="pavucontrol"
+scripts["bmenu"]="terminal -e bmenu"
+scripts["Kill compton"]="pkill compton"
+scripts["Start/restart compton"]="display_updater compton"
+scripts["Screenshot whole screen"]="i3-scrot -d 1"
+scripts["Screenshot window"]="i3-scrot -w 1"
+scripts["Screenshot selection"]="i3-scrot -s"
+scripts["Screenshot clipboard whole screen"]="scrot_clipboard -d 1"
+scripts["Screenshot clipboard window"]="scrot_clipboard -u -d 1"
+scripts["Screenshot clipboard selection"]="scrot_clipboard -s"
+scripts["Set transparency to 99%"]="transset-df -a 0.99"
+scripts["Set transparency to 100%"]="transset-df -a 1"
+scripts["Program mode toggle"]="prog_mode_toggle"
+scripts["Program mode swedish toggle"]="prog_mode_toggle swetoggle"
+scripts["Show xtitle"]='notify-send "$(xtitle)"'
+scripts["Change theme"]="theme_select_rofi"
+scripts["Lock and turn off screen"]="screenmng lock"
+scripts["Lock"]='lock'
+scripts["Refresh Polybar (SIGUSR1)"]="pkill -USR1 -x polybar"
+scripts["Display Updater"]="display_updater_rofi"
+scripts["Open Downloaded PDF"]='open_downloaded_pdf'
+scripts["Suspend"]='systemctl suspend'
+scripts['Presentation Mode toggle']='screenmng toggle'
 
-# eller printf '%s\n' "${names[@]}"
-choice="$( IFS=$'\n'; echo -e "${names[*]}" | rofi -dmenu -i -p "exec" -no-custom -format i )"
+choice="$( printf '%s\n' "${!scripts[@]}" | sort | rofi -dmenu -i -p "exec" -no-custom )"
 
 if [[ "$choice" ]]; then
-    echo "du valde ${names[$choice]}"
+    echo "du valde $choice"
     eval "${scripts[$choice]}" &
 else
     echo "du valde inget"
