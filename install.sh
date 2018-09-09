@@ -4,6 +4,9 @@
 # this install script relies on $PWD to be the directory that this
 # script is stored in (the root of the dotfiles folder)
 
+# random saker att tänka på:
+# i3-scrot screenshot dir (~/.config/i3-scrot.conf)
+
 force=
 tag=
 
