@@ -73,14 +73,15 @@ function repos_cmd {
         tput setaf 6
         echo "-----$(basename "$re")-----"
         tput sgr0
-        git --git-dir="$re/.git" --work-tree="$re" "$@"
+        (cd "$re" && "$@")
         echo
     done
 }
 
-alias repos_check='repos_cmd fetch &>/dev/null; repos_cmd status'
-alias repos_pull='repos_cmd pull'
-alias repos_status='repos_cmd status'
+alias repos_check='repos_cmd git fetch &>/dev/null; repos_cmd git status'
+alias repos_pull='repos_cmd git pull'
+alias repos_status='repos_cmd git status'
+alias repos_magit='repos_cmd magit >/dev/null'
 
 function mountsmb {
     if [[ $# -ne 3 ]]; then
