@@ -51,7 +51,11 @@ alias ll='els -s'
 alias lle='els -se'
 alias lll='ls -lAhv'
 
-alias s='lll | grep'
+alias lg='lll | grep -i'
+
+function f {
+    find . -iname '*'"$1"'*'
+}
 
 alias gl='glola'
 
