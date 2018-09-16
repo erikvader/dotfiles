@@ -58,8 +58,11 @@ import qualified DBus.Client as D
 
 myModMask = mod4Mask
 
+scratchWS = "\61485"
+
 -- myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer]
-myWorkspaces = zipWith (++) (map (concatMap show) $ combinations [1..3 :: Integer]) ([" \62056", " \61508"] ++ repeat " \61705")
+myWorkspaces = (zipWith (++) (["\62056 ", "\61508 "] ++ repeat "\61705 ") (map (concatMap show) $ combinations [1..3 :: Integer])) ++ [scratchWS]
+-- myWorkspaces = map (concatMap show) $ combinations [1..3 :: Integer]
 
 myBaseLayouts = Tall 1 (3/100) (1/2) |||
                 ThreeColMid 1 (3/100) (1/3) (1/2) |||
@@ -120,6 +123,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_e), L.increaseLimit),
     ((modm, xK_c), L.toggleLimit),
     ((modm, xK_f), L.toggleFull),
+    ((modm .|. shiftMask, xK_f), sendMessage $ Toggle MIRROR),
 
     --cycle
     -- ((modm, xK_i), onLayout [("TwoPane", rotFocusedUp)] rotAllUp), --rotate current window in two pane pretty much
@@ -195,8 +199,6 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- toggle zoom
     -- ((modm, xK_f), sendMessage $ Toggle FULL),
-
-    ((modm, xK_d), sendMessage $ Toggle MIRROR),
 
     -- close focused window
     ((modm, xK_q), kill),
@@ -284,7 +286,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_0), confirmPrompt def "power off?" $ spawn "poweroff"),
 
     -- Restart xmonad
-    ((modm .|. shiftMask, xK_c), spawn "if xmonad --recompile; then xmonad --restart; notify-send 'XMonad restarted'; else notify-send 'XMonad failed to compile'; fi")
+    ((modm .|. shiftMask, xK_c), spawn "if xmonad --recompile; then xmonad --restart; notify-send 'XMonad restarted'; else notify-send 'XMonad failed to compile'; fi"),
+
+    ((modm, xK_d), windows $ W.greedyView scratchWS),
+    ((modm .|. shiftMask, xK_d), windows $ W.shift scratchWS)
     ]
     ++
 
