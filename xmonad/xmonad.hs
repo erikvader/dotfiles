@@ -21,7 +21,8 @@ import XMonad.Actions.UpdatePointer
 import XMonad.Actions.Warp
 import XMonad.Actions.CycleWS (nextWS, prevWS)
 import XMonad.Actions.PhysicalScreens
-import XMonad.Actions.SwapWorkspaces
+-- import XMonad.Actions.SwapWorkspaces
+import XMonad.Actions.WorkspaceNames
 
 import XMonad.Util.SpawnOnce
 import XMonad.Util.WorkspaceCompare
@@ -236,6 +237,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- moves workspaces up or down
     ((modm .|. shiftMask, xK_period), swapTo Next),
     ((modm .|. shiftMask, xK_comma), swapTo Prev),
+    ((modm, xK_v), renameWorkspace def),
+    ((modm .|. shiftMask, xK_v), setCurrentWorkspaceName ""),
 
     -- Shrink the master area
     ((modm, xK_h), sendMessage Shrink),
@@ -393,12 +396,16 @@ myNonfocusPP = myFocusPP {
 multiPrepare :: D.Client -> String -> PP -> X PP
 multiPrepare dbus output pp = do
   L.updateCurrentState
-  return $ pp {ppOutput = dbusOutput dbus . prependOutput . fixXinerama}
+  workspaceNamesPP $ pp {ppOutput = dbusOutput dbus . (output ++) . fixXinerama}
   where
-    prependOutput = (output ++)
-
     fixXinerama :: String -> String
-    fixXinerama s = removeIndices 0 s $ tail . init $ findIndices (\c -> c == '[' || c == ']') $ takeWhile (/= ':') s
+    fixXinerama s = removeIndices 0 s $ tail . init $ findIndices (\c -> c == '[' || c == ']') $ takeTo (ppSep pp) s
+
+    takeTo :: Eq a => [a] -> [a] -> [a]
+    takeTo [] src = src
+    takeTo _ [] = []
+    takeTo to src | isPrefixOf to src = []
+                  | otherwise = (head src):(takeTo to (tail src))
 
     removeIndices :: Int -> String -> [Int] -> String
     removeIndices _ [] _ = []
