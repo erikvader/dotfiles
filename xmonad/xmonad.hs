@@ -241,6 +241,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_comma), swapTo Prev),
     ((modm, xK_v), renameWorkspace def),
     ((modm .|. shiftMask, xK_v), setCurrentWorkspaceName ""),
+    ((modm .|. mod1Mask, xK_v), mapWorkspaces $ flip setWorkspaceName ""),
 
     -- Shrink the master area
     ((modm, xK_h), sendMessage Shrink),

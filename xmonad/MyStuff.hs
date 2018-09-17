@@ -5,7 +5,8 @@ module Erik.MyStuff (
   onLayout,
   writeStd,
   focusAnyEmpty,focusLowestEmpty,
-  shiftView
+  shiftView,
+  mapWorkspaces
   -- pointerDance
 ) where
 
@@ -98,3 +99,5 @@ focusLowestEmpty order = windows (\w -> maybe id W.view (findLowestEmpty w) w)
       where
         f id = maybe False (isNothing . W.stack) $ find ((id ==) . W.tag) (W.hidden w)
 
+mapWorkspaces :: (WorkspaceId -> X a) -> X()
+mapWorkspaces f = asks (workspaces . config) >>= mapM_ f
