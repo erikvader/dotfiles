@@ -144,7 +144,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_x), spawn "rofi -show drun"),
     ((modm, xK_Escape), spawn "rofi -show window"),
     ((modm, xK_r), spawn "rofi_script_selector"),
-    ((modm .|. shiftMask, xK_r), spawn "display_updater_rofi"),
+    ((modm .|. shiftMask, xK_r), spawn "open_downloaded_pdf"),
 
     -- screens
     ((modm, xK_Tab), onNextNeighbour def W.view),
