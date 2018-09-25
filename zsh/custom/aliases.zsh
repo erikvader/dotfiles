@@ -6,7 +6,7 @@ alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
 
 alias tra='transmission-remote'
 
-alias youtube-dl-mkv='youtube-dl --merge-output-format mkv'
+alias ydm='youtube-dl --merge-output-format mkv'
 
 alias cdm='cd /media'
 alias findbroken='find . -xtype l'
