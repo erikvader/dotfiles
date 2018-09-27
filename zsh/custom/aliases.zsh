@@ -39,6 +39,7 @@ alias yfs='yaourt -Fs'
 alias yfl='yaourt -Fl'
 alias ym='yaourt -Qm' # foreign
 alias yo='yaourt -Qdt' # list orphans
+alias yor='yaourt -Rn $(yaourt -Qqdt)' # remove orphans non-recursively
 alias yl='yaourt -Qe' # list explicit
 alias yc='yaourt -Sc' # clear cache from no longer installed
 alias yr='yaourt -Rn'
