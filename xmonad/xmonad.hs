@@ -169,7 +169,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- display stuff
     ((modm, xK_plus), spawn "display_updater all"),
     ((modm .|. shiftMask, xK_plus), spawn "xrandr --output eDP1 --auto"),
-    ((modm, xK_grave), spawn "pgrep -x redshift && pkill -USR1 -x redshift || redshift-gtk"),
+    ((modm, xK_grave), spawn "pkill -f -USR1 redshift-manual-daemon"),
     ((modm, xK_apostrophe), spawn "xrandr-invert-colors"),
     ((modm, xK_asciicircum), spawn "pkill compton"),
 

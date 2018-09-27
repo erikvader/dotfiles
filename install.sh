@@ -103,6 +103,7 @@ scripts=(
     "scripts/run_polybar.sh"
     "scripts/run_polybar_many.sh"
     "power/screenmng.sh"
+    "redshift/redshift-manual-daemon.sh"
 )
 
 for s in "${scripts[@]}"; do
@@ -118,7 +119,6 @@ place "$PWD/mpv"                         "$HOME/.config"          ""            
 place "$PWD/zathura"                     "$HOME/.config"          ""                     zathura
 place "$PWD/sxiv/sxiv"                   "$HOME/.config"          ""                     sxiv
 place "$PWD/.compton.conf"               "$HOME/.config"          "compton.conf"         compton
-place "$PWD/redshift.conf"               "$HOME/.config"          ""                     redshift
 place "$PWD/zsh/custom"                  "$HOME"                  ".my-oh-my-zsh-custom" zsh
 place "$PWD/zsh/.zshrc"                  "$HOME"                  ""                     zsh
 place "$PWD/.profile"                    "$HOME"                  ""                     profile
