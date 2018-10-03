@@ -359,7 +359,7 @@ myFocusPPXin = def
       ppUrgent = wrap " %{B#bd2c40} " "! %{B-} ",
       ppHidden = wrap "  " "  ",
       ppWsSep = "",
-      ppSep = " : ",
+      ppSep = " %{F#ffb52a}:%{F-} ",
       ppTitle = shorten 60,
       ppSort = getSortByXineramaPhysicalRule def,
       ppOrder = \(w:l:t:lwc:lwf:ldh:_) -> filter (not . null) [w, lwf ++ l, ldh, lwc, t],
@@ -368,7 +368,8 @@ myFocusPPXin = def
 
 myNonfocusPPXin :: PP
 myNonfocusPPXin = myFocusPPXin {
-  ppCurrent = wrap "%{B#505050 u#00ace6 +u}[  " "  ]%{B- -u}"
+  ppCurrent = wrap "%{B#505050 u#00ace6 +u}[  " "  ]%{B- -u}",
+  ppSep = " %{F#00ace6}:%{F-} "
   }
 
 myFocusPP :: PP
