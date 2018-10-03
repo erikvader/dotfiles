@@ -59,6 +59,7 @@ function f {
 }
 
 alias gl='glola'
+alias SS='sudo systemctl'
 
 alias ec="emacsclient -n -c"
 
