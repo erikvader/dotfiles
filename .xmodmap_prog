@@ -2,17 +2,17 @@
 ! keycode 66 = Control_R
 ! add control = Control_R
 
-! switches some modifiers
+! switch some modifiers
 clear lock
 remove mod4 = Hyper_L
 clear shift
 remove control = Control_R
 
 keycode 62 = Hyper_L
-keycode 105 = Shift_L
+keycode 105 = Shift_R
 
 add mod3 = Hyper_L
-add shift = Shift_L
+add shift = Shift_L Shift_R
 
 ! rebinds some normal keys
 keycode 9 = Escape Caps_Lock
