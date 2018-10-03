@@ -40,6 +40,7 @@ import XMonad.Layout.MultiToggle
 import XMonad.Layout.MultiToggle.Instances
 import XMonad.Layout.Renamed
 import XMonad.Layout.LayoutCombinators
+import XMonad.Layout.PerWorkspace
 import qualified XMonad.Layout.GridVariants as GV
 import XMonad.Layout.Spacing
 
@@ -64,11 +65,13 @@ scratchWS = "\61485"
 myWorkspaces = (zipWith (++) (["\62056 ", "\61508 "] ++ repeat "\61705 ") (map (concatMap show) $ combinations [1..3 :: Integer])) ++ [scratchWS]
 -- myWorkspaces = map (concatMap show) $ combinations [1..3 :: Integer]
 
-myBaseLayouts = Tall 1 (3/100) (1/2) |||
+myBaseLayouts = onWorkspace scratchWS grid tall |||
                 ThreeColMid 1 (3/100) (1/3) (1/2) |||
-                GV.Grid (16/9) |||
+                onWorkspace scratchWS tall grid |||
                 GV.SplitGrid GV.L 1 1 (1/2) (16/9) (3/100) |||
                 renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
+  where grid = GV.Grid 1
+        tall = Tall 1 (3/100) (1/2)
 
 myBaseLayoutsNames = ["Tall", "ThreeCol", "Grid", "SplitGrid", "Spiral"]
 
@@ -148,7 +151,11 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- screens
     ((modm, xK_Tab), onNextNeighbour def W.view),
-    ((modm .|. shiftMask, xK_Tab), onNextNeighbour def W.greedyView),
+    ((modm .|. shiftMask, xK_Tab), onPrevNeighbour def W.view),
+    ((modm .|. controlMask, xK_j), onNextNeighbour def W.view),
+    ((modm .|. controlMask, xK_k), onPrevNeighbour def W.view),
+    ((modm .|. controlMask .|. shiftMask, xK_j), onNextNeighbour def swapWith),
+    ((modm .|. controlMask .|. shiftMask, xK_k), onPrevNeighbour def swapWith),
 
     -- printscreen
     ((0, xK_Print), spawn "i3-scrot"),

@@ -6,7 +6,8 @@ module Erik.MyStuff (
   writeStd,
   focusAnyEmpty,focusLowestEmpty,
   shiftView,
-  mapWorkspaces
+  mapWorkspaces,
+  swapWith
   -- pointerDance
 ) where
 
@@ -101,3 +102,9 @@ focusLowestEmpty order = windows (\w -> maybe id W.view (findLowestEmpty w) w)
 
 mapWorkspaces :: (WorkspaceId -> X a) -> X()
 mapWorkspaces f = asks (workspaces . config) >>= mapM_ f
+
+-- swap current workspace with wi and focus current
+-- only makes sense if both current and wi are visible on separate monitors
+swapWith :: WorkspaceId -> WindowSet -> WindowSet
+swapWith wi ws = W.view cur . W.greedyView wi $ ws
+  where cur = W.tag . W.workspace . W.current $ ws
