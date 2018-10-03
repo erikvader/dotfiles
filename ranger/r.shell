@@ -1,0 +1,16 @@
+#!/bin/zsh
+
+# wrapper for zsh that enables aliases when used as a script
+# useful in ranger
+
+setopt aliases
+
+aliasfile=$HOME/.my-oh-my-zsh-custom/aliases.zsh
+
+if [[ -f $aliasfile ]]; then
+    source "$aliasfile"
+fi
+if [[ $# -ge 1 && $1 = '-c' ]]; then
+    shift
+fi
+eval "$@"

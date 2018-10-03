@@ -164,7 +164,7 @@ bindkey '^f' vi-forward-blank-word
 function ranger-cd {
     temp="$(mktemp)"
 
-    ranger --choosedir "$temp"
+    SHELL=r.shell ranger --choosedir "$temp"
 
     content="$(cat "$temp" 2>/dev/null)" &&
         if [[ "$content" ]]; then

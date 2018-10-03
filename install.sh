@@ -129,6 +129,7 @@ place "$PWD/ranger/commands.py"          "$HOME/.config/ranger"   ""            
 place "$PWD/ranger/rc.conf"              "$HOME/.config/ranger"   ""                     ranger
 place "$PWD/ranger/rifle.conf"           "$HOME/.config/ranger"   ""                     ranger
 place "$PWD/ranger/scope.sh"             "$HOME/.config/ranger"   ""                     ranger
+place "$PWD/ranger/r.shell"              "$bin_location"          ""                     ranger
 place "$PWD/dunstrc"                     "$HOME/.config/dunst"    ""                     dunst
 
 place "$PWD/xmonad/xmonad.hs"            "$HOME/.xmonad"          ""                     xmonad
