@@ -179,6 +179,9 @@ bindkey -s '^o' '\eq ranger-cd\n'
 # smartcase in less
 export LESS=-Ri
 
+# bat default style
+export BAT_STYLE=changes
+
 # ranger wont load default conf, only user
 export RANGER_LOAD_DEFAULT_RC=FALSE
 
