@@ -100,8 +100,7 @@ scripts=(
     "scripts/flac_to_mp3.sh"
     "scripts/extract.sh"
     "scripts/mangadex_downloader.py"
-    "scripts/run_polybar.sh"
-    "scripts/run_polybar_many.sh"
+    "scripts/run_polybar.py"
     "power/screenmng.sh"
     "redshift/redshift-manual-daemon.sh"
 )
