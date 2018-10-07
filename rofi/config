@@ -7,3 +7,9 @@ rofi.color-window: #d8000000, #ff69b4
 rofi.kb-row-first: Alt+less
 rofi.kb-row-last:  Alt+greater
 
+# rofi.kb-remove-to-sol: Control+u
+rofi.kb-row-down:      Down,Control+n,Control+j
+rofi.kb-row-up:        Up,Control+p,ISO_Left_Tab,Control+k
+rofi.kb-accept-entry:  Control+m,Return,KP_Enter
+rofi.kb-remove-to-eol: 
+
