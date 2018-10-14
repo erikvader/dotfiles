@@ -58,10 +58,14 @@ function f {
     find . -iname '*'"$1"'*'
 }
 
-alias gl='glola'
+# copy of glola
+alias gl='git log --graph --pretty='"'"'%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"'"' --all'
+alias gst='git status'
+
 alias SS='sudo systemctl'
 
 alias ec="emacsclient -n -c"
+alias sec="SUDO_EDITOR='emacsclient -c' sudo -e"
 
 alias mountanime="mountsmb ERIKRIMSKOG anime erik /media/anime"
 
