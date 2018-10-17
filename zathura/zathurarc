@@ -4,4 +4,7 @@ map . navigate next
 map , navigate previous
 map w adjust_window best-fit
 map W adjust_window width
+map v toggle_statusbar
+# map b set first-page-column 2
+# map B set first-page-column 1
 
