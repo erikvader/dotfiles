@@ -31,6 +31,8 @@ scripts["Display Updater"]="display_updater_rofi"
 scripts["Open Downloaded PDF"]='open_downloaded_pdf'
 scripts["Suspend"]='systemctl suspend'
 scripts['Presentation Mode toggle']='screenmng toggle'
+scripts['Org Agenda']='emacsclient -n -c -e '"'"'(same-buffer (org-agenda))'"'"
+scripts['Org quick todo']="rofi -dmenu -p 'TODO' | sed -E 's/^/\\n* TODO /' >> ~/Dropbox/org/keep.org"
 
 choice="$( printf '%s\n' "${!scripts[@]}" | sort | rofi -dmenu -i -p "exec" -no-custom )"
 
