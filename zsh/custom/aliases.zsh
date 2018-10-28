@@ -140,6 +140,14 @@ function man {
     command man "$@"
 }
 
+function men {
+    if [[ $# -lt 1 ]]; then
+        echo "usage $0 args" >&2
+        return 1
+    fi
+    emacsclient -n -c -e '(same-buffer (man "'"$@"'"))' >/dev/null
+}
+
 function cless {
     pygmentize "$1" | less
 }
