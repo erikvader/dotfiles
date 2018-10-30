@@ -2,7 +2,7 @@
 
 declare -A scripts
 
-scripts["Clipboard history"]="rofi -modi 'clipboard:greenclip print' -show clipboard -run-command '{cmd}'"
+scripts["Clipboard history"]="CM_LAUNCHER=rofi clipmenu"
 scripts["Invert colors"]="xrandr-invert-colors"
 scripts["Toggle redshift"]="pkill -USR1 '^redshift$'"
 scripts["Audio powersave toggle"]="gksudo toggle_audio_powersave"

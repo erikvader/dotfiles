@@ -12,12 +12,6 @@ if ! scrot "$@" "$tmp"; then
     exit 1
 fi
 
-# greenclip only likes images that are less than 500kb
-if [[ $(identify -format '%B' "$tmp") -lt 512000 ]]; then
-    # default jpg quality in scrot is 75
-    convert "$tmp" -define jpeg:extent=500kb -quality 75 "$tmp"
-fi
-
 if xclip -selection clipboard -t image/jpeg -i "$tmp"; then
     notify-send 'scrot_clipboard' 'Screenshot now in clipboard'
 else
