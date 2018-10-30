@@ -7,7 +7,8 @@ module Erik.MyStuff (
   focusAnyEmpty,focusLowestEmpty,
   shiftView,
   mapWorkspaces,
-  swapWith
+  swapWith,
+  workspaceNamesClearerLogHook
   -- pointerDance
 ) where
 
@@ -15,7 +16,10 @@ import System.Directory (getHomeDirectory)
 import XMonad
 import qualified XMonad.StackSet as W
 import Data.List (find)
-import Data.Maybe (maybe,isNothing)
+import Data.Maybe (maybe,isNothing,isJust)
+import Control.Monad (when)
+import XMonad.Actions.WorkspaceNames (getWorkspaceNames',setWorkspaceName)
+import qualified XMonad.Util.ExtensibleState as XS
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
@@ -108,3 +112,28 @@ mapWorkspaces f = asks (workspaces . config) >>= mapM_ f
 swapWith :: WorkspaceId -> WindowSet -> WindowSet
 swapWith wi ws = W.view cur . W.greedyView wi $ ws
   where cur = W.tag . W.workspace . W.current $ ws
+
+-- Xmonad.Actions.WorkspaceNames auto clearer -------------------
+
+newtype WorkspaceNamesCache = WorkspaceNamesCache String
+instance ExtensionClass WorkspaceNamesCache where
+  initialValue = WorkspaceNamesCache ""
+
+-- clears the name of a hidden workspace if that workspace is empty and if it has a name
+workspaceNamesClearerLogHook :: X ()
+workspaceNamesClearerLogHook = do
+  ss <- gets windowset
+  let hash = concatMap hashfun $ W.current ss:W.visible ss
+  (WorkspaceNamesCache oldHash) <- XS.get
+  when (hash /= oldHash) $ do
+    clearAllEmpty (W.hidden ss)
+    XS.put $ WorkspaceNamesCache hash
+  where
+    hashfun s = concat [show $ W.screen s, show $ W.tag . W.workspace $ s, show $ W.screenDetail s]
+
+    clearAllEmpty :: [WindowSpace] -> X ()
+    clearAllEmpty hiddens = do
+      gwn <- getWorkspaceNames'
+      -- predikatet måste gå att göra finare
+      let cands = filter (\x -> (isNothing . W.stack) x && (isJust . gwn . W.tag) x) hiddens
+      mapM_ (flip setWorkspaceName "" . W.tag) cands

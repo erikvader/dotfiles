@@ -453,6 +453,6 @@ main = do
   xmonad $ indiPP $ withUrgencyHook NoUrgencyHook $ ewmh $ docks $ myConfig {
     layoutHook = avoidStruts myLayoutHook,
     handleEventHook = handleEventHook myConfig <+> fullscreenEventHook,
-    logHook = logHook myConfig <+> multiPP myFocusPPXin myNonfocusPPXin (multiPrepare dbus)
+    logHook = logHook myConfig <+> workspaceNamesClearerLogHook <+> multiPP myFocusPPXin myNonfocusPPXin (multiPrepare dbus)
     }
 
