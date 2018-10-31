@@ -14,7 +14,11 @@ function xss {
 }
 
 function lock {
-    xset dpms force off
+    xset s activate && sleep 1 && xset dpms force off
+}
+
+function lock_only {
+    xset s activate
 }
 
 function is_on {
@@ -34,6 +38,9 @@ function is_on {
 }
 
 case "$1" in
+    lock_only)
+        lock_only
+        ;;
     lock)
         lock
         ;;
