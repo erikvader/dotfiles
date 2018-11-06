@@ -202,6 +202,7 @@ class fzf_select(Command):
             pftuple[1] += "-o -path '*/.*' "
 
         command = command % tuple(pftuple)
+        command += " | sort --version-sort"
         command += " | fzf +m --reverse"
         command = command.replace(r"\\", "\\")
 
