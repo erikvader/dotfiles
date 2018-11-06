@@ -6,7 +6,7 @@ alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
 
 alias tra='transmission-remote'
 
-alias ydm='youtube-dl --merge-output-format mkv'
+alias ydm='youtube-dl --merge-output-format mkv --write-thumbnail'
 
 alias cdm='cd /media'
 alias findbroken='find . -xtype l'
@@ -106,7 +106,7 @@ function mountfat {
 }
 
 function ediff {
-    emacsclient -n -c -e '(same-buffer (diff "'"$1"'" "'"$2"'"))' >/dev/null
+    emacsclient -n -c -e '(same-buffer (ediff "'"$1"'" "'"$2"'"))' >/dev/null
 }
 
 function vdiff {
