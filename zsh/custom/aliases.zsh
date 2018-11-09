@@ -163,5 +163,15 @@ function c {
     x=$(cat "$C_LOCATIONS" | fzf +m --reverse --query="$1")
     if [[ -n "$x" ]]; then
         cd "${x/#\~/$HOME}"
+function copyfile {
+    if [[ $# -ne 1 ]]; then
+        echo "Usage: $0 file" >&2
+        return 1
     fi
+    if [[ ! -f $1 ]]; then
+        echo "\"$1\" is not a regular file" >&2
+        return 1
+    fi
+    local type=$(file -b --mime-type "$1")
+    xclip -selection clipboard -t "$type" -i "$1"
 }

@@ -12,7 +12,9 @@ if ! scrot "$@" "$tmp"; then
     exit 1
 fi
 
-if xclip -selection clipboard -t image/jpeg -i "$tmp"; then
+type=$(file -b --mime-type "$tmp")
+
+if xclip -selection clipboard -t "$type" -i "$tmp"; then
     notify-send 'scrot_clipboard' 'Screenshot now in clipboard'
 else
     notify-send 'scrot_clipboard' 'Screenshot failed!'
