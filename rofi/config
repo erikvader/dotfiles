@@ -3,6 +3,7 @@ rofi.bw: 0
 ##State:           ´bg´,      ´fg´,    ´bgalt´,   ´hlbg´,  ´hlfg´
 rofi.color-normal: #00000000, #f3f4f5, #00000000, #ff69b4, #f3f4f5
 rofi.color-window: #d8000000, #ff69b4
+rofi.color-active: #00ace6,   #ffffff, #00ace6,   #ff69b4, #f4f4f5                  
 
 rofi.kb-row-first: Alt+less
 rofi.kb-row-last:  Alt+greater
@@ -12,4 +13,3 @@ rofi.kb-row-down:      Down,Control+n,Control+j
 rofi.kb-row-up:        Up,Control+p,ISO_Left_Tab,Control+k
 rofi.kb-accept-entry:  Control+m,Return,KP_Enter,Control+l
 rofi.kb-remove-to-eol: 
-
