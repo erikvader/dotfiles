@@ -35,6 +35,7 @@ import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.ManageHelpers
 import XMonad.Hooks.UrgencyHook
+import XMonad.Hooks.WorkspaceHistory
 
 import qualified XMonad.Layout.Dwindle as Dwind
 import XMonad.Layout.MultiToggle
@@ -63,7 +64,7 @@ myModMask = mod4Mask
 scratchWS = "\61485"
 
 -- myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer]
-myWorkspaces = (zipWith (++) (["\62056 ", "\61508 "] ++ repeat "\61705 ") (map (concatMap show) $ combinations [1..3 :: Integer])) ++ [scratchWS]
+myWorkspaces = zipWith (++) (["\62056 ", "\61508 "] ++ repeat "\61705 ") (map (concatMap show) $ combinations [1..3 :: Integer]) ++ [scratchWS]
 -- myWorkspaces = map (concatMap show) $ combinations [1..3 :: Integer]
 
 myBaseLayouts = onWorkspace scratchWS grid tall |||
@@ -94,6 +95,18 @@ runXmonadStartupOnce = do
     perms <- io $ getPermissions startupFile
     when (executable perms) $
       spawnOnce startupFile
+
+-- if not on scratch -> greedyView it
+-- if     on scratch -> view latest workspace that is not visible on any screen
+scratchVisit :: X ()
+scratchVisit = gets windowset >>= (\ss -> func $ map (W.tag . W.workspace) (W.current ss : W.visible ss))
+  where
+    func (cur:vis) | cur == scratchWS = do
+                       hist <- workspaceHistory
+                       let cand = find (\x -> x `notElem` (scratchWS:vis)) hist
+                       whenJust cand gw
+                   | otherwise = gw scratchWS
+    gw x = windows $ W.greedyView x
 
 -- Do the same thing as XMonad.Actions.UpdatePointer, except that it
 -- also checks whether a mouse button is currently pressed. If one is
@@ -286,7 +299,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- Restart xmonad
     ((modm .|. shiftMask, xK_c), spawn "if xmonad --recompile; then xmonad --restart; notify-send 'XMonad restarted'; else notify-send 'XMonad failed to compile'; fi"),
 
-    ((modm, xK_d), windows $ W.greedyView scratchWS),
+    ((modm, xK_d), scratchVisit),
     ((modm .|. shiftMask, xK_d), windows $ W.shift scratchWS)
     ]
     ++
@@ -464,6 +477,6 @@ main = do
   xmonad $ indiPP $ withUrgencyHook NoUrgencyHook $ ewmh $ docks $ myConfig {
     layoutHook = avoidStruts myLayoutHook,
     handleEventHook = handleEventHook myConfig <+> fullscreenEventHook,
-    logHook = logHook myConfig <+> workspaceNamesClearerLogHook <+> multiPP myFocusPPXin myNonfocusPPXin (multiPrepare dbus)
+    logHook = logHook myConfig <+> workspaceHistoryHook <+> workspaceNamesClearerLogHook <+> multiPP myFocusPPXin myNonfocusPPXin (multiPrepare dbus)
     }
 
