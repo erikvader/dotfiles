@@ -148,21 +148,6 @@ function men {
     emacsclient -n -c -e '(same-buffer (man "'"$@"'"))' >/dev/null
 }
 
-function cless {
-    pygmentize "$1" | less
-}
-
-C_LOCATIONS="$HOME/.clocations"
-
-function ca {
-    echo "${PWD/#$HOME/~}" >> "$C_LOCATIONS"
-    sort -u -o "$C_LOCATIONS" "$C_LOCATIONS"
-}
-
-function c {
-    x=$(cat "$C_LOCATIONS" | fzf +m --reverse --query="$1")
-    if [[ -n "$x" ]]; then
-        cd "${x/#\~/$HOME}"
 function copyfile {
     if [[ $# -ne 1 ]]; then
         echo "Usage: $0 file" >&2
