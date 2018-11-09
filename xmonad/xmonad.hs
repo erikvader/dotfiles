@@ -3,7 +3,8 @@
 import System.Posix.Types (CMode(..))
 import System.Posix.IO (dupTo,closeFd,createFile,stdError)
 import Control.Exception (catch,SomeException)
-import System.Directory (doesFileExist,removeFile)
+import System.Directory (doesFileExist,removeFile,executable,getPermissions,getHomeDirectory)
+import System.FilePath ((</>))
 import System.IO
 import System.Exit
 import Data.Bits (testBit)
@@ -82,7 +83,17 @@ myLayoutHook =
   mkToggle (single MIRROR)
   myBaseLayouts
 
-myStartupHook = spawnOnce "[[ -f $HOME/.xmonad_startup ]] && \"$HOME/.xmonad_startup\""
+myStartupHook = runXmonadStartupOnce
+
+runXmonadStartupOnce :: X ()
+runXmonadStartupOnce = do
+  home <- io getHomeDirectory
+  let startupFile = home </> ".xmonad_startup"
+  itExists <- io $ doesFileExist startupFile
+  when itExists $ do
+    perms <- io $ getPermissions startupFile
+    when (executable perms) $
+      spawnOnce startupFile
 
 -- Do the same thing as XMonad.Actions.UpdatePointer, except that it
 -- also checks whether a mouse button is currently pressed. If one is
@@ -397,8 +408,8 @@ multiPrepare dbus output pp = do
     takeTo :: Eq a => [a] -> [a] -> [a]
     takeTo [] src = src
     takeTo _ [] = []
-    takeTo to src | isPrefixOf to src = []
-                  | otherwise = (head src):(takeTo to (tail src))
+    takeTo to src | to `isPrefixOf` src = []
+                  | otherwise = head src : takeTo to (tail src)
 
     removeIndices :: Int -> String -> [Int] -> String
     removeIndices _ [] _ = []
