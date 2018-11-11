@@ -143,7 +143,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
     ((modm, xK_w), L.bury),
 
-    ((modm, xK_o), focusLowestEmpty $ XMonad.workspaces conf),
+    ((modm, xK_o), windowsLowestEmpty W.view $ XMonad.workspaces conf),
+    ((modm .|. shiftMask, xK_o), windowsLowestEmpty shiftView $ XMonad.workspaces conf),
 
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),

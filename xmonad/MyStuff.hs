@@ -3,8 +3,7 @@ module Erik.MyStuff (
   rotLastUp, rotLastDown, rotLast',
   rotUp, rotDown,
   onLayout,
-  writeStd,
-  focusAnyEmpty,focusLowestEmpty,
+  windowsLowestEmpty,
   shiftView,
   mapWorkspaces,
   swapWith,
@@ -81,23 +80,9 @@ onLayout xs def = do
     Just (_, x) -> x
     Nothing -> def
 
--- writes to "stdout"
-writeStd :: String -> IO ()
-writeStd s = do
-  home <- getHomeDirectory
-  appendFile (home ++ "/.xmonad/stdout") (s ++ "\n")
-
--- focuses any empty hidden workspace, if there is one
--- TODO: generalize
-focusAnyEmpty :: X ()
-focusAnyEmpty = windows (\w -> maybe id W.view (findEmpty w) w)
-  where
-    findEmpty :: WindowSet -> Maybe WorkspaceId
-    findEmpty w = W.tag <$> find (isNothing . W.stack) (W.hidden w)
-
--- focuses the lowest index empty hidden workspace, if there is one
-focusLowestEmpty :: [String] -> X ()
-focusLowestEmpty order = windows (\w -> maybe id W.view (findLowestEmpty w) w)
+-- runs f on the lowest index empty hidden workspace, if there is one
+windowsLowestEmpty :: (WorkspaceId -> WindowSet -> WindowSet) -> [String] -> X ()
+windowsLowestEmpty f order = windows (\w -> maybe id f (findLowestEmpty w) w)
   where
     findLowestEmpty :: WindowSet -> Maybe WorkspaceId
     findLowestEmpty w = find f order
