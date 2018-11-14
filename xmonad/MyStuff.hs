@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-name-shadowing -fno-warn-missing-signatures #-}
 module Erik.MyStuff (
   rotLastUp, rotLastDown, rotLast',
   rotUp, rotDown,
@@ -11,7 +11,6 @@ module Erik.MyStuff (
   -- pointerDance
 ) where
 
-import System.Directory (getHomeDirectory)
 import XMonad
 import qualified XMonad.StackSet as W
 import Data.List (find)

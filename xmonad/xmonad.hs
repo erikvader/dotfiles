@@ -1,14 +1,13 @@
-{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-name-shadowing -fno-warn-missing-signatures #-}
 
 import System.Posix.Types (CMode(..))
 import System.Posix.IO (dupTo,closeFd,createFile,stdError)
 import Control.Exception (catch,SomeException)
 import System.Directory (doesFileExist,removeFile,executable,getPermissions,getHomeDirectory)
 import System.FilePath ((</>))
-import System.IO
 import System.Exit
 import Data.Bits (testBit)
-import Control.Monad (unless, mapM_, when)
+import Control.Monad (unless, when)
 import Data.List
 
 import Graphics.X11.ExtraTypes.XF86
@@ -101,6 +100,7 @@ runXmonadStartupOnce = do
 scratchVisit :: X ()
 scratchVisit = gets windowset >>= (\ss -> func $ map (W.tag . W.workspace) (W.current ss : W.visible ss))
   where
+    func [] = return ()
     func (cur:vis) | cur == scratchWS = do
                        hist <- workspaceHistory
                        let cand = find (\x -> x `notElem` (scratchWS:vis)) hist
@@ -397,19 +397,19 @@ myNonfocusPPXin = myFocusPPXin {
   ppSep = " %{F#00ace6}:%{F-} "
   }
 
-myFocusPP :: PP
-myFocusPP = myFocusPPXin
-    {
-      ppCurrent = wrap "%{B#505050 u#ffb52a +u}  " "  %{B- -u}",
-      ppVisible = wrap "%{B#505050 u#00bfff +u}  " "  %{B- -u}",
-      ppSort = ppSort def
-    }
+-- myFocusPP :: PP
+-- myFocusPP = myFocusPPXin
+--     {
+--       ppCurrent = wrap "%{B#505050 u#ffb52a +u}  " "  %{B- -u}",
+--       ppVisible = wrap "%{B#505050 u#00bfff +u}  " "  %{B- -u}",
+--       ppSort = ppSort def
+--     }
 
-myNonfocusPP :: PP
-myNonfocusPP = myFocusPP {
-  ppCurrent = wrap "%{u#e69500 +u}  " "  %{-u}",
-  ppVisible = wrap "%{u#0086b3 +u}  " "  %{-u}"
-  }
+-- myNonfocusPP :: PP
+-- myNonfocusPP = myFocusPP {
+--   ppCurrent = wrap "%{u#e69500 +u}  " "  %{-u}",
+--   ppVisible = wrap "%{u#0086b3 +u}  " "  %{-u}"
+--   }
 
 multiPrepare :: D.Client -> String -> PP -> X PP
 multiPrepare dbus output pp = do
@@ -463,7 +463,7 @@ main :: IO ()
 main = do
   dbus <- D.connectSession
       -- Request access to the DBus name
-  D.requestName dbus (D.busName_ "org.xmonad.Log") [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
+  _ <- D.requestName dbus (D.busName_ "org.xmonad.Log") [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
 
   -- custom .xsession-error
   catch (do
@@ -471,7 +471,7 @@ main = do
             fs <- doesFileExist errorFile
             when fs $ removeFile errorFile
             fd <- createFile errorFile (CMode 0o666)
-            dupTo fd stdError
+            _ <- dupTo fd stdError
             return ())
     (\e -> trace (show (e :: SomeException)))
 

@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-missing-signatures -fno-warn-name-shadowing#-}
+{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-name-shadowing -fno-warn-missing-signatures #-}
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, FlexibleContexts, FlexibleInstances #-}
 module Erik.CompactWorkspaces (
   compactWorkspaceCombinations, combinations,
@@ -95,7 +95,7 @@ compactWorkspace f order start mods keys = do
                                                                    then return ks
                                                                    else setOption ks r'
                             | otherwise -> setOption ks released
-  io $ grabKeyboard d root False grabModeAsync grabModeAsync currentTime
+  _ <- io $ grabKeyboard d root False grabModeAsync grabModeAsync currentTime
   pressed <- setOption start cempty
   io $ ungrabKeyboard d currentTime
   let mi = cindex pressed order

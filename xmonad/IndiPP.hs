@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-name-shadowing -fno-warn-missing-signatures #-}
 {-# LANGUAGE DeriveDataTypeable, TupleSections #-}
 module Erik.IndiPP (
   indiPPStartupHook,
@@ -8,17 +8,15 @@ module Erik.IndiPP (
 ) where
 
 import qualified XMonad.Util.ExtensibleState as XS
-import System.Directory (getHomeDirectory)
 import XMonad
 import qualified XMonad.StackSet as W
 import Data.List (find)
 import Data.Monoid
-import Data.Maybe (maybe,isNothing,catMaybes,fromMaybe,mapMaybe)
+import Data.Maybe (catMaybes,fromMaybe,mapMaybe)
 import Control.Monad(forM,mapM,when)
 import Control.Monad.Trans (lift)
 import Control.Monad.Writer (WriterT, execWriterT, tell)
 import Graphics.X11.Xrandr
-import Graphics.X11.Xinerama (xineramaQueryScreens)
 import XMonad.Hooks.DynamicLog
 import Data.Foldable (traverse_)
 

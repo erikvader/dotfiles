@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-name-shadowing -fno-warn-missing-signatures #-}
 {-# LANGUAGE CPP, RecordWildCards, FlexibleInstances, MultiParamTypeClasses, DeriveDataTypeable, PatternGuards #-}
 
 module Erik.MyLimitWindows (
@@ -168,7 +168,7 @@ data LimitState = LimitState { slimit          :: Int,
                                svisible        :: Int,
                                sdetachedOffset :: Int } deriving (Read,Show)
 
-data SliceStyle = FirstN | Slice deriving (Read,Show)
+data SliceStyle = FirstN deriving (Read,Show)
 
 data LimitChange = LimitQuery | LimitToggle | LimitFull | LimitChange { unLC :: Int -> Int } deriving (Typeable)
 
