@@ -1,6 +1,6 @@
 #!/bin/bash
 
-tmp='/tmp/screenshot.jpg'
+tmp='/tmp/screenshot.png'
 trap 'rm -f "$tmp"' EXIT
 
 if ! maim "$@" "$tmp"; then

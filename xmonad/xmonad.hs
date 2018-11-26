@@ -162,12 +162,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. controlMask .|. shiftMask, xK_k), onPrevNeighbour def swapWith),
 
     -- printscreen
-    ((0, xK_Print), spawn "i3-scrot"),
-    ((modm, xK_Print), spawn "i3-scrot -w"),
-    ((modm .|. shiftMask, xK_Print), spawn "i3-scrot -s"),
-    ((controlMask, xK_Print), spawn "scrot_clipboard"),
-    ((modm .|. controlMask, xK_Print), spawn "scrot_clipboard -u"),
-    ((modm .|. shiftMask .|. controlMask, xK_Print), spawn "scrot_clipboard -s"),
+    ((0, xK_Print), spawn "maim-notify"),
+    ((shiftMask, xK_Print), spawn "maim-notify -s"),
+    ((controlMask, xK_Print), spawn "maim_clipboard"),
+    ((shiftMask .|. controlMask, xK_Print), spawn "maim_clipboard -s"),
 
     -- flash
     ((modm, xK_z), spawn "flasher"),

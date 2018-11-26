@@ -4,9 +4,6 @@
 # this install script relies on $PWD to be the directory that this
 # script is stored in (the root of the dotfiles folder)
 
-# random saker att tänka på:
-# i3-scrot screenshot dir (~/.config/i3-scrot.conf)
-
 force=
 tag=
 
@@ -79,7 +76,7 @@ scripts=(
     "themes/init_theme.sh"
     "conky/conky_start"
     "scripts/m4_start.sh"
-    "i3/scrot_clipboard.sh"
+    "i3/maim_clipboard.sh"
     "i3/lock.sh"
     "i3/i3_brightness.sh"
     "i3/create-lock-img.sh"
@@ -103,6 +100,7 @@ scripts=(
     "scripts/run_polybar.py"
     "power/screenmng.sh"
     "redshift/redshift-manual-daemon.sh"
+    "scripts/maim-notify.sh"
 )
 
 for s in "${scripts[@]}"; do
