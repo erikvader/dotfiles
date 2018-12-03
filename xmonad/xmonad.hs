@@ -163,9 +163,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- printscreen
     ((0, xK_Print), spawn "maim-notify"),
-    ((shiftMask, xK_Print), spawn "maim-notify -s"),
+    ((shiftMask, xK_Print), spawn "maim-notify -su"),
     ((controlMask, xK_Print), spawn "maim_clipboard"),
-    ((shiftMask .|. controlMask, xK_Print), spawn "maim_clipboard -s"),
+    ((shiftMask .|. controlMask, xK_Print), spawn "maim_clipboard -su"),
 
     -- flash
     ((modm, xK_z), spawn "flasher"),
