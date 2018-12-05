@@ -22,6 +22,8 @@ alias xa="xarchiver"
 
 alias mi="mediainfo"
 
+alias cclip="xclip -selection clipboard"
+
 alias rsd='rsync -avhsn --delete'
 alias rs='rsync -avhs --delete --progress'
 alias rc='rsync -avhs --progress'
