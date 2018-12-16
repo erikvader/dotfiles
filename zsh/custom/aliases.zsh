@@ -6,6 +6,8 @@ alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
 
 alias tra='transmission-remote'
 
+alias clone='setsid urxvt &>/dev/null'
+
 alias ydm='youtube-dl --merge-output-format mkv --write-thumbnail'
 
 alias cdm='cd /media'
@@ -37,6 +39,7 @@ alias yqs='yaourt -Qs'
 alias yss='yaourt -Ss'
 alias ysi='yaourt -Si'
 alias yqi='yaourt -Qi'
+alias yql='yaourt -Ql'
 alias yfs='yaourt -Fs'
 alias yfl='yaourt -Fl'
 alias ym='yaourt -Qm' # foreign
