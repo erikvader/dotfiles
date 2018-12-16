@@ -193,3 +193,11 @@ if [[ -f "$HOME/.dircolors" ]]; then
     zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 fi
 
+# run a command and enter normal shell after it exits
+# instead of exiting the while shell
+# http://www.zsh.org/mla/users/2005/msg00599.html
+# zsh -is eval cmd...
+if [[ $1 == eval ]]; then
+    "$@"
+    set --
+fi

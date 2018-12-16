@@ -203,6 +203,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- launch a terminal
     ((modm .|. mod1Mask, xK_Return), spawn $ XMonad.terminal conf),
     ((modm, xK_Return), spawn "urxvt"),
+    ((modm .|. controlMask, xK_Return), spawn "urxvt -e zsh -is eval ranger-cd"),
     ((modm .|. shiftMask, xK_Return), spawn "emacsclient -nc"),
     -- ((modm, xK_BackSpace), spawn "$HOME/.emacs_anywhere/bin/run"),
 
