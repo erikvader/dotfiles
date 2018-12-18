@@ -1,7 +1,7 @@
 # -*- tab-width: 4; show-trailing-whitespace: t; -*-
 
 # package manager commands
-PAC := yaourt
+PAC := yay
 PACLIST := $(PAC) -Qq
 PACINSTALL := $(PAC) -S
 
