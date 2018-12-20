@@ -1,17 +1,11 @@
 alias open="xdg-open"
 alias q="exit"
 alias r="ranger-cd"
-alias p="thunar &!"
 alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
-
-alias tra='transmission-remote'
 
 alias clone='setsid urxvt &>/dev/null'
 
 alias ydm='youtube-dl --merge-output-format mkv --write-thumbnail'
-
-alias cdm='cd /media'
-alias findbroken='find . -xtype l'
 
 alias pps='ps -Ho pid,ppid,pgid,comm'
 alias ppss='ps -Ho pid,ppid,pgid,command'
@@ -19,8 +13,6 @@ alias ppss='ps -Ho pid,ppid,pgid,command'
 alias lsnet="sudo nmap -sn 192.168.1.0/24"
 
 alias cdiff="diff --color=auto"
-
-alias xa="xarchiver"
 
 alias mi="mediainfo"
 
@@ -31,22 +23,9 @@ alias rs='rsync -avhs --delete --progress'
 alias rc='rsync -avhs --progress'
 
 alias y='yay'
-# alias yy='yay -Syy'
-# alias yu='yay -Syua'
-# alias yua='yay -Syua --noconfirm'
 alias ys='yay -S'
-alias yqs='yay -Qs'
-alias yss='yay -Ss'
-alias ysi='yay -Si'
-alias yqi='yay -Qi'
-alias yql='yay -Ql'
-alias yfs='yay -Fs'
-alias yfl='yay -Fl'
-alias ym='yay -Qm' # foreign
 alias yo='yay -Qdt' # list orphans
 alias yor='yay -Rn $(yay -Qqdt)' # remove orphans non-recursively
-alias yl='yay -Qe' # list explicit
-alias yc='yay -Sc' # clear cache from no longer installed
 alias yr='yay -Rn'
 alias yrr='yay -Rsn'
 alias yrrr='yay -Rsnc'
