@@ -70,3 +70,4 @@ $(dirsdel): %\:del: %\:add
 conky\:add: m4\:add
 conky\:install: m4\:install
 xmonad\:add: STOWFLAGS += --no-folding
+display_updater\:add: STOWFLAGS += --no-folding
