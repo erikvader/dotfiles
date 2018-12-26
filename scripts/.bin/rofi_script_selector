@@ -32,6 +32,7 @@ scripts['Presentation Mode toggle']='screenmng toggle'
 scripts['Org Agenda']='emacsclient -n -c -e '"'"'(same-buffer (org-agenda))'"'"
 scripts['Org quick todo']="rofi -dmenu -p 'TODO' | sed -E 's/^/\\n* TODO /' >> $HOME/Dropbox/org/keep.org"
 scripts['Org open keep.org']="emacsclient -c -n $HOME/Dropbox/org/keep.org"
+scripts['man']="rofi_man"
 
 choice="$( printf '%s\n' "${!scripts[@]}" | sort | rofi -dmenu -i -p "exec" -no-custom )"
 
