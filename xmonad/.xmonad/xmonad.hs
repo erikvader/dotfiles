@@ -246,6 +246,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- moves workspaces up or down
     ((modm .|. shiftMask, xK_period), swapTo Next),
     ((modm .|. shiftMask, xK_comma), swapTo Prev),
+
+    -- rename workspaces
     ((modm, xK_v), renameWorkspace def),
     ((modm .|. shiftMask, xK_v), setCurrentWorkspaceName ""),
     ((modm .|. mod1Mask, xK_v), mapWorkspaces $ flip setWorkspaceName ""),

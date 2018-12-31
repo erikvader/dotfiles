@@ -29,7 +29,7 @@ alias yor='yay -Rn $(yay -Qqdt)' # remove orphans non-recursively
 alias yr='yay -Rn'
 alias yrr='yay -Rsn'
 alias yrrr='yay -Rsnc'
-# alias ylibc="yay -S --aur --m-arg '--nocheck --skippgpcheck' libc++"
+alias ylibc="yay -S --aur --mflags '--nocheck' libc++ libc++abi libc++experimental"
 
 alias l='ls -Av'
 alias ll='els -s'
