@@ -6,6 +6,7 @@
 export QT_QPA_PLATFORMTHEME='qt5ct'
 
 export PATH="$HOME/.bin:$HOME/.local/bin:$PATH"
+export PYTHONPATH="$HOME/.pythonlibs:$PYTHONPATH"
 
 # java doesn't like xmonad
 export _JAVA_AWT_WM_NONREPARENTING=1
