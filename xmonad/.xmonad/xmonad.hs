@@ -272,15 +272,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- Push window back into tiling
     ((modm, xK_t), withFocused $ windows . W.sink),
-    ((modm .|. shiftMask, xK_t), withFocused (\w -> let sw = 1920 -- TODO: remove hardcoded values
-                                                        sh = 1080
-                                                        wi = 700
-                                                        he = 500
-                                                    in tileWindow w (Rectangle ((sw - wi) `div` 2)
-                                                                     ((sh - he) `div` 2)
-                                                                     (fromIntegral wi :: Dimension)
-                                                                     (fromIntegral he :: Dimension))
-                                                       >> float w)),
+    ((modm .|. shiftMask, xK_t), withFocused $ centerFloat 700 500),
 
     -- Toggle the status bar gap
     -- Use this binding with avoidStruts from Hooks.ManageDocks.

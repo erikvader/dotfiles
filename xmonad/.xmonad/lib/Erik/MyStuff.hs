@@ -7,7 +7,8 @@ module Erik.MyStuff (
   shiftView,
   mapWorkspaces,
   swapWith,
-  workspaceNamesClearerLogHook
+  workspaceNamesClearerLogHook,
+  centerFloat
   -- pointerDance
 ) where
 
@@ -44,6 +45,18 @@ import qualified XMonad.Util.ExtensibleState as XS
 
 --     good (x1, y1) (x2, y2) = ((x1-x2) ** 2) + ((y1-y2) ** 2) < (100 ** 2)
 
+getCurrentScreenSize :: X Rectangle
+getCurrentScreenSize = screenRect . W.screenDetail . W.current . windowset <$> get
+
+centerFloat :: Dimension -> Dimension -> Window -> X ()
+centerFloat w h win = do
+  Rectangle sx sy sw sh <- getCurrentScreenSize
+  tileWindow win (Rectangle
+                  (sx + fromIntegral ((sw - w) `div` 2))
+                  (sy + fromIntegral ((sh - h) `div` 2))
+                  w
+                  h)
+  float win
 
 shiftView :: WorkspaceId -> WindowSet -> WindowSet
 shiftView i = W.view i . W.shift i
