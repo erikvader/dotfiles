@@ -94,10 +94,6 @@ function ediff {
     emacsclient -n -c -e '(same-buffer (ediff "'"$1"'" "'"$2"'"))' >/dev/null
 }
 
-function vdiff {
-    emacsclient -n -c -e '(vdiff-files "'"$1"'" "'"$2"'" nil (function vdiff-close-everything))' >/dev/null
-}
-
 function magit {
     emacsclient -n -c -e '(same-buffer (magit-status))' >/dev/null
 }
