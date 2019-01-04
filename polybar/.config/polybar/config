@@ -61,7 +61,7 @@ font-4 = droidsansfallback:pixelsize=11
 
 modules-left = xmonad
 modules-center =
-modules-right = screenmng mounts transmission volume progmode temperature memory cpu wlan battery date
+modules-right = screenmng powersave volume progmode temperature memory cpu wlan battery date
 
 tray-position = center
 tray-padding = 2
@@ -100,7 +100,7 @@ inherit = bar/example
 
 modules-left = xmonad
 modules-center =
-modules-right = screenmng transmission spotify volume progmode temperature2 temperature memory cpu date
+modules-right = screenmng volume progmode temperature2 temperature memory cpu date
 
 [module/xmonad]
 type = custom/script
