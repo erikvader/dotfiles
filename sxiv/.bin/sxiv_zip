@@ -65,4 +65,4 @@ else
     exit 1
 fi
 
-sxiv -- "$temp"
+find "$temp" -type f | LC_ALL=C sort -V | sxiv -i
