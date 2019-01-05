@@ -6,8 +6,7 @@ import Control.Exception (catch,SomeException)
 import System.Directory (doesFileExist,removeFile,executable,getPermissions,getHomeDirectory)
 import System.FilePath ((</>))
 import System.Exit
-import Data.Bits (testBit)
-import Control.Monad (unless, when)
+import Control.Monad (when)
 import Data.List
 
 import Graphics.X11.ExtraTypes.XF86
@@ -17,7 +16,6 @@ import Codec.Binary.UTF8.String as UTF8
 import XMonad hiding ( (|||) )
 import XMonad.Config.Desktop
 
-import XMonad.Actions.UpdatePointer
 import XMonad.Actions.Warp
 import XMonad.Actions.CycleWS (nextWS, prevWS)
 import XMonad.Actions.PhysicalScreens
@@ -103,19 +101,6 @@ scratchVisit = gets windowset >>= (\ss -> func $ map (W.tag . W.workspace) (W.cu
                        whenJust cand gw
                    | otherwise = gw scratchWS
     gw x = windows $ W.greedyView x
-
--- Do the same thing as XMonad.Actions.UpdatePointer, except that it
--- also checks whether a mouse button is currently pressed. If one is
--- pressed, then that probably means that something is being dragged,
--- and if something is being dragged we don't want the cursor to jump
--- all over the place. So if a mouse button is pressed, this does
--- nothing.
-myUpdatePointer = do
-  dpy <- asks display
-  root <- asks theRoot
-  (_,_,_,_,_,_,_,m) <- io $ queryPointer dpy root
-  unless (testBit m 9 || testBit m 8 || testBit m 10) $
-    updatePointer (0.5, 0.5) (0.25, 0.25)
 
 myKeys conf@XConfig {XMonad.modMask = modm} =
   M.fromList $
@@ -217,6 +202,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     ((modm, xK_a), warpToWindow 1 1),
     ((modm .|. shiftMask, xK_a), warpToWindow 0.5 0.5),
+    ((modm .|. controlMask, xK_a), myUpdatePointerToggle),
 
     -- Move focus to the previous window
     ((modm, xK_k), windows W.focusUp),

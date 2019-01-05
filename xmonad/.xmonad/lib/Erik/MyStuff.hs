@@ -8,7 +8,9 @@ module Erik.MyStuff (
   mapWorkspaces,
   swapWith,
   workspaceNamesClearerLogHook,
-  centerFloat
+  centerFloat,
+  myUpdatePointer, myUpdatePointerToggle,
+  notifySend
   -- pointerDance
 ) where
 
@@ -16,9 +18,12 @@ import XMonad
 import qualified XMonad.StackSet as W
 import Data.List (find)
 import Data.Maybe (maybe,isNothing,isJust)
-import Control.Monad (when)
+import Control.Monad (when, unless)
 import XMonad.Actions.WorkspaceNames (getWorkspaceNames',setWorkspaceName)
+import XMonad.Actions.UpdatePointer
 import qualified XMonad.Util.ExtensibleState as XS
+import Data.Bits (testBit)
+import XMonad.Util.Run (safeSpawn)
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
@@ -44,6 +49,9 @@ import qualified XMonad.Util.ExtensibleState as XS
 --                                  | otherwise          -> rposes n (x:xs) (a + 1)
 
 --     good (x1, y1) (x2, y2) = ((x1-x2) ** 2) + ((y1-y2) ** 2) < (100 ** 2)
+
+notifySend :: String -> String -> X ()
+notifySend header msg = safeSpawn "notify-send" [header, msg]
 
 getCurrentScreenSize :: X Rectangle
 getCurrentScreenSize = screenRect . W.screenDetail . W.current . windowset <$> get
@@ -134,3 +142,33 @@ workspaceNamesClearerLogHook = do
       -- predikatet måste gå att göra finare
       let cands = filter (\x -> (isNothing . W.stack) x && (isJust . gwn . W.tag) x) hiddens
       mapM_ (flip setWorkspaceName "" . W.tag) cands
+
+----------------------------- my update pointer -----------------------------
+
+newtype MyUpdatePointerActive = MyUpdatePointerActive Bool
+instance ExtensionClass MyUpdatePointerActive where
+  initialValue = MyUpdatePointerActive True
+
+myUpdatePointerToggle :: X ()
+myUpdatePointerToggle = toggle <$> XS.get >>= \m -> log m >> XS.put m
+  where
+    toggle (MyUpdatePointerActive b) = MyUpdatePointerActive (not b)
+    log (MyUpdatePointerActive b) = notifySend ("pointer update is "++if b then "on" else "off") ""
+
+-- Do the same thing as XMonad.Actions.UpdatePointer, except that it
+-- also checks whether a mouse button is currently pressed. If one is
+-- pressed, then that probably means that something is being dragged,
+-- and if something is being dragged we don't want the cursor to jump
+-- all over the place. So if a mouse button is pressed, this does
+-- nothing.
+myUpdatePointer =
+  whenX isActive $ do
+    dpy <- asks display
+    root <- asks theRoot
+    (_,_,_,_,_,_,_,m) <- io $ queryPointer dpy root
+    unless (testBit m 9 || testBit m 8 || testBit m 10) $
+      updatePointer (0.5, 0.5) (0.25, 0.25)
+
+  where
+    isActive = (\(MyUpdatePointerActive b) -> b) <$> XS.get
+
