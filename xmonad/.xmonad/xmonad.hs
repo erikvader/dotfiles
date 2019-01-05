@@ -48,8 +48,6 @@ import XMonad.Layout.Spacing
 import Erik.MyStuff
 import Erik.IndiPP
 import qualified Erik.MyLimitWindows as L
--- import XMonad.Layout.LimitWindows
-import Erik.CompactWorkspaces
 import Erik.ThreeColP
 
 import qualified XMonad.StackSet as W
@@ -62,9 +60,7 @@ myModMask = mod4Mask
 
 scratchWS = "\61485"
 
--- myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer]
-myWorkspaces = zipWith (++) (["\62056 ", "\61508 "] ++ repeat "\61705 ") (map (concatMap show) $ combinations [1..3 :: Integer]) ++ [scratchWS]
--- myWorkspaces = map (concatMap show) $ combinations [1..3 :: Integer]
+myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer] ++ [scratchWS]
 
 myBaseLayouts = onWorkspace scratchWS grid tall |||
                 ThreeColMid 1 (3/100) (1/3) (1/2) |||
@@ -301,33 +297,18 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- mod-[1..9], Switch to workspace N
     -- mod-shift-[1..9], Move client to workspace N
     --
-    -- [((m .|. modm, k), windows (f i))
-    --     | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
-    --     , (f, m) <- [(W.greedyView, 0),
-    --                  (\i -> W.view i . W.shift i, controlMask .|. shiftMask),
-    --                  (W.shift, controlMask)
-    --                  -- , (W.view, shiftMask)
-    --                 ]]
-
-    -- [((modm .|. m, k), compWS (1/5) i (windows . f)) |
-    --   (i, k) <- zip [0..] [xK_1 .. xK_3],
-    --   (f, m) <- [(W.greedyView, 0),
-    --              (\i -> W.view i . W.shift i, controlMask .|. shiftMask),
-    --              (W.shift, controlMask)
-    --             ]]
-
-    -- jump to layout
-    [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
+    [((m .|. modm, k), windows (f i))
+        | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
+        , (f, m) <- [(W.greedyView, 0),
+                     (\i -> W.view i . W.shift i, controlMask .|. shiftMask),
+                     (W.shift, controlMask)
+                     -- , (W.view, shiftMask)
+                    ]]
 
     ++
 
-    let keys = [xK_1, xK_2, xK_3]
-    in [((modm .|. m, k), compactWorkspaceCombinations f k mods keys)
-       | k <- keys,
-         (f, m, mods) <- [(W.greedyView, 0, [xK_Super_L]),
-                          (shiftView, controlMask .|. shiftMask, [xK_Super_L, xK_Control_L, xK_Shift_L]),
-                          (W.shift, controlMask, [xK_Super_L, xK_Control_L])
-                          ]]
+    -- jump to layout
+    [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
 
     ++
 
@@ -345,7 +326,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     [((m .|. modm, key), f sc)
         | (key, sc) <- zip [xK_F1, xK_F2, xK_F3] [0..]
         , (f, m) <- [(viewScreen def, 0),
-                     (\i -> viewScreen def i >> sendToScreen def i, shiftMask .|. controlMask),
+                     (\i -> sendToScreen def i >> viewScreen def i, shiftMask .|. controlMask),
                      (\i -> getScreen def i >>= maybe (return Nothing) screenWorkspace >>= flip whenJust (windows . W.greedyView), shiftMask),
                      (sendToScreen def, controlMask)
                     ]]
