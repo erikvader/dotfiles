@@ -16,6 +16,8 @@ alias cdiff="diff --color=auto"
 
 alias mi="mediainfo"
 
+alias pg='pgrep -l'
+
 alias cclip="xclip -selection clipboard"
 
 alias rsd='rsync -avhsn --delete'
