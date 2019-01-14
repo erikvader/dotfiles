@@ -1,31 +1,32 @@
 #!/bin/bash
 
-# converts a folder of of png:s and/or jpg:s to cbz-files
-# all of these folders are contained in a directory, which is the first
-# argument to this script
+# convert_to_cbz folder [folder..]
+# converts each folder x of images into x.cbz with those images
 
 set -e
 
 if [[ $# -le 0 ]]; then
-    echo "me wants some arguments :("
+    echo "me wants some arguments :(" >&2
     exit 1
 fi
 
-folder="$1"
-
-fs="$(find "$folder" -mindepth 1 -maxdepth 1 -type d)"
-
-if [[ -z "$fs" ]]; then
-    echo "$folder is empty" >&2
-    exit 1
-fi
-
-while IFS='' read -r line || [[ -n "$line" ]]; do
-    if [[ -e "$line.cbz" ]]; then
-        echo "skipping \"$line\""
+for f in "$@"; do
+    newname="$f.cbz"
+    if [[ -e $newname ]]; then
+        echo "\"$newname\" already exists, skipping..." >&2
         continue
     fi
-    zip -jmr "$line.cbz" "$line" -i "*.png" -i "*.jpg"
-    rm -d "$line"
-    echo "created \"$line.cbz\""
-done <<< "$fs"
+    if [[ ! -d $f ]]; then
+        echo "\"$f\" is not a directory, skipping... " >&2
+        continue
+    fi
+
+    echo "creating \"$newname\"..."
+    if zip -jmr "$newname" "$f" >/dev/null; then
+        rm -d "$f"
+        echo "done!"
+    else
+        echo "zipping failed, aborting..." >&2
+        exit 1
+    fi
+done
