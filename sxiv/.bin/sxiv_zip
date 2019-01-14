@@ -35,18 +35,21 @@ temp=$(mktemp -d --tmpdir 'sxiv_zip.XXXXXXXXXX')
 trap 'rm -rf "$temp"' EXIT
 
 if [[ -d $targ ]]; then
-    while IFS='' read -r line || [[ -n "$line" ]]; do
-        if file -b --mime-type "$line" | grep -q '^image/'; then
-            cp -t "$temp" "$line"
-        fi
-    done <<< "$(find "$1" -mindepth 1 -maxdepth 1)"
+    ln -srt "$temp" "$targ"
 elif [[ -f $targ ]]; then
     ext=${targ##*.}
     case ${ext,,} in
         zip|cbz)
-            if ! unzip "$targ" -d "$temp" &>/dev/null; then
-                echo "unzip failed, is this really a zip file?" >&2
-                exit 1
+            if command -v fuse-zip &>/dev/null; then
+                if ! fuse-zip -r "$targ" "$temp"; then
+                    exit 1
+                fi
+                trap 'fusermount -u "$temp"; rm -d "$temp"' EXIT
+            else
+                if ! unzip "$targ" -d "$temp" &>/dev/null; then
+                    echo "unzip failed, is this really a zip file?" >&2
+                    exit 1
+                fi
             fi
             ;;
         rar|cbr)
@@ -65,4 +68,4 @@ else
     exit 1
 fi
 
-find "$temp" -type f | LC_ALL=C sort -V | sxiv -i
+find -L "$temp" -type f | LC_ALL=C sort -V | sxiv -i
