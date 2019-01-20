@@ -1,6 +1,6 @@
 #!/bin/bash
 
-selected=$(rofi -dmenu -i -p 'emoji' < "$HOME/.emoji")
+selected=$(rofi -dmenu -i -p "$1" < "$2")
 
 if [[ -n $selected ]]; then
     cut -d' ' -f1 <<< "$selected" | tr -d '\n' | xclip -selection clipboard -i
