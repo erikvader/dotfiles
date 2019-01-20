@@ -5,7 +5,16 @@ from time import sleep
 
 ACTIVE_SLEEP = 15
 INACTIVE_SLEEP = 60
+RABBIT = "🐇"
+TURTLE = "🐢"
+SKULL = "☠"
 
+last_stats = {}
+
+def polybar_color(s, c):
+   return "%{{F#{}}}{}%{{F-}}".format(c, s)
+
+# get amount of torrents that are downloading (everything that is not 100%)
 def get_downloading(client):
    # state kan vara intressant
    torrents = client.call('core.get_torrents_status', {}, ['is_finished', 'paused'])
@@ -17,12 +26,43 @@ def get_downloading(client):
 
    return downloading
 
+# is the download speed limited to any value?
 def is_throttled(client):
    download_speed = client.call('core.get_config_value', b'max_download_speed')
    return download_speed != -1
 
+# get average speeds in B/s
+# first reading of a session returns junk values
+def get_avg_speeds(client):
+   global last_stats
+   stats = client.call('core.get_session_status', ['total_download', 'total_upload'])
+
+   down = stats[b'total_download'] - last_stats.get(b'total_download', 0)
+   down /= ACTIVE_SLEEP
+
+   up = stats[b'total_upload'] - last_stats.get(b'total_upload', 0)
+   up /= ACTIVE_SLEEP
+
+   last_stats = stats
+   return down, up
+
 def print_stats(client):
-   print("{} {}".format(get_downloading(client), "🐢" if is_throttled(client) else "🐇"), flush=True)
+   down, up = get_avg_speeds(client)
+   throttled = is_throttled(client)
+   active = get_downloading(client)
+
+   if down == 0 and up == 0:
+      status_icon = SKULL
+   elif throttled:
+      status_icon = TURTLE
+   else:
+      status_icon = RABBIT
+
+   down = polybar_color(str(round(down/1024, 1)), "7cfc00")
+   up = polybar_color(str(round(up/1024, 1)), "ff4500")
+   active = polybar_color(str(active), "ffd700")
+
+   print("({}/{})#{} {}".format(down, up, active, status_icon), flush=True)
 
 def main():
    client = DelugeRPCClient('127.0.0.1', 58846, 'erik', 'abc123')
