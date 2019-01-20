@@ -52,12 +52,9 @@ module-margin-left = 1
 module-margin-right = 2
 
 font-0 = vera:pixelsize=11;3
-; font-1 = unifont:fontformat=truetype:size=6:heavy;-2
-;font-2 = siji:pixelsize=10
 font-1 = fontawesome:pixelsize=14;3
-font-2 = ubuntumono:pixelsize=11
-font-3 = fontawesome:pixelsize=10;3
-font-4 = droidsansfallback:pixelsize=11
+font-2 = noto color emoji:scale=10;1
+font-3 = droidsansfallback:pixelsize=11
 
 modules-left = xmonad
 modules-center =
@@ -100,7 +97,7 @@ inherit = bar/example
 
 modules-left = xmonad
 modules-center =
-modules-right = screenmng volume progmode temperature2 temperature memory cpu date
+modules-right = deluge screenmng volume progmode temperature2 temperature memory cpu date
 
 [module/xmonad]
 type = custom/script
@@ -116,9 +113,9 @@ tail = true
 format-underline = #ff69b4
 format-padding = 2
 
-[module/transmission]
+[module/deluge]
 type = custom/script
-exec = ~/.config/polybar/transmission.py
+exec = ~/.config/polybar/deluge.py
 tail = true
 
 ; format-prefix = " "
@@ -169,7 +166,6 @@ format-margin = 1
 type = custom/script
 exec = ~/.config/polybar/scrolling_title.sh
 tail = true
-label-active-font = 2
 
 [module/powersave]
 type = custom/script
@@ -177,7 +173,6 @@ exec = ~/.config/polybar/powersave.sh
 tail = true
 
 label = %output%
-label-font = 3
 
 format-underline = #4bffdc
 format-padding = 2
@@ -299,12 +294,9 @@ label = 
 bar-width = 10
 bar-indicator = │
 bar-indicator-foreground = #ff
-bar-indicator-font = 1
 bar-fill = ─
-bar-fill-font = 1
 bar-fill-foreground = #9f78e1
 bar-empty = ─
-bar-empty-font = 1
 bar-empty-foreground = ${colors.foreground-alt}
 
 [module/backlight-acpi]
@@ -402,7 +394,6 @@ format-volume-underline = #ffb52a
 
 label-volume =   %percentage%%
 label-volume-foreground = ${root.foreground}
-label-volume-font = 0
 
 format-muted-prefix = " "
 format-muted-foreground = #aaaaaa
@@ -418,12 +409,9 @@ bar-volume-foreground-5 = #f5a70a
 bar-volume-foreground-6 = #ff5555
 bar-volume-gradient = false
 bar-volume-indicator = │
-bar-volume-indicator-font = 1
 bar-volume-indicator-foreground = #ff
 bar-volume-fill = ─
-bar-volume-fill-font = 1
 bar-volume-empty = ─
-bar-volume-empty-font = 1
 bar-volume-empty-foreground = ${colors.foreground-alt}
 
 [module/battery]
