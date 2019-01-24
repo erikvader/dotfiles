@@ -1,0 +1,37 @@
+# Magic local data for file(1) command.
+# Insert here your local magic data. Format is described in magic(5).
+
+# Magic local data for file(1) command.
+# Insert here your local magic data. Format is described in magic(5).
+
+#------------------------------------------------------------------------------
+# matroska:  file(1) magic for Matroska files
+#
+# See http://www.matroska.org/
+#
+
+# EBML id:
+# 0		belong		0x1a45dfa3
+# DocType id:
+# >5		beshort		0x4282
+# DocType contents:
+# >>0x8		string		matroska	Matroska data
+# !:mime video/x-matroska
+#------------------------------------------------------------------------------
+# matroska:  file(1) magic for Matroska files
+#
+# See http://www.matroska.org/
+#
+
+# EBML id:
+0		belong		0x1a45dfa3
+# EMBL Version:
+>0xc		beshort		0x4286		Version 4 / Version 2
+# DocType id:
+>0x1c		beshort		0x4282
+# DocType contents:
+>>0x1f		string		matroska	Matroska data
+!:mime video/x-matroska
+>>0x1f		string		webm	webm video
+!:mime video/webm
+
