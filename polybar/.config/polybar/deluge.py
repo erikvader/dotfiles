@@ -51,7 +51,7 @@ def print_stats(client):
    throttled = is_throttled(client)
    active = get_downloading(client)
 
-   if down == 0 and up == 0:
+   if down <= 1024 and up <= 1024:
       status_icon = SKULL
    elif throttled:
       status_icon = TURTLE
