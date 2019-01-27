@@ -9,7 +9,7 @@ function isActive {
         echo ""
     else
         # return 1
-        echo ""
+        echo "🙉"
     fi
 }
 
