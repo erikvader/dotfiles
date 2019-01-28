@@ -10,20 +10,25 @@ module Erik.MyStuff (
   workspaceNamesClearerLogHook,
   centerFloat,
   myUpdatePointer, myUpdatePointerToggle,
-  notifySend
+  notifySend,
+  windowOverview
   -- pointerDance
 ) where
 
 import XMonad
 import qualified XMonad.StackSet as W
-import Data.List (find)
-import Data.Maybe (maybe,isNothing,isJust)
+import Data.List (find, sortOn, elemIndex)
+import Data.Maybe (maybe,isNothing,isJust,fromMaybe)
 import Control.Monad (when, unless)
 import XMonad.Actions.WorkspaceNames (getWorkspaceNames',setWorkspaceName)
 import XMonad.Actions.UpdatePointer
 import qualified XMonad.Util.ExtensibleState as XS
 import Data.Bits (testBit)
 import XMonad.Util.Run (safeSpawn)
+import Erik.TreeSelect
+import Data.Tree
+import XMonad.Util.TreeZipper
+import Foreign.C.String (peekCString)
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
@@ -112,6 +117,12 @@ windowsLowestEmpty f order = windows (\w -> maybe id f (findLowestEmpty w) w)
 mapWorkspaces :: (WorkspaceId -> X a) -> X()
 mapWorkspaces f = asks (workspaces . config) >>= mapM_ f
 
+workspacesSorted :: X [WindowSpace]
+workspacesSorted = do
+  ws <- W.workspaces <$> gets windowset
+  order <- asks $ workspaces . config
+  return $ sortOn (\w -> fromMaybe (-1) $ elemIndex (W.tag w) order) ws
+
 -- swap current workspace with wi and focus current
 -- only makes sense if both current and wi are visible on separate monitors
 swapWith :: WorkspaceId -> WindowSet -> WindowSet
@@ -172,3 +183,50 @@ myUpdatePointer =
   where
     isActive = (\(MyUpdatePointerActive b) -> b) <$> XS.get
 
+------------------------- window overviewer -------------------------
+
+getNameClass :: Window -> X (String, String)
+getNameClass w = do
+  dsp <- asks display
+  clas <- io $ tp_value <$> getTextProperty dsp w wM_CLASS >>= peekCString
+  nam <- io $ tp_value <$> getTextProperty dsp w wM_NAME >>= peekCString
+  return (nam, clas)
+
+windowTsConfig :: TSConfig a
+windowTsConfig = def {
+  ts_hidechildren = False,
+  ts_font = "xft:vera",
+  ts_background = 0xc0c0c0c0,
+  ts_node = (0xff000000, 0xff50d0db),
+  ts_nodealt = (0xff000000, 0xff10b8d6),
+  ts_highlight = (0xffffffff, 0xffff0000),
+  ts_extra = 0xff000000
+  }
+
+-- starts a TreeSelect thing that shows an overview of all workspaces and windows
+windowOverview :: X ()
+windowOverview = do
+  curtag <- gets $ W.tag . W.workspace . W.current . windowset
+  let toZip t = fromMaybe z $ findChild (\(TSNode x _ _) -> x == curtag) z
+        where z = fromForest t
+  tree <- toZip <$> workspaceTree
+  mx <- treeselectAt windowTsConfig tree []
+  sequence_ mx
+
+-- creates a forest of workspace nodes with their windows as children
+workspaceTree :: X (Forest (TSNode (X ())))
+workspaceTree = do
+  ws <- workspacesSorted
+  mapM makeWork ws
+  where
+    makeWork :: WindowSpace -> X (Tree (TSNode (X ())))
+    makeWork w = do
+      wins <- makeWindow $ W.stack w
+      return $ Node (TSNode (W.tag w) "" (windows . W.view $ W.tag w)) wins
+
+    makeWindow :: Maybe (W.Stack Window) -> X (Forest (TSNode (X ())))
+    makeWindow s = mapM windowNode $ W.integrate' s
+
+    windowNode w = do
+      (nam, clas) <- getNameClass w
+      return $ Node (TSNode clas nam (windows $ W.focusWindow w)) []

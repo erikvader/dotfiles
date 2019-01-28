@@ -130,7 +130,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- rofi
     ((modm, xK_x), spawn "rofi -show run"),
     ((modm .|. shiftMask, xK_x), spawn "rofi -show drun"),
-    ((modm, xK_Escape), spawn "rofi -show window"),
+    -- ((modm, xK_Escape), spawn "rofi -show window"),
+    ((modm, xK_Escape), windowOverview),
     ((modm, xK_r), spawn "rofi_script_selector"),
     ((modm .|. shiftMask, xK_r), spawn "open_downloaded_pdf"),
 

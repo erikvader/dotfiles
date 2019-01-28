@@ -35,6 +35,7 @@ scripts['Org open keep.org']="emacsclient -c -n $HOME/Dropbox/org/keep.org"
 scripts['Man']="rofi_man"
 scripts['Emoji selector']='rofi_iconfont emoji "$HOME/.emoji"'
 scripts['Font Awesome 4.7 selector']='rofi_iconfont awesome "$HOME/.awesome47"'
+scripts['Window list']="rofi -show window"
 
 choice="$( printf '%s\n' "${!scripts[@]}" | sort | rofi -dmenu -i -p "exec" -no-custom )"
 
