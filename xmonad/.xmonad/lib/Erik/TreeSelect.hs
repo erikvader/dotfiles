@@ -64,6 +64,7 @@ module Erik.TreeSelect
 import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State
+import Control.Monad (when)
 import Data.List (find)
 import Data.Maybe
 import Data.Tree
@@ -562,28 +563,38 @@ drawLayers xl yl ((bs, c, as):xs) = do
     let nodeColor y = if odd y then ts_node else ts_nodealt
 
     -- draw nodes above
-    forM_ (zip [yl ..] (reverse bs)) $ \(y, Node n _) ->
-        drawNode xl y n (nodeColor y)
-        -- drawLayers (xl + 1) (y + 1) ns
-        -- TODO: draw rest? if not ts_hidechildren
-        -- drawLayers (xl + 1) (y + 1) ns
+    y <- drawTrees xl yl (reverse bs)
 
     -- draw the current / parent node
     -- if this is the last (currently focused) we use the 'ts_highlight' color
-    let current_level = yl + length bs
+    let current_level = y
     drawNode xl current_level c $
         if null xs then ts_highlight
                    else nodeColor current_level
 
-    l2 <- drawLayers (xl + 1) (current_level + 1) xs
+    y <- if null xs && not ts_hidechildren
+      then do -- if at last layer, attempt to draw the focused element's subtree
+        t <- gets $ subForest . tz_current . tss_tree
+        drawTrees (xl+1) (current_level+1) t
+      else
+        drawLayers (xl + 1) (current_level + 1) xs
 
     -- draw nodes below
-    forM_ (zip [l2 ..] as) $ \(y, Node n _) ->
-        drawNode xl y n (nodeColor y)
-        -- TODO: draw rest? if not ts_hidechildren
-        -- drawLayers (xl + 1) (y + 1) ns
-    return (l2 + length as)
+    drawTrees xl y as
 
+drawTrees :: Int -> Int -> Forest (TSNode a) -> TreeSelect a Int
+drawTrees _ yl [] = return yl
+drawTrees xl yl (Node n ns:xs) = do
+    TSConfig{..} <- ask
+    let nodeColor y = if odd y then ts_node else ts_nodealt
+
+    drawNode xl yl n (nodeColor yl)
+
+    y <- if not ts_hidechildren
+           then drawTrees (xl+1) (yl+1) ns
+           else return (yl+1)
+
+    drawTrees xl y xs
 
 -- | Draw a node at a given indentation and height level
 drawNode :: Int -- ^ indentation level (not in pixels)
@@ -656,3 +667,7 @@ fromARGB x = XRenderColor (fromIntegral $ 0xff00 .&. shiftR x 8)  -- red
                           (fromIntegral $ 0xff00 .&. shiftL x 8)  -- blue
                           (fromIntegral $ 0xff00 .&. shiftR x 16) -- alpha
 #endif
+
+-- Local Variables:
+-- haskell-indentation-left-offset: 4
+-- End:
