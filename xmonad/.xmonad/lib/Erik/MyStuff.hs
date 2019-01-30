@@ -185,6 +185,7 @@ myUpdatePointer =
 
 ------------------------- window overviewer -------------------------
 
+-- gets WM_CLASS and WM_NAME from a window
 getNameClass :: Window -> X (String, String)
 getNameClass w = do
   dsp <- asks display
@@ -196,11 +197,11 @@ windowTsConfig :: TSConfig a
 windowTsConfig = def {
   ts_hidechildren = False,
   ts_font = "xft:vera",
-  ts_background = 0xc0c0c0c0,
+  ts_background = 0xa0444444,
   ts_node = (0xff000000, 0xff50d0db),
   ts_nodealt = (0xff000000, 0xff10b8d6),
   ts_highlight = (0xffffffff, 0xffff0000),
-  ts_extra = 0xff000000
+  ts_extra = 0xffffffff
   }
 
 -- starts a TreeSelect thing that shows an overview of all workspaces and windows
