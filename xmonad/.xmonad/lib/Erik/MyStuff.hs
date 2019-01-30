@@ -218,7 +218,7 @@ windowOverview = do
 workspaceTree :: X (Forest (TSNode (X ())))
 workspaceTree = do
   ws <- workspacesSorted
-  mapM makeWork ws
+  mapM makeWork (filter (isJust . W.stack) ws)
   where
     makeWork :: WindowSpace -> X (Tree (TSNode (X ())))
     makeWork w = do
