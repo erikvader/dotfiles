@@ -210,9 +210,10 @@ windowOverview = do
   curtag <- gets $ W.tag . W.workspace . W.current . windowset
   let toZip t = fromMaybe z $ findChild (\(TSNode x _ _) -> x == curtag) z
         where z = fromForest t
-  tree <- toZip <$> workspaceTree
-  mx <- treeselectAt windowTsConfig tree []
-  sequence_ mx
+  forest <- workspaceTree
+  unless (null forest) $ do
+    mx <- treeselectAt windowTsConfig (toZip forest) []
+    sequence_ mx
 
 -- creates a forest of workspace nodes with their windows as children
 workspaceTree :: X (Forest (TSNode (X ())))
