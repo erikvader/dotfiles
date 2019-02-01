@@ -10,7 +10,7 @@ alias ydm='youtube-dl --merge-output-format mkv --write-thumbnail'
 alias pps='ps -Ho pid,ppid,pgid,comm'
 alias ppss='ps -Ho pid,ppid,pgid,command'
 
-alias lsnet="sudo nmap -sn 192.168.1.0/24"
+alias lsnet="sudo ss -tulpn"
 
 alias cdiff="diff --color=auto"
 
