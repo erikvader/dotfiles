@@ -1,6 +1,7 @@
 #!/bin/python
 
 from deluge_client import DelugeRPCClient, FailedToReconnectException
+from ssl import SSLError
 from time import sleep
 
 ACTIVE_SLEEP = 15
@@ -69,7 +70,7 @@ def main():
    while True:
       try:
          client.reconnect()
-      except ConnectionRefusedError:
+      except (ConnectionRefusedError, SSLError):
          sleep(INACTIVE_SLEEP)
          continue
 
@@ -82,10 +83,4 @@ def main():
             break
 
 if __name__ == "__main__":
-   try:
-      main()
-   except Exception as e:
-      print("error in /tmp/deluge_transmission_error", flush=True)
-      with open("/tmp/deluge_transmission_error", "w") as f:
-         from traceback import format_exc
-         f.write(format_exc())
+   main()
