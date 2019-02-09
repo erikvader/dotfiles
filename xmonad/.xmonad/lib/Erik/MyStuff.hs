@@ -11,7 +11,6 @@ module Erik.MyStuff (
   centerFloat,
   myUpdatePointer, myUpdatePointerToggle,
   notifySend,
-  windowOverview,
   twostepWs,
   ppShowWindows
   -- pointerDance
@@ -27,10 +26,6 @@ import XMonad.Actions.UpdatePointer
 import qualified XMonad.Util.ExtensibleState as XS
 import Data.Bits (testBit)
 import XMonad.Util.Run (safeSpawn)
-import Erik.TreeSelect
-import Data.Tree
-import XMonad.Util.TreeZipper
-import Foreign.C.String (peekCString)
 import XMonad.Actions.Submap (submap)
 import qualified Data.Map as M
 import XMonad.Hooks.DynamicLog
@@ -122,12 +117,6 @@ windowsLowestEmpty f order = windows (\w -> maybe id f (findLowestEmpty w) w)
 mapWorkspaces :: (WorkspaceId -> X a) -> X()
 mapWorkspaces f = asks (workspaces . config) >>= mapM_ f
 
-workspacesSorted :: X [WindowSpace]
-workspacesSorted = do
-  ws <- W.workspaces <$> gets windowset
-  order <- asks $ workspaces . config
-  return $ sortOn (\w -> fromMaybe (-1) $ elemIndex (W.tag w) order) ws
-
 -- swap current workspace with wi and focus current
 -- only makes sense if both current and wi are visible on separate monitors
 swapWith :: WorkspaceId -> WindowSet -> WindowSet
@@ -188,66 +177,16 @@ myUpdatePointer =
   where
     isActive = (\(MyUpdatePointerActive b) -> b) <$> XS.get
 
-------------------------- window overviewer -------------------------
-
--- gets WM_CLASS and WM_NAME from a window
-getNameClass :: Window -> X (String, String)
-getNameClass w = do
-  dsp <- asks display
-  clas <- io $ tp_value <$> getTextProperty dsp w wM_CLASS >>= peekCString
-  nam <- io $ tp_value <$> getTextProperty dsp w wM_NAME >>= peekCString
-  return (nam, clas)
-
--- get all WM_CLASS property values from a window
-getClass :: Window -> X [String]
-getClass w = withDisplay $ \dsp -> io $ getTextProperty dsp w wM_CLASS >>= wcTextPropertyToTextList dsp
-
-windowTsConfig :: TSConfig a
-windowTsConfig = def {
-  ts_hidechildren = False,
-  ts_font = "xft:vera",
-  ts_background = 0xa0444444,
-  ts_node = (0xff000000, 0xff50d0db),
-  ts_nodealt = (0xff000000, 0xff10b8d6),
-  ts_highlight = (0xffffffff, 0xffff0000),
-  ts_extra = 0xffffffff
-  }
-
--- starts a TreeSelect thing that shows an overview of all workspaces and windows
-windowOverview :: X ()
-windowOverview = do
-  curtag <- gets $ W.tag . W.workspace . W.current . windowset
-  let toZip t = fromMaybe z $ findChild (\(TSNode x _ _) -> x == curtag) z
-        where z = fromForest t
-  forest <- workspaceTree
-  unless (null forest) $ do
-    mx <- treeselectAt windowTsConfig (toZip forest) []
-    sequence_ mx
-
--- creates a forest of workspace nodes with their windows as children
-workspaceTree :: X (Forest (TSNode (X ())))
-workspaceTree = do
-  ws <- workspacesSorted
-  mapM makeWork (filter (isJust . W.stack) ws)
-  where
-    makeWork :: WindowSpace -> X (Tree (TSNode (X ())))
-    makeWork w = do
-      wins <- makeWindow $ W.stack w
-      return $ Node (TSNode (W.tag w) "" (windows . W.view $ W.tag w)) wins
-
-    makeWindow :: Maybe (W.Stack Window) -> X (Forest (TSNode (X ())))
-    makeWindow s = mapM windowNode $ W.integrate' s
-
-    windowNode w = do
-      (nam, clas) <- getNameClass w
-      return $ Node (TSNode clas nam (windows $ W.focusWindow w)) []
-
 ------------------------- two-step workspace action -------------------------
 
 twostepWs :: [WorkspaceId] -> [KeySym] -> (WorkspaceId -> X ()) -> X ()
 twostepWs ws keys f = submap $ M.fromList [((0, k), f w) | (k, w) <- zip keys ws]
 
 ------------------------------ pp show windows ------------------------------
+
+-- get all WM_CLASS property values from a window
+getClass :: Window -> X [String]
+getClass w = withDisplay $ \dsp -> io $ getTextProperty dsp w wM_CLASS >>= wcTextPropertyToTextList dsp
 
 headSafe :: a -> [a] -> a
 headSafe d []    = d
