@@ -11,7 +11,8 @@ module Erik.MyStuff (
   centerFloat,
   myUpdatePointer, myUpdatePointerToggle,
   notifySend,
-  windowOverview
+  windowOverview,
+  twostepWs
   -- pointerDance
 ) where
 
@@ -29,6 +30,8 @@ import Erik.TreeSelect
 import Data.Tree
 import XMonad.Util.TreeZipper
 import Foreign.C.String (peekCString)
+import XMonad.Actions.Submap (submap)
+import qualified Data.Map as M
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
@@ -232,3 +235,9 @@ workspaceTree = do
     windowNode w = do
       (nam, clas) <- getNameClass w
       return $ Node (TSNode clas nam (windows $ W.focusWindow w)) []
+
+------------------------- two-step workspace action -------------------------
+
+twostepWs :: [WorkspaceId] -> [KeySym] -> (WorkspaceId -> X ()) -> X ()
+twostepWs ws keys f = submap $ M.fromList [((0, k), f w) | (k, w) <- zip keys ws]
+
