@@ -373,7 +373,7 @@ myNonfocusPPXin = myFocusPPXin {
 multiPrepare :: D.Client -> String -> PP -> X PP
 multiPrepare dbus output pp = do
   L.updateCurrentState
-  ppShowWindows (wrap "%{F#ffffff}" "%{F-}") pp {ppOutput = dbusOutput dbus . (output ++) . fixXinerama}
+  ppShowWindows (wrap "%{F#ffffff T5}" "%{F- T-}") pp {ppOutput = dbusOutput dbus . (output ++) . fixXinerama}
   where
     fixXinerama :: String -> String
     fixXinerama s = removeIndices 0 s $ tail . init $ findIndices (\c -> c == '[' || c == ']') $ takeTo (ppSep pp) s
