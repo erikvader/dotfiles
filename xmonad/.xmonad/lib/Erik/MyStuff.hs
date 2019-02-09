@@ -12,14 +12,15 @@ module Erik.MyStuff (
   myUpdatePointer, myUpdatePointerToggle,
   notifySend,
   windowOverview,
-  twostepWs
+  twostepWs,
+  ppShowWindows
   -- pointerDance
 ) where
 
 import XMonad
 import qualified XMonad.StackSet as W
 import Data.List (find, sortOn, elemIndex)
-import Data.Maybe (maybe,isNothing,isJust,fromMaybe)
+import Data.Maybe (maybe,isNothing,isJust,fromMaybe,mapMaybe)
 import Control.Monad (when, unless)
 import XMonad.Actions.WorkspaceNames (getWorkspaceNames',setWorkspaceName)
 import XMonad.Actions.UpdatePointer
@@ -32,6 +33,7 @@ import XMonad.Util.TreeZipper
 import Foreign.C.String (peekCString)
 import XMonad.Actions.Submap (submap)
 import qualified Data.Map as M
+import XMonad.Hooks.DynamicLog
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
@@ -196,6 +198,10 @@ getNameClass w = do
   nam <- io $ tp_value <$> getTextProperty dsp w wM_NAME >>= peekCString
   return (nam, clas)
 
+-- get all WM_CLASS property values from a window
+getClass :: Window -> X [String]
+getClass w = withDisplay $ \dsp -> io $ getTextProperty dsp w wM_CLASS >>= wcTextPropertyToTextList dsp
+
 windowTsConfig :: TSConfig a
 windowTsConfig = def {
   ts_hidechildren = False,
@@ -240,4 +246,44 @@ workspaceTree = do
 
 twostepWs :: [WorkspaceId] -> [KeySym] -> (WorkspaceId -> X ()) -> X ()
 twostepWs ws keys f = submap $ M.fromList [((0, k), f w) | (k, w) <- zip keys ws]
+
+------------------------------ pp show windows ------------------------------
+
+headSafe :: a -> [a] -> a
+headSafe d []    = d
+headSafe _ (x:_) = x
+
+defaultIcon = "#"
+windowIcons = M.fromList [
+  ("emacs", "\61508"),
+  ("qutebrowser", "\62056"),
+  ("urxvt", "\61705")
+  ]
+
+ppShowWindows :: (WorkspaceId -> String) -> PP -> X PP
+ppShowWindows prepare pp = do
+  f <- getIcons
+  let format old w = old $ prepare w ++ f w
+  return $
+    pp {
+      ppCurrent         = format $ ppCurrent pp,
+      ppVisible         = format $ ppVisible pp,
+      ppHidden          = format $ ppHidden pp ,
+      ppHiddenNoWindows = format $ ppHiddenNoWindows pp,
+      ppUrgent          = format $ ppUrgent pp
+      }
+  where
+    getWindowsFor :: WindowSet -> WorkspaceId -> [Window]
+    getWindowsFor set wi = maybe [] (W.integrate' . W.stack) (find (\w -> wi == W.tag w) $ W.workspaces set)
+
+    classesToIcon :: [String] -> String
+    -- classesToIcon cs = headSafe defaultIcon $ mapMaybe (`M.lookup` windowIcons) cs
+    classesToIcon cs = headSafe defaultIcon $ map ((:[]) . head) cs
+
+    getIcons :: X (WorkspaceId -> String)
+    getIcons = do
+      ss <- gets windowset
+      let allwins = W.allWindows ss
+      withClasses <- M.fromList . zip allwins <$> mapM (fmap (filter (not . null)) . getClass) allwins
+      return $ \ws -> concatMap (\w -> classesToIcon $ M.findWithDefault [] w withClasses) $ getWindowsFor ss ws
 

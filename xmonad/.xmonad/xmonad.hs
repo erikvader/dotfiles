@@ -58,7 +58,7 @@ myModMask = mod4Mask
 
 scratchWS = "\61485"
 
-myWorkspaces = ["1 \62056", "2 \61508"] ++ map ((++ " \61705") . show) [3..9 :: Integer] ++ [scratchWS]
+myWorkspaces = map show [1..9] ++ [scratchWS]
 
 myBaseLayouts = onWorkspace scratchWS grid tall |||
                 ThreeColMid 1 (3/100) (1/3) (1/2) |||
@@ -342,7 +342,7 @@ myFocusPPXin = def
       ppCurrent = wrap "%{B#505050 u#ffb52a +u}[  " "  ]%{B- -u}",
       ppVisible = wrap "%{B#505050}[  " "  ]%{B-}",
       ppUrgent = wrap " %{B#bd2c40} " "! %{B-} ",
-      ppHidden = wrap "  " "  ",
+      ppHidden = wrap " " " ",
       ppWsSep = "",
       ppSep = " %{F#ffb52a}:%{F-} ",
       ppTitle = shorten 60,
@@ -374,7 +374,7 @@ myNonfocusPPXin = myFocusPPXin {
 multiPrepare :: D.Client -> String -> PP -> X PP
 multiPrepare dbus output pp = do
   L.updateCurrentState
-  workspaceNamesPP $ pp {ppOutput = dbusOutput dbus . (output ++) . fixXinerama}
+  ppShowWindows (wrap "%{F#ffffff}" "%{F-}") pp {ppOutput = dbusOutput dbus . (output ++) . fixXinerama}
   where
     fixXinerama :: String -> String
     fixXinerama s = removeIndices 0 s $ tail . init $ findIndices (\c -> c == '[' || c == ']') $ takeTo (ppSep pp) s
