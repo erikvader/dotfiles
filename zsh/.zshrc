@@ -193,6 +193,10 @@ if [[ -f "$HOME/.dircolors" ]]; then
     zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 fi
 
+if [[ -f "$HOME/.zshrc.local" ]]; then
+    source "$HOME/.zshrc.local"
+fi
+
 # run a command and enter normal shell after it exits
 # instead of exiting the while shell
 # http://www.zsh.org/mla/users/2005/msg00599.html

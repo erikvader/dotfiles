@@ -54,8 +54,6 @@ alias SS='sudo systemctl'
 alias ec="emacsclient -n -c"
 alias sec="SUDO_EDITOR='emacsclient -c' sudo -e"
 
-alias mountanime="mountsmb ERIKRIMSKOG anime erik /media/anime"
-
 REPOS=( "$HOME/.emacs.d" "$HOME/dotfiles" "$HOME/.config/qutebrowser" )
 function repos_cmd {
     for re in "${REPOS[@]}"; do
