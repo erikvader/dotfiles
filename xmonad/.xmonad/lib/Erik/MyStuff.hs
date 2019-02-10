@@ -19,7 +19,7 @@ module Erik.MyStuff (
 import XMonad
 import qualified XMonad.StackSet as W
 import Data.List (find, sortOn, elemIndex)
-import Data.Maybe (maybe,isNothing,isJust,fromMaybe,mapMaybe)
+import Data.Maybe (maybe,isNothing,isJust,fromMaybe,mapMaybe,listToMaybe)
 import Control.Monad (when, unless)
 import XMonad.Actions.WorkspaceNames (getWorkspaceNames',setWorkspaceName)
 import XMonad.Actions.UpdatePointer
@@ -29,6 +29,7 @@ import XMonad.Util.Run (safeSpawn)
 import XMonad.Actions.Submap (submap)
 import qualified Data.Map as M
 import XMonad.Hooks.DynamicLog
+import Control.Exception (catch,SomeException)
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
@@ -186,17 +187,14 @@ twostepWs ws keys f = submap $ M.fromList [((0, k), f w) | (k, w) <- zip keys ws
 
 -- get all WM_CLASS property values from a window
 getClass :: Window -> X [String]
-getClass w = withDisplay $ \dsp -> io $ getTextProperty dsp w wM_CLASS >>= wcTextPropertyToTextList dsp
-
-headSafe :: a -> [a] -> a
-headSafe d []    = d
-headSafe _ (x:_) = x
+getClass w = withDisplay $ \dsp -> io $
+  catch
+    (getTextProperty dsp w wM_CLASS >>= wcTextPropertyToTextList dsp)
+    ((\_ -> return []) :: SomeException -> IO [String])
 
 defaultIcon = "#"
 windowIcons = M.fromList [
-  ("emacs", "\61508"),
-  ("qutebrowser", "\62056"),
-  ("urxvt", "\61705")
+  ("mpv", "m")
   ]
 
 ppShowWindows :: (WorkspaceId -> String) -> PP -> X PP
@@ -216,13 +214,12 @@ ppShowWindows prepare pp = do
     getWindowsFor set wi = maybe [] (W.integrate' . W.stack) (find (\w -> wi == W.tag w) $ W.workspaces set)
 
     classesToIcon :: [String] -> String
-    -- classesToIcon cs = headSafe defaultIcon $ mapMaybe (`M.lookup` windowIcons) cs
-    classesToIcon cs = headSafe defaultIcon $ map ((:[]) . head) cs
+    classesToIcon cs = fromMaybe defaultIcon $ listToMaybe $ mapMaybe (`M.lookup` windowIcons) cs ++ mapMaybe (fmap (:[]) . listToMaybe) cs
 
     getIcons :: X (WorkspaceId -> String)
     getIcons = do
       ss <- gets windowset
       let allwins = W.allWindows ss
-      withClasses <- M.fromList . zip allwins <$> mapM (fmap (filter (not . null)) . getClass) allwins
+      withClasses <- M.fromList . zip allwins <$> mapM getClass allwins
       return $ \ws -> concatMap (\w -> classesToIcon $ M.findWithDefault [] w withClasses) $ getWindowsFor ss ws
 
