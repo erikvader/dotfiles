@@ -55,7 +55,7 @@ font-0 = vera:pixelsize=11;3
 font-1 = fontawesome:pixelsize=14;3
 font-2 = noto color emoji:scale=10;1
 font-3 = droidsansfallback:pixelsize=11
-font-4 = arial:bold:pixelsize=11;2
+font-4 = LiberationSans:bold:pixelsize=11;2
 
 modules-left = xmonad
 modules-center =
