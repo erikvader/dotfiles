@@ -12,13 +12,15 @@ module Erik.MyStuff (
   myUpdatePointer, myUpdatePointerToggle,
   notifySend,
   twostepWs,
-  ppShowWindows
+  ppShowWindows,
+  decoratePP,
+  multiDecoratePP
   -- pointerDance
 ) where
 
 import XMonad
 import qualified XMonad.StackSet as W
-import Data.List (find, sortOn, elemIndex)
+import Data.List (find)
 import Data.Maybe (maybe,isNothing,isJust,fromMaybe,mapMaybe,listToMaybe)
 import Control.Monad (when, unless)
 import XMonad.Actions.WorkspaceNames (getWorkspaceNames',setWorkspaceName)
@@ -185,6 +187,31 @@ twostepWs ws keys f = submap $ M.fromList [((0, k), f w) | (k, w) <- zip keys ws
 
 ------------------------------ pp show windows ------------------------------
 
+-- decorates PP to run f first on all workspace related rules
+decoratePP :: (WorkspaceId -> String) -> PP -> PP
+decoratePP f pp = pp {
+  ppCurrent         = ppCurrent pp . f,
+  ppVisible         = ppVisible pp . f,
+  ppHidden          = ppHidden pp . f,
+  ppHiddenNoWindows = ppHiddenNoWindows pp . f,
+  ppUrgent          = ppUrgent pp . f
+  }
+
+-- takes a list of functions f1, f2 .. fn where each fi takes two arguments:
+--   w as the current workspaceId
+--   o as the previous formatted string
+--   and returns a new formatted string
+--
+-- This functions modifies the given pp to use:
+-- (ppf . fn w . .. . f2 w . f1 w) :: String -> String
+-- instead of each workspace formatting function ppf of pp (ppCurrent,
+-- ppVisible etc).
+multiDecoratePP :: [WorkspaceId -> String -> String] -> PP -> PP
+multiDecoratePP fs = decoratePP (composeDecorates fs)
+  where
+    composeDecorates :: [WorkspaceId -> String -> String] -> WorkspaceId -> String
+    composeDecorates fs w = foldl (\c n -> n w . c) id fs w
+
 -- get all WM_CLASS property values from a window
 getClass :: Window -> X [String]
 getClass w = withDisplay $ \dsp -> io $
@@ -197,18 +224,10 @@ windowIcons = M.fromList [
   ("mpv", "m")
   ]
 
-ppShowWindows :: (WorkspaceId -> String) -> PP -> X PP
-ppShowWindows prepare pp = do
-  f <- getIcons
-  let format old w = old $ prepare w ++ f w
-  return $
-    pp {
-      ppCurrent         = format $ ppCurrent pp,
-      ppVisible         = format $ ppVisible pp,
-      ppHidden          = format $ ppHidden pp ,
-      ppHiddenNoWindows = format $ ppHiddenNoWindows pp,
-      ppUrgent          = format $ ppUrgent pp
-      }
+-- returns a function that retreives a workspace's window string
+-- (string containing one char for each window)
+ppShowWindows :: X (WorkspaceId -> String)
+ppShowWindows = getIcons
   where
     getWindowsFor :: WindowSet -> WorkspaceId -> [Window]
     getWindowsFor set wi = maybe [] (W.integrate' . W.stack) (find (\w -> wi == W.tag w) $ W.workspaces set)

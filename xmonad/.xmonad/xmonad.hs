@@ -8,6 +8,7 @@ import System.FilePath ((</>))
 import System.Exit
 import Control.Monad (when)
 import Data.List
+import Data.Maybe (maybe)
 
 import Graphics.X11.ExtraTypes.XF86
 
@@ -373,8 +374,19 @@ myNonfocusPPXin = myFocusPPXin {
 multiPrepare :: D.Client -> String -> PP -> X PP
 multiPrepare dbus output pp = do
   L.updateCurrentState
-  ppShowWindows (wrap "%{F#ffffff T5}" "%{F- T-}") pp {ppOutput = dbusOutput dbus . (output ++) . fixXinerama}
+  showWindows <- ppShowWindows
+  wsName <- getWorkspaceNames'
+  return $
+    multiDecoratePP
+    [
+      \_ o -> colorize o,
+      \w o -> o ++ showWindows w,
+      \w o -> o ++ maybe "" (":"++) (wsName w)
+    ]
+    pp {ppOutput = dbusOutput dbus . (output ++) . fixXinerama}
   where
+    colorize = wrap "%{F#ffffff T5}" "%{F- T-}"
+
     fixXinerama :: String -> String
     fixXinerama s = removeIndices 0 s $ tail . init $ findIndices (\c -> c == '[' || c == ']') $ takeTo (ppSep pp) s
 
