@@ -57,7 +57,7 @@ import qualified DBus.Client as D
 
 myModMask = mod4Mask
 
-scratchWS = "\61485"
+scratchWS = "S"
 
 myWorkspaces = map show [1..9] ++ [scratchWS]
 
