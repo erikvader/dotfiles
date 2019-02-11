@@ -273,10 +273,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- Restart xmonad
     ((modm .|. shiftMask, xK_c), spawn "if xmonad --recompile; then xmonad --restart; notify-send 'XMonad restarted'; else notify-send 'XMonad failed to compile'; fi"),
 
-    ((modm, xK_g), scratchVisit),
-
-    ((modm, xK_d), twostepWs (XMonad.workspaces conf) ([xK_1 .. xK_9] ++ [xK_g]) (windows . W.shift)),
-    ((modm .|. shiftMask, xK_d), twostepWs (XMonad.workspaces conf) ([xK_1 .. xK_9] ++ [xK_g]) (windows . shiftView))
+    ((modm, xK_d), scratchVisit),
+    ((modm .|. shiftMask, xK_d), windows $ W.shift scratchWS)
     ]
     ++
 

@@ -11,7 +11,6 @@ module Erik.MyStuff (
   centerFloat,
   myUpdatePointer, myUpdatePointerToggle,
   notifySend,
-  twostepWs,
   ppShowWindows,
   decoratePP,
   multiDecoratePP
@@ -28,7 +27,6 @@ import XMonad.Actions.UpdatePointer
 import qualified XMonad.Util.ExtensibleState as XS
 import Data.Bits (testBit)
 import XMonad.Util.Run (safeSpawn)
-import XMonad.Actions.Submap (submap)
 import qualified Data.Map as M
 import XMonad.Hooks.DynamicLog
 import Control.Exception (catch,SomeException)
@@ -179,11 +177,6 @@ myUpdatePointer =
 
   where
     isActive = (\(MyUpdatePointerActive b) -> b) <$> XS.get
-
-------------------------- two-step workspace action -------------------------
-
-twostepWs :: [WorkspaceId] -> [KeySym] -> (WorkspaceId -> X ()) -> X ()
-twostepWs ws keys f = submap $ M.fromList [((0, k), f w) | (k, w) <- zip keys ws]
 
 ------------------------------ pp show windows ------------------------------
 
