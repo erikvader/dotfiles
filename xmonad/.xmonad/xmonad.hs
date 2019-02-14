@@ -411,7 +411,7 @@ baseConfig = desktopConfig {
 myConfig = baseConfig {
   manageHook = composeAll [ isDialog --> doCenterFloat ] <+> manageHook baseConfig,
   startupHook = startupHook baseConfig <+> myStartupHook,
-  logHook = logHook baseConfig >> myUpdatePointer
+  logHook = logHook baseConfig <+> myUpdatePointer
   }
 
 dbusOutput :: D.Client -> String -> IO ()
