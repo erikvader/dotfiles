@@ -4,7 +4,7 @@ from deluge_client import DelugeRPCClient, FailedToReconnectException
 from ssl import SSLError
 from time import sleep
 
-ACTIVE_SLEEP = 15
+ACTIVE_SLEEP = 5
 INACTIVE_SLEEP = 60
 RABBIT = "🐇"
 TURTLE = "🐢"

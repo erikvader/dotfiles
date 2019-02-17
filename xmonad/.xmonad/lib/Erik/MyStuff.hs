@@ -30,6 +30,7 @@ import XMonad.Util.Run (safeSpawn)
 import qualified Data.Map as M
 import XMonad.Hooks.DynamicLog
 import Control.Exception (catch,SomeException)
+import Data.Char (toLower)
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
@@ -226,7 +227,7 @@ ppShowWindows = getIcons
     getWindowsFor set wi = maybe [] (W.integrate' . W.stack) (find (\w -> wi == W.tag w) $ W.workspaces set)
 
     classesToIcon :: [String] -> String
-    classesToIcon cs = fromMaybe defaultIcon $ listToMaybe $ mapMaybe (`M.lookup` windowIcons) cs ++ mapMaybe (fmap (:[]) . listToMaybe) cs
+    classesToIcon cs = fromMaybe defaultIcon $ listToMaybe $ mapMaybe (`M.lookup` windowIcons) cs ++ mapMaybe (fmap ((:[]) . toLower) . listToMaybe) cs
 
     getIcons :: X (WorkspaceId -> String)
     getIcons = do
