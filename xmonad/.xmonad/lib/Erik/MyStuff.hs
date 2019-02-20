@@ -13,15 +13,16 @@ module Erik.MyStuff (
   notifySend,
   ppShowWindows,
   decoratePP,
-  multiDecoratePP
-  -- pointerDance
+  multiDecoratePP,
+  withWorkspace,
+  toggleMapStrutsOn
 ) where
 
 import XMonad
 import qualified XMonad.StackSet as W
 import Data.List (find)
 import Data.Maybe (maybe,isNothing,isJust,fromMaybe,mapMaybe,listToMaybe)
-import Control.Monad (when, unless)
+import Control.Monad (when,unless,filterM,forM_,forM)
 import XMonad.Actions.WorkspaceNames (getWorkspaceNames',setWorkspaceName)
 import XMonad.Actions.UpdatePointer
 import qualified XMonad.Util.ExtensibleState as XS
@@ -31,6 +32,7 @@ import qualified Data.Map as M
 import XMonad.Hooks.DynamicLog
 import Control.Exception (catch,SomeException)
 import Data.Char (toLower)
+import XMonad.Hooks.ManageDocks (checkDock)
 import Text.Regex
 
 -- pointerDance (num of jumps) (delay in microseconds)
@@ -119,6 +121,15 @@ windowsLowestEmpty f order = windows (\w -> maybe id f (findLowestEmpty w) w)
 
 mapWorkspaces :: (WorkspaceId -> X a) -> X()
 mapWorkspaces f = asks (workspaces . config) >>= mapM_ f
+
+-- runs a X thingy on the current workspace tag
+withWorkspace :: (WorkspaceId -> X a) -> X a
+withWorkspace f = withWindowSet (f . W.currentTag)
+
+-- returns the screenId that w is visible on, if visible
+lookupScreen :: WorkspaceId -> WindowSet -> Maybe ScreenId
+lookupScreen w ss = find (\i -> W.lookupWorkspace i ss == Just w) scrids
+  where scrids = map W.screen (W.screens ss)
 
 -- swap current workspace with wi and focus current
 -- only makes sense if both current and wi are visible on separate monitors
@@ -240,3 +251,47 @@ ppShowWindows = getIcons
       withClasses <- M.fromList . zip allwins <$> mapM getClass allwins
       return $ \ws -> concatMap (\w -> classesToIcon $ M.findWithDefault [] w withClasses) $ getWindowsFor ss ws
 
+-------------------------------- unmap struts -------------------------------
+
+-- toggle visibility (mapping) of all docks on workspace ws
+toggleMapStrutsOn :: WorkspaceId -> X ()
+toggleMapStrutsOn ws = do
+  docks <- getDocksOn ws
+  allMapped <- and <$> mapM isMapped docks
+  setMappingOf (not allMapped) docks
+
+-- if show is true, then map all windows in ws
+--                  else unmap all windows in ws
+setMappingOf :: Bool -> [Window] -> X ()
+setMappingOf show = mapM_ (\w -> withDisplay $ \d -> io $ f d w)
+  where f | show = mapWindow
+          | otherwise = unmapWindow
+
+-- get all dock windows according to checkDock from XMonad.Hooks.ManageDocks
+getDocks :: X [Window]
+getDocks = do
+  d <- asks display
+  r <- asks theRoot
+  (_,_,ws) <- io $ queryTree d r
+  filterM (runQuery checkDock) ws
+
+-- get all dock windows on workspace ws (or more accurately, windows on
+-- the screen ws is on)
+-- if ws isn't visible, an empty list is returned
+getDocksOn :: WorkspaceId -> X [Window]
+getDocksOn ws = do
+  mcurScr <- lookupScreen ws <$> gets windowset
+  maybew <- forM mcurScr $ \curScr -> filterM (`isWindowOnScreen` curScr) =<< getDocks
+  return $ fromMaybe [] maybew
+
+-- checks whether w is on screen with id si
+isWindowOnScreen :: Window -> ScreenId -> X Bool
+isWindowOnScreen w si = (si ==) . fst <$> floatLocation w
+
+-- checks if w is mapped (visible) or not
+-- waIsUnviewable counts as unmapped in this case (this is set if a
+-- child window is mapped to an unmapped parent)
+isMapped :: Window -> X Bool
+isMapped w = withDisplay $ \d -> do
+  attr <- io $ getWindowAttributes d w
+  return $ wa_map_state attr == waIsViewable

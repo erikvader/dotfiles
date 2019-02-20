@@ -262,9 +262,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- See also the statusBar function from Hooks.DynamicLog.
     --
     ((modm, xK_s), sendMessage ToggleStruts),
-    -- I want to do this inside xmonad :(
-    ((modm .|. shiftMask, xK_s), spawn "xdotool search --name polybar windowmap %@"),
-    ((modm .|. controlMask, xK_s), spawn "xdotool search --name polybar windowunmap %@"),
+    ((modm .|. shiftMask, xK_s), withWorkspace toggleMapStrutsOn),
 
     -- Quit xmonad
     ((modm .|. shiftMask, xK_0), confirmPrompt def "logout?" $ io exitSuccess),
