@@ -31,6 +31,7 @@ import qualified Data.Map as M
 import XMonad.Hooks.DynamicLog
 import Control.Exception (catch,SomeException)
 import Data.Char (toLower)
+import Text.Regex
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
@@ -214,9 +215,12 @@ getClass w = withDisplay $ \dsp -> io $
     ((\_ -> return []) :: SomeException -> IO [String])
 
 defaultIcon = "#"
-windowIcons = M.fromList [
+windowIcons = map (\(a,b) -> (mkRegex a, b)) [
   ("mpv", "m")
   ]
+
+regexLookup :: String -> [(Regex, String)] -> Maybe String
+regexLookup s tab = snd <$> find (isJust . flip matchRegex s . fst) tab
 
 -- returns a function that retreives a workspace's window string
 -- (string containing one char for each window)
@@ -227,7 +231,7 @@ ppShowWindows = getIcons
     getWindowsFor set wi = maybe [] (W.integrate' . W.stack) (find (\w -> wi == W.tag w) $ W.workspaces set)
 
     classesToIcon :: [String] -> String
-    classesToIcon cs = fromMaybe defaultIcon $ listToMaybe $ mapMaybe (`M.lookup` windowIcons) cs ++ mapMaybe (fmap ((:[]) . toLower) . listToMaybe) cs
+    classesToIcon cs = fromMaybe defaultIcon $ listToMaybe $ mapMaybe (`regexLookup` windowIcons) cs ++ mapMaybe (fmap ((:[]) . toLower) . listToMaybe) cs
 
     getIcons :: X (WorkspaceId -> String)
     getIcons = do
