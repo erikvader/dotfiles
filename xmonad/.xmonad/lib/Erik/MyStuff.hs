@@ -226,8 +226,10 @@ getClass w = withDisplay $ \dsp -> io $
     ((\_ -> return []) :: SomeException -> IO [String])
 
 defaultIcon = "#"
+-- default settings on mkRegex might be wrong (not sure)
 windowIcons = map (\(a,b) -> (mkRegex a, b)) [
-  ("mpv", "m")
+  ("mpv", "m"),
+  ("^MATLAB", "m")
   ]
 
 regexLookup :: String -> [(Regex, String)] -> Maybe String
