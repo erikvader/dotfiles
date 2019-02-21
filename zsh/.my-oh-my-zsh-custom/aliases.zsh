@@ -28,6 +28,7 @@ alias y='yay'
 alias ys='yay -S'
 alias yo='yay -Qdt' # list orphans
 alias yor='yay -Rn $(yay -Qqdt)' # remove orphans non-recursively
+alias yc='yay -Sc'
 alias yr='yay -Rn'
 alias yrr='yay -Rsn'
 alias yrrr='yay -Rsnc'
