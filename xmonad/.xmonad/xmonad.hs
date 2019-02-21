@@ -262,7 +262,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- See also the statusBar function from Hooks.DynamicLog.
     --
     ((modm, xK_s), sendMessage ToggleStruts),
-    ((modm .|. shiftMask, xK_s), withWorkspace toggleMapStrutsOn),
+    ((modm .|. shiftMask, xK_s), toggleMapStruts),
 
     -- Quit xmonad
     ((modm .|. shiftMask, xK_0), confirmPrompt def "logout?" $ io exitSuccess),

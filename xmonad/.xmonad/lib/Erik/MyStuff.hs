@@ -14,8 +14,7 @@ module Erik.MyStuff (
   ppShowWindows,
   decoratePP,
   multiDecoratePP,
-  withWorkspace,
-  toggleMapStrutsOn
+  toggleMapStruts
 ) where
 
 import XMonad
@@ -121,15 +120,6 @@ windowsLowestEmpty f order = windows (\w -> maybe id f (findLowestEmpty w) w)
 
 mapWorkspaces :: (WorkspaceId -> X a) -> X()
 mapWorkspaces f = asks (workspaces . config) >>= mapM_ f
-
--- runs a X thingy on the current workspace tag
-withWorkspace :: (WorkspaceId -> X a) -> X a
-withWorkspace f = withWindowSet (f . W.currentTag)
-
--- returns the screenId that w is visible on, if visible
-lookupScreen :: WorkspaceId -> WindowSet -> Maybe ScreenId
-lookupScreen w ss = find (\i -> W.lookupWorkspace i ss == Just w) scrids
-  where scrids = map W.screen (W.screens ss)
 
 -- swap current workspace with wi and focus current
 -- only makes sense if both current and wi are visible on separate monitors
@@ -255,10 +245,10 @@ ppShowWindows = getIcons
 
 -------------------------------- unmap struts -------------------------------
 
--- toggle visibility (mapping) of all docks on workspace ws
-toggleMapStrutsOn :: WorkspaceId -> X ()
-toggleMapStrutsOn ws = do
-  docks <- getDocksOn ws
+-- toggle visibility (mapping) of all docks on the current screen
+toggleMapStruts :: X ()
+toggleMapStruts = do
+  docks <- gets windowset >>= getDocksOn . W.screen . W.current
   allMapped <- and <$> mapM isMapped docks
   setMappingOf (not allMapped) docks
 
@@ -277,14 +267,9 @@ getDocks = do
   (_,_,ws) <- io $ queryTree d r
   filterM (runQuery checkDock) ws
 
--- get all dock windows on workspace ws (or more accurately, windows on
--- the screen ws is on)
--- if ws isn't visible, an empty list is returned
-getDocksOn :: WorkspaceId -> X [Window]
-getDocksOn ws = do
-  mcurScr <- lookupScreen ws <$> gets windowset
-  maybew <- forM mcurScr $ \curScr -> filterM (`isWindowOnScreen` curScr) =<< getDocks
-  return $ fromMaybe [] maybew
+-- get all dock windows on a particular screen
+getDocksOn :: ScreenId -> X [Window]
+getDocksOn si = filterM (`isWindowOnScreen` si) =<< getDocks
 
 -- checks whether w is on screen with id si
 isWindowOnScreen :: Window -> ScreenId -> X Bool
