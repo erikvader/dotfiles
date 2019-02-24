@@ -180,7 +180,6 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((0, xF86XK_AudioPrev), spawn "playerctl previous"),
 
     -- launch a terminal
-    ((modm .|. mod1Mask, xK_Return), spawn $ XMonad.terminal conf),
     ((modm, xK_Return), spawn "urxvt"),
     ((modm .|. controlMask, xK_Return), spawn "urxvt -e zsh -is eval ranger-cd"),
     ((modm .|. shiftMask, xK_Return), spawn "emacsclient -nc"),
@@ -401,7 +400,6 @@ multiPrepare dbus output pp = do
 baseConfig = desktopConfig {
   modMask = myModMask,
   borderWidth = 0,
-  terminal = "urxvt",
   keys = myKeys,
   workspaces = myWorkspaces
   }

@@ -86,7 +86,7 @@ URxvt.clipboard.autocopy: true
 !URxvt.clipboard.pastecmd: xclip -o -selection clipboard
 
 !perl!
-URxvt.perl-ext-common: default,resize-font,keyboard-select,clipboard,url-select
+URxvt.perl-ext-common: default,resize-font,keyboard-select,clipboard,url-select,new-window
 
 URxvt.keysym.M-Escape: perl:keyboard-select:activate
 URxvt.keysym.M-s:      perl:keyboard-select:search
@@ -102,6 +102,7 @@ URxvt.keysym.M-d:      eval:scroll_down_pages 0.5
 URxvt.keysym.M-b:      eval:scroll_up_pages 1
 URxvt.keysym.M-f:      eval:scroll_down_pages 1
 URxvt.keysym.M-g:      eval:scroll_to_bottom
+URxvt.keysym.C-N:      perl:new-window
 
 URxvt.keysym.M-l: perl:url-select:select_next
 URxvt.url-select.launcher: /usr/bin/xdg-open

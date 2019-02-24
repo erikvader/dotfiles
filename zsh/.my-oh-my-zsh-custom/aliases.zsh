@@ -3,8 +3,6 @@ alias q="exit"
 alias r="ranger-cd"
 alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
 
-alias clone='setsid urxvt &>/dev/null'
-
 alias ydm='youtube-dl --merge-output-format mkv --write-thumbnail'
 
 alias pps='ps -Ho pid,ppid,pgid,comm'
