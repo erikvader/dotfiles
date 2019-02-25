@@ -50,9 +50,6 @@ alias gsts='git submodule foreach "git status"'
 
 alias SS='sudo systemctl'
 
-alias ec="emacsclient -n -c"
-alias sec="SUDO_EDITOR='emacsclient -c' sudo -e"
-
 REPOS=( "$HOME/.emacs.d" "$HOME/dotfiles" "$HOME/.config/qutebrowser" )
 function repos_cmd {
     for re in "${REPOS[@]}"; do
@@ -139,4 +136,18 @@ function copyfile {
     fi
     local type=$(file -b --mime-type "$1")
     xclip -selection clipboard -t "$type" -i "$1"
+}
+
+alias sec="SUDO_EDITOR='emacsclient -c' sudo -e"
+
+function ec {
+    # If the argument is - then write stdin to a tempfile and open the
+    # tempfile.
+    if [[ $# -eq 1 && "$1" = - ]]; then
+        tempfile="$(mktemp "emacs-stdin.XXXXXXX" --tmpdir)"
+        cat - > "$tempfile"
+        emacsclient -nc --eval "(progn (find-file \"$tempfile\") (set-visited-file-name nil) (rename-buffer \"*stdin*\" t) (delete-file \"$tempfile\"))" >/dev/null
+    else
+        emacsclient -nc "$@"
+    fi
 }
