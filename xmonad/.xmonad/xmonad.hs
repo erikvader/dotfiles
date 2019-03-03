@@ -408,7 +408,7 @@ baseConfig = desktopConfig {
   }
 
 myConfig = baseConfig {
-  manageHook = composeAll [ isDialog --> doCenterFloat, appName =? "URxvtFZF" --> doCenterFloat <+> hasBorder True] <+> manageHook baseConfig,
+  manageHook = composeAll [ isDialog <||> appName =? "URxvtFZF" --> doCenterFloat ] <+> manageHook baseConfig,
   startupHook = startupHook baseConfig <+> myStartupHook,
   logHook = logHook baseConfig <+> myUpdatePointer
   }
