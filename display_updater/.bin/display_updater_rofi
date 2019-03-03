@@ -1,6 +1,6 @@
 #!/bin/bash
 
-choice="$( display_updater --list | rofi -dmenu -i -p "display" -no-custom )"
+choice=$(display_updater --list | fzf_dmenu --prompt="display: ")
 
 if [[ "$choice" ]]; then
     display_updater "$choice"

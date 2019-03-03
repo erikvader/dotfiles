@@ -43,6 +43,7 @@ import XMonad.Layout.LayoutCombinators
 import XMonad.Layout.PerWorkspace
 import qualified XMonad.Layout.GridVariants as GV
 import XMonad.Layout.Spacing
+import XMonad.Layout.NoBorders
 
 import Erik.MyStuff
 import Erik.IndiPP
@@ -72,6 +73,7 @@ myBaseLayouts = onWorkspace scratchWS grid tall |||
 myBaseLayoutsNames = ["Tall", "ThreeCol", "Grid", "SplitGrid", "Spiral"]
 
 myLayoutHook =
+  noBorders $
   L.limitWindows 2 False True $
   renamed [CutWordsLeft 1] $ -- remove smartspacing text
   spacingRaw True (Border 3 3 3 3) True (Border 3 3 3 3) True $
@@ -129,9 +131,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_o), windowsLowestEmpty shiftView $ XMonad.workspaces conf),
 
     -- rofi
-    ((modm, xK_x), spawn "rofi -show run"),
-    ((modm .|. shiftMask, xK_x), spawn "rofi -show drun"),
-    ((modm, xK_Escape), spawn "rofi -show window"),
+    ((modm, xK_x), spawn "fzf_run"),
+    ((modm, xK_Escape), spawn "rofi -show window"), -- TODO: replace with fzf
     ((modm, xK_r), spawn "rofi_script_selector"),
     ((modm .|. shiftMask, xK_r), spawn "open_downloaded_pdf"),
 
@@ -399,13 +400,15 @@ multiPrepare dbus output pp = do
 
 baseConfig = desktopConfig {
   modMask = myModMask,
-  borderWidth = 0,
+  borderWidth = 1,
+  focusedBorderColor = "#dddddd",
+  normalBorderColor = "#555555",
   keys = myKeys,
   workspaces = myWorkspaces
   }
 
 myConfig = baseConfig {
-  manageHook = composeAll [ isDialog --> doCenterFloat ] <+> manageHook baseConfig,
+  manageHook = composeAll [ isDialog --> doCenterFloat, appName =? "URxvtFZF" --> doCenterFloat <+> hasBorder True] <+> manageHook baseConfig,
   startupHook = startupHook baseConfig <+> myStartupHook,
   logHook = logHook baseConfig <+> myUpdatePointer
   }

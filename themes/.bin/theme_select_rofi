@@ -1,6 +1,6 @@
 #!/bin/bash
 
-choice="$( (echo "random"; theme_select -l) | rofi -dmenu -i -p "theme" -no-custom )"
+choice=$( (echo "random"; theme_select -l) | fzf_dmenu --prompt="theme: ")
 
 if [[ "$choice" = "random" ]]; then
     theme_select -r

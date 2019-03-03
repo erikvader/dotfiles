@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cmd=$(find -H $(echo -n "$PATH" | tr ':' '\0' | xargs -0 printf '%q ') \( -type f -o -xtype f \) -executable | awk -F '/' '{print $NF"/"$0}' | sort -u -t '/' -k 1,1 | cut -d'/' -f2- | fzf_dmenu --prompt="Run: " --delimiter="/" --nth=-1 --with-nth=-1)
+
+if [[ -n $cmd ]]; then
+    setsid "$cmd" </dev/null >/dev/null &
+fi

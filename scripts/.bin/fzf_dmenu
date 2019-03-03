@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Wrapper for a fzf that opens in a separate urxvt window.
+# All arguments are sent to fzf.
+# The environment variable URXVTFZF_GEOMETRY can be set to change the
+# size of the terminal window.
+
+DOCAT=false
+
+if [[ $# -ge 1 && $# -le 2 && $1 = -- ]]; then
+    shift
+    DOCAT=true
+fi
+
+exec {out}>&1 {inn}<&0
+
+if $DOCAT; then
+    cmd="${1:+echo $(printf "%q" "$1");} cat 1>&$out"
+else
+    cmd="fzf --reverse ${*:+$(printf "%q " "$@")} 1>&$out 0<&$inn"
+fi
+urxvt -name URxvtFZF -geometry "${URXVTFZF_GEOMETRY:-100x24}" -e sh -c "$cmd"
+
+exec {out}>&- {inn}<&-
