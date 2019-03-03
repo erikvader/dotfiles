@@ -1,0 +1,8 @@
+[Unit]
+Description=battery-checker system
+
+[Service]
+Type=simple
+User=root
+ExecStart=/bin/battery-checker
+
