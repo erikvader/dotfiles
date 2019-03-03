@@ -384,7 +384,7 @@ multiPrepare dbus output pp = do
     colorize = wrap "%{F#ffffff T5}" "%{F- T-}"
 
     fixXinerama :: String -> String
-    fixXinerama s = removeIndices 0 s $ tail . init $ findIndices (\c -> c == '[' || c == ']') $ takeTo (ppSep pp) s
+    fixXinerama s = removeIndices 0 s . tail . init . findIndices (\c -> c == '[' || c == ']') . takeTo (ppSep pp) $ s
 
     takeTo :: Eq a => [a] -> [a] -> [a]
     takeTo [] src = src
