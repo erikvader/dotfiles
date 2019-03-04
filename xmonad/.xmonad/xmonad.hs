@@ -42,7 +42,6 @@ import XMonad.Layout.LayoutCombinators
 import XMonad.Layout.PerWorkspace
 import qualified XMonad.Layout.GridVariants as GV
 import XMonad.Layout.Spacing
-import XMonad.Layout.NoBorders
 
 import Erik.MyStuff
 import Erik.IndiPP
@@ -72,7 +71,6 @@ myBaseLayouts = onWorkspace scratchWS grid tall |||
 myBaseLayoutsNames = ["Tall", "ThreeCol", "Grid", "SplitGrid", "Spiral"]
 
 myLayoutHook =
-  noBorders $
   L.limitWindows 2 False True $
   renamed [CutWordsLeft 1] $ -- remove smartspacing text
   spacingRaw True (Border 3 3 3 3) True (Border 3 3 3 3) True $
@@ -395,7 +393,7 @@ multiPrepare dbus output pp = do
 
 baseConfig = desktopConfig {
   modMask = myModMask,
-  borderWidth = 1,
+  borderWidth = 0,
   focusedBorderColor = "#dddddd",
   normalBorderColor = "#555555",
   keys = myKeys,
