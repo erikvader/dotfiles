@@ -13,7 +13,6 @@ module Erik.MyStuff (
   notifySend,
   ppShowWindows,
   decoratePP,
-  multiDecoratePP,
   toggleMapStruts
 ) where
 
@@ -21,7 +20,7 @@ import XMonad
 import qualified XMonad.StackSet as W
 import Data.List (find)
 import Data.Maybe (maybe,isNothing,isJust,fromMaybe,mapMaybe,listToMaybe)
-import Control.Monad (when,unless,filterM,forM_,forM)
+import Control.Monad (when,unless,filterM)
 import XMonad.Actions.WorkspaceNames (getWorkspaceNames',setWorkspaceName)
 import XMonad.Actions.UpdatePointer
 import qualified XMonad.Util.ExtensibleState as XS
@@ -193,21 +192,6 @@ decoratePP f pp = pp {
   ppUrgent          = ppUrgent pp . f
   }
 
--- takes a list of functions f1, f2 .. fn where each fi takes two arguments:
---   w as the current workspaceId
---   o as the previous formatted string
---   and returns a new formatted string
---
--- This functions modifies the given pp to use:
--- (ppf . fn w . .. . f2 w . f1 w) :: String -> String
--- instead of each workspace formatting function ppf of pp (ppCurrent,
--- ppVisible etc).
-multiDecoratePP :: [WorkspaceId -> String -> String] -> PP -> PP
-multiDecoratePP fs = decoratePP (composeDecorates fs)
-  where
-    composeDecorates :: [WorkspaceId -> String -> String] -> WorkspaceId -> String
-    composeDecorates fs w = foldl (\c n -> n w . c) id fs w
-
 -- get all WM_CLASS property values from a window
 getClass :: Window -> X [String]
 getClass w = withDisplay $ \dsp -> io $
@@ -218,7 +202,7 @@ getClass w = withDisplay $ \dsp -> io $
 defaultIcon = "#"
 -- default settings on mkRegex might be wrong (not sure)
 windowIcons = map (\(a,b) -> (mkRegex a, b)) [
-  ("mpv", "m"),
+  ("^mpv$", "m"),
   ("^MATLAB", "m")
   ]
 

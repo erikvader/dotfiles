@@ -20,7 +20,6 @@ import XMonad.Config.Desktop
 import XMonad.Actions.Warp
 import XMonad.Actions.CycleWS (nextWS, prevWS)
 import XMonad.Actions.PhysicalScreens
--- import XMonad.Actions.SwapWorkspaces
 import XMonad.Actions.WorkspaceNames
 
 import XMonad.Util.SpawnOnce
@@ -373,13 +372,9 @@ multiPrepare dbus output pp = do
   showWindows <- ppShowWindows
   wsName <- getWorkspaceNames'
   return $
-    multiDecoratePP
-    [
-      \_ o -> colorize o,
-      \w o -> o ++ showWindows w,
-      \w o -> o ++ maybe "" (":"++) (wsName w)
-    ]
-    pp {ppOutput = dbusOutput dbus . (output ++) . fixXinerama}
+    decoratePP
+      (\w -> concatMap ($ w) [colorize, showWindows, maybe "" (":"++) . wsName])
+      (pp {ppOutput = dbusOutput dbus . (output ++) . fixXinerama})
   where
     colorize = wrap "%{F#ffffff T5}" "%{F- T-}"
 
