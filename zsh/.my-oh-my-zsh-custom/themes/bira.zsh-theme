@@ -12,35 +12,32 @@ else
 fi
 
 local current_dir='%{$terminfo[bold]$fg[blue]%}$(shrink_path -l -t)%{$reset_color%}'
-local rvm_ruby=''
-if which rvm-prompt &> /dev/null; then
-  rvm_ruby='%{$fg[red]%}‹$(rvm-prompt i v g)›%{$reset_color%}'
-else
-  if which rbenv &> /dev/null; then
-    rvm_ruby='%{$fg[red]%}‹$(rbenv version | sed -e "s/ (set.*$//")›%{$reset_color%}'
-  fi
-fi
 
-MODE_INDICATOR="──[%{$fg_bold[yellow]%}NORMAL%{$reset_color%}]"
-RANGER_INDICATOR="──[%{$fg_bold[magenta]%}RANGER%{$reset_color%}]"
+# local MODE_INDICATOR="──[%{$fg_bold[yellow]%}NORMAL%{$reset_color%}]"
+# function vi_mode_prompt_info() {
+#   echo "${${KEYMAP/vicmd/$MODE_INDICATOR}/(main|viins)/}"
+# }
 
-function vi_mode_prompt_info() {
-  echo "${${KEYMAP/vicmd/$MODE_INDICATOR}/(main|viins)/}"
-}
-
-function ranger_prompt_info {
+function ranger_prompt {
   if [[ "$RANGER_LEVEL" ]]; then
-    echo "${RANGER_INDICATOR}"
+    echo -n "──[%{$fg[magenta]%}RANGER%{$reset_color%}]"
   else
-    echo ""
+    echo -n ""
   fi
+  echo "%{$reset_color%}"
 }
 
-local git_branch='$(git_prompt_info)%{$reset_color%}'
-local vi_prompt='$(vi_mode_prompt_info)%{$reset_color%}'
-local ranger_prompt='$(ranger_prompt_info)%{$reset_color%}'
+function wine_prompt {
+    if export -p | grep -q 'export WINEPREFIX='; then
+        echo -n "──[%{$fg[red]%}$WINEPREFIX%{$reset_color%}]"
+    else
+        echo -n ""
+    fi
+    echo "%{$reset_color%}"
+}
 
-PROMPT="┌─[${user_host}]──[${current_dir}]${git_branch}${vi_prompt}${ranger_prompt}
+
+PROMPT="┌─[${user_host}]──[${current_dir}]"'$(git_prompt_info)$(ranger_prompt)$(wine_prompt)'"
 └─%B${user_symbol}%b "
 #RPS1="%B${return_code}%b"
 
