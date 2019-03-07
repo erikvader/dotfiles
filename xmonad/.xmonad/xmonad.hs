@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-name-shadowing -fno-warn-missing-signatures #-}
+{-# LANGUAGE CPP, PartialTypeSignatures #-}
 
 import System.Posix.Types (CMode(..))
 import System.Posix.IO (dupTo,closeFd,createFile,stdError)
@@ -42,6 +43,7 @@ import XMonad.Layout.LayoutCombinators
 import XMonad.Layout.PerWorkspace
 import qualified XMonad.Layout.GridVariants as GV
 import XMonad.Layout.Spacing
+import XMonad.Layout.SimplestFloat
 
 import Erik.MyStuff
 import Erik.IndiPP
@@ -60,15 +62,23 @@ scratchWS = "S"
 
 myWorkspaces = map show [1..9] ++ [scratchWS]
 
-myBaseLayouts = onWorkspace scratchWS grid tall |||
-                ThreeColMid 1 (3/100) (1/3) (1/2) |||
-                onWorkspace scratchWS tall grid |||
-                GV.SplitGrid GV.L 1 1 (1/2) (16/9) (3/100) |||
-                renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
-  where grid = GV.Grid 1
-        tall = Tall 1 (3/100) (1/2)
+#define COMMA ,
+#define GRID GV.Grid 1
+#define TALL Tall 1 (3/100) (1/2)
+#define TEMPLATE(X,Y,F1,F2) F1 X F2 \
+                            F1 (simplestFloat :: _ Window) F2 \
+                            F1 Y F2 \
+                            F1 ThreeColMid 1 (3/100) (1/3) (1/2) F2 \
+                            F1 GV.SplitGrid GV.L 1 1 (1/2) (16/9) (3/100) F2 \
+                            F1 renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
+#define LAYOUTS(X,Y) (TEMPLATE(X,Y,,|||))
+#define NAMES(X,Y) TEMPLATE(X,Y,description $,COMMA)
 
-myBaseLayoutsNames = ["Tall", "ThreeCol", "Grid", "SplitGrid", "Spiral"]
+myBaseLayouts = onWorkspace scratchWS LAYOUTS(GRID,TALL) LAYOUTS(TALL,GRID)
+
+#ifndef __HLINT__
+myBaseLayoutsNames = [NAMES(TALL,GRID)]
+#endif
 
 myLayoutHook =
   L.limitWindows 2 False True $
