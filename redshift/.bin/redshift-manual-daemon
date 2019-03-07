@@ -1,18 +1,25 @@
 #!/bin/bash
 
-ison=false
+levels=(0 $(seq 3200 -200 2000))
+ind=0
 
 function toggle {
-    if $ison; then
+    : $((ind+=$1))
+    if [[ $ind -lt 0 ]]; then
+        ind=0
+    elif [[ $ind -ge ${#levels[@]} ]]; then
+        ind=$((${#levels[@]}-1))
+    fi
+
+    if [[ ${levels[$ind]} -eq 0 ]]; then
         redshift -x &>/dev/null
-        ison=false
     else
-        redshift -PO 3200 &>/dev/null
-        ison=true
+        redshift -PO ${levels[$ind]} &>/dev/null
     fi
 }
 
-trap 'toggle' USR1
+trap 'toggle 1' USR1
+trap 'toggle -1' USR2
 trap 'kill $spid' EXIT
 
 sleep infinity &
