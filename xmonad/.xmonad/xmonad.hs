@@ -402,7 +402,7 @@ multiPrepare output pp = do
                                   | otherwise = s:removeIndices (c+1) ss (i:is)
 
     rootOutput :: Display -> Window -> String -> String -> IO ()
-    rootOutput d r output str = internAtom d ("_XMONAD_STATUS_" ++ output) False >>= setTextProperty d r str
+    rootOutput d r output str = internAtom d ("_XMONAD_STATUS_" ++ output) False >>= setTextProperty d r (UTF8.decodeString str)
 
 baseConfig = desktopConfig {
   modMask = myModMask,
