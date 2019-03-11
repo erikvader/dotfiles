@@ -279,6 +279,38 @@ class Mode:
          return False
       return not outputs.all_connected(self.outputs)
 
+   def restart_all(self, dry, output):
+      if not dry:
+         pkill([p["name"] for p in self.programs], wait=False)
+
+      qu = self.programs.copy()
+      c = 0
+      while qu:
+         if c > 15:
+            break
+
+         if dry:
+            pgreps = [False for _ in qu]
+         else:
+            pgreps = pgrep([q["name"] for q in qu])
+
+         for a,q in zip(pgreps, qu):
+            if not a:
+               if "file" not in q:
+                  print(q["name"] + " is missing required field \"file\"", flush=True, file=sys.stderr)
+                  continue
+               start_external(q["file"], q.get("args"), q.get("env"), dry, output)
+
+         qu[:] = [q for a,q in zip(pgreps, qu) if a]
+         if qu:
+            sleep(0.3)
+            c += 1
+
+      for q in qu:
+         asd = "{} didn't die".format(q["name"])
+         notify_send(asd)
+         print(asd, flush=True, file=sys.stderr)
+
    def apply(self, outputs, disp, force=False, dry=False, output=False):
       if self._is_cant_apply(outputs):
          return Mode.CANT_APPLY
@@ -289,32 +321,20 @@ class Mode:
          xrandr_args = outputs.get_comp_xrandr_args(self.outputs)
          self.run_xrandr(xrandr_args, disp, dry=dry)
 
-      for p in self.programs:
-         if not dry:
-            pkill(p["name"])
-         c = 0
-         while not dry and pgrep(p["name"]):
-            c += 1
-            if c > 15:
-               asd = "{} didn't die".format(p["name"])
-               notify_send(asd)
-               print(asd, flush=True, file=sys.stderr)
-               break
-            sleep(0.3)
-         else:
-            if "file" not in p:
-               raise DisplayException("some program is missing required field \"file\"")
-            start_external(p["file"], p.get("args"), p.get("env"), dry, output)
+      self.restart_all(dry, output)
 
    def __str__(self):
       return "default: {}, outputs: {}, xrandr: {}, no_xrandr: {}, programs: {}, delay: {}".format(self.default, self.outputs, self.xrandr, self.no_xrandr, self.programs, self.delay)
 
-def pkill(name):
-   S.run(["pkill", "-x", name], stdin=S.DEVNULL, stderr=S.DEVNULL, stdout=S.DEVNULL)
+def pkill(names, wait=True):
+   ps = [S.Popen(["pkill", "-x", name], stdin=S.DEVNULL, stderr=S.DEVNULL, stdout=S.DEVNULL) for name in names]
+   if wait:
+      for p in ps:
+         p.wait()
 
-def pgrep(name):
-   r = S.run(["pgrep", "-x", name], stdin=S.DEVNULL, stderr=S.DEVNULL, stdout=S.DEVNULL)
-   return r.returncode == 0
+def pgrep(names):
+   opens = [S.Popen(["pgrep", "-x", name], stdin=S.DEVNULL, stderr=S.DEVNULL, stdout=S.DEVNULL) for name in names]
+   return [o.wait() == 0 for o in opens]
 
 def start_external(file, args=None, env=None, dry=False, output=False):
    if dry:
