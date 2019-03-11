@@ -1,0 +1,14 @@
+#!/bin/bash
+
+emots=(
+    "( ͡° ͜ʖ ͡°)"
+    "(ノಠ益ಠ)ノ彡┻━┻"
+    "(╯°□°）╯︵ ┻━┻"
+    "¯\_(ツ)_/¯"
+)
+
+selected=$(printf '%s\n' "${emots[@]}" | fzf_dmenu)
+
+if [[ -n $selected ]]; then
+    echo -n "$selected" | xclip -i -selection clipboard
+fi
