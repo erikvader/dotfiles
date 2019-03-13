@@ -1,5 +1,9 @@
 #!/bin/python
 
+# TODO: config option to run all programs anyway if we only killed
+#       dead outputs. good if we want to have status bars or something
+#       on temporary screens.
+
 from Xlib import display
 from Xlib.ext import randr
 import os, json, sys, re
@@ -9,19 +13,20 @@ from copy import deepcopy
 from time import sleep
 from traceback import print_exc
 
-from relation import Relation
-
 CONFIG_FILE=os.path.join(os.environ["HOME"], ".display_updaterc")
+APPLY_SUCCESS = 0
+CANT_APPLY = 1
+ALREADY_APPLIED = 2
 
 class DisplayException(Exception):
    pass
 
-class Outputs:
+class XOutputs:
    #pylint: disable=protected-access
 
    def __init__(self):
       self.outputs = []
-      self._outputs = {}
+      # self._outputs = {}
       self.primary = None
 
    @classmethod
@@ -36,53 +41,29 @@ class Outputs:
       resources = _r.xrandr_get_screen_resources()._data
       timestamp = resources["config_timestamp"]
       for output in resources["outputs"]:
-         o = Output.fromDisplay(output, _d, timestamp)
+         o = XOutput.fromDisplay(output, _d, timestamp)
          if output == self.primary:
             o.primary = True
          self.outputs.append(o)
-         self._outputs[o.name] = o
       return self
 
    def __iter__(self):
       return self.outputs.__iter__()
 
    def __str__(self):
-      return "\n".join([str(o) for o in self])
-
-   def get(self, name):
-      return self._outputs.get(name, None)
-
-   def get_relations(self):
-      return self._get_mirrors()
-
-   def _get_mirrors(self):
-      rel = Relation()
-      ms = self.outputs
-      for i in range(len(ms)):
-         for j in range(i+1, len(ms)):
-            if ms[i].is_mirroring(ms[j]):
-               rel.relate(ms[i].name, ms[j].name, "mirror")
-      return rel
-
-   def all_connected(self, outs):
-      for o in outs:
-         if not self.get(o).connected:
-            return False
-      return True
-
-   def all_only_alive(self, outs):
-      for o in outs:
-         if not self.get(o).is_alive():
-            return False
-      if self.get_other_alive(outs):
-         return False
-      return True
+      return "\n".join(str(o) for o in self)
 
    def get_other_alive(self, outs):
-      return [o.name for o in self if o.name not in outs and o.is_alive()]
+      return [o for o in self if o.name not in outs and o.is_alive()]
 
    def get_all_dead(self):
-      return [o.name for o in self.outputs if o.is_dead()]
+      return [o for o in self.outputs if o.is_dead()]
+
+   def get_all_alive(self):
+      return [o for o in self.outputs if o.is_alive()]
+
+   def get_all_connected(self):
+      return [o for o in self.outputs if o.connected]
 
    # get xrandr arguments to disable all dead outputs and to disable non-wanted outputs.
    # be_on is a list if wanted outputs (their names). If it is None, then return only args for dead outputs.
@@ -91,12 +72,13 @@ class Outputs:
       all_other += self.get_other_alive(be_on) if be_on is not None else []
       xrandr_args = []
       for d in all_other:
-         xrandr_args += ["--output", d, "--off"]
+         xrandr_args += ["--output", d.name, "--off"]
       return xrandr_args
 
-class Output:
+class XOutput:
    def __init__(self):
       self.name = self.connected = self.displaying = self.crtc = self.primary = self.rotation = self.mode = self.x = self.y = self.w = self.h = None
+      self.auto = False
 
    @classmethod
    def fromDisplay(cls, output, d, timestamp):
@@ -111,20 +93,39 @@ class Output:
 
       if self.displaying:
          info2 = d.xrandr_get_crtc_info(self.crtc, timestamp)._data
-         self.rotation = info2["rotation"]
+         self.rotation = info2["rotation"] # 1=normal, 2=left, 4=inverted, 8=right
          self.mode = info2["mode"]
          self.x = info2["x"]
          self.y = info2["y"]
          self.w = info2["width"]
          self.h = info2["height"]
-      else:
-         self.rotation = self.mode = self.x = self.y = self.w = self.h = None
+         self.auto = self.mode in info["modes"][0:info["num_preferred"]]
       return self
 
-   def is_mirroring(self, output2):
-      if not self.displaying or not output2.displaying:
-         return False
-      return self.x == output2.x and self.y == output2.y and self.w == output2.w and self.h == output2.h
+   def is_sameas(self, output2):
+      return (self.x == output2.x and
+              self.y == output2.y and
+              self.w == output2.w and
+              self.h == output2.h)
+
+   def is_leftof(self, output2):
+      return (self.x + self.w == output2.x and
+              seg_intersect((self.y, self.y + self.h),
+                            (output2.y, output2.y + output2.h)))
+
+   def is_rightof(self, output2):
+      return output2.is_leftof(self)
+
+   def is_aboveof(self, output2):
+      return (self.y + self.h == output2.y and
+              seg_intersect((self.x, self.x + self.w),
+                            (output2.x, output2.x + output2.w)))
+
+   def is_belowof(self, output2):
+      return output2.is_aboveof(self)
+
+   def get_rotation(self):
+      return {1: "normal", 2: "left", 4: "inverted", 8: "right"}[self.rotation]
 
    def is_dead(self):
       return self.displaying and not self.connected
@@ -135,13 +136,50 @@ class Output:
    def __str__(self):
       def bool_to_is(b):
          return "is" if b else "is not"
-      return "{} {} connected and {} displaying".format(self.name, bool_to_is(self.connected), bool_to_is(self.displaying))
+      def extras():
+         return "rotation: {}, auto: {}, primary: {}".format(self.get_rotation(), self.auto, self.primary)
+      return "{} {} connected and {} displaying{}".format(self.name,
+                                                          bool_to_is(self.connected),
+                                                          bool_to_is(self.displaying),
+                                                          ", " + extras() if self.is_alive() else "")
+
+class MOutput:
+   def __init__(self):
+      self.name = self.leftof = self.rightof = self.above = self.below = self.sameas = None
+      self.primary = False
+      self.rotation = "normal"
+      self.auto = True
+
+   def get_xrandr(self):
+      return (["--output", self.name]
+           + (["--auto"] if self.auto else [])
+           + (["--primary"] if self.primary else [])
+           + (["--rotate", self.rotation])
+           + (["--left-of", self.leftof] if self.leftof else [])
+           + (["--right-of", self.rightof] if self.rightof else [])
+           + (["--above", self.above] if self.above else [])
+           + (["--below", self.below] if self.below else [])
+           + (["--sameas", self.sameas] if self.sameas else []))
+
+   def is_sameas(self, other):
+      return self.sameas == other.name or other.sameas == self.name
+
+   def is_leftof(self, other):
+      return self.leftof == other.name or other.rightof == self.name
+
+   def is_rightof(self, other):
+      return self.rightof == other.name or other.leftof == self.name
+
+   def is_aboveof(self, other):
+      return self.above == other.name or other.below == self.name
+
+   def is_belowof(self, other):
+      return self.below == other.name or other.above == self.name
+
+   def __str__(self):
+      return self.name
 
 class Mode:
-   APPLY_SUCCESS = 0
-   CANT_APPLY = 1
-   ALREADY_APPLIED = 2
-
    def __init__(self, conf, mode):
       self.default = None
       self.outputs = []
@@ -149,7 +187,6 @@ class Mode:
       self.no_xrandr = False
       self.programs = []
       self.delay = conf.get("programs_delay", 0)
-      self.relations = Relation()
 
       if "modes" not in conf:
          raise DisplayException("missing required field 'modes'")
@@ -166,33 +203,63 @@ class Mode:
       flag_re = re.compile(r"^--")
       def is_flag(s):
          return flag_re.match(s)
+      def pop():
+         if not xrandr:
+            raise DisplayException("xrandr parse error: no more input")
+         return xrandr.pop(0)
+      def peek():
+         if xrandr:
+            return xrandr[0]
+         return None
+      def push(x):
+         xrandr.insert(0, x)
 
-      waiting_out = False
-      waiting_same = False
-      for x in xrandr:
-         if waiting_out:
-            waiting_out = False
-            if is_flag(x):
-               raise DisplayException("xrandr parse error: didn't expect a flag after --output")
-            self.outputs.append(x)
-         elif waiting_same:
-            waiting_same = False
-            if is_flag(x):
-               raise DisplayException("xrandr parse error: didn't expect a flag after --same-as")
-            if not self.outputs:
-               raise DisplayException("xrandr parse error: --same-as on nothing?")
-            self.relations.relate(self.outputs[-1], x, "mirror")
-         # elif not is_flag(x):
-         #    raise DisplayException("xrandr parse error: is expecting a flag")
-         elif x == "--output":
-            waiting_out = True
-         elif x == "--off":
-            raise DisplayException("xrandr parse error: why use --off? it's not needed")
-         elif x == "--same-as":
-            waiting_same = True
+      def parse_outputs():
+         outs = []
+         while peek():
+            outs.append(parse_output())
+         return outs
 
-      if waiting_out or waiting_same:
-         raise DisplayException("xrandr parse error: list ended with trailing --output or --same-as")
+      def parse_output():
+         out = MOutput()
+         x = pop()
+         if not x == "--output":
+            raise DisplayException("xrandr parse error: expected --output")
+
+         out.name = parse_name()
+         while peek():
+            p = pop()
+            if p == "--auto":
+               out.auto = True
+            elif p == "--rotation":
+               out.rotation = parse_name()
+            elif p == "--same-as":
+               out.sameas = parse_name()
+            elif p == "--left-of":
+               out.leftof = parse_name()
+            elif p == "--right-of":
+               out.rightof = parse_name()
+            elif p == "--primary":
+               out.primary = True
+            elif p == "--off":
+               raise DisplayException("--off not needed")
+            elif p == "--above":
+               out.above = parse_name()
+            elif p == "--below":
+               out.below = parse_name()
+            else:
+               push(p)
+               break
+
+         return out
+
+      def parse_name():
+         x = pop()
+         if is_flag(x):
+            raise DisplayException("xrandr parse error: didn't expect a flag")
+         return x
+
+      self.outputs = parse_outputs()
 
    def _parse_programs(self, conf, rest):
       if "run_programs" not in rest:
@@ -225,103 +292,24 @@ class Mode:
          return m
 
       m = fix_inherit(mode, [])
-      self.default   = m.get("default")
-      self.outputs   = m.get("outputs", [])
-      self.xrandr    = m.get("xrandr", [])
-      self.no_xrandr = not bool(self.xrandr)
-      self.mirror    = m.get("mirror", [])
+      self.default               = m.get("default")
+      self.outputs               = m.get("outputs", [])
+      self.xrandr                = m.get("xrandr", [])
+      self.no_xrandr             = not bool(self.xrandr)
       return m
 
-   def _is_already_applied(self, outputs):
-      if self.no_xrandr:
-         return False
-      if not outputs.all_only_alive(self.outputs):
-         return False
-      rel = outputs.get_relations()
-      if self.relations.filter("mirror") != rel.filter("mirror"):
-         return False
-      # works because we know at this point that all_only_alive is true
-      # and this is needed because outputs.get_relations() returns more relations than self.relations has
-      # if not self.relations.filter("right", "left", "osv") <= rel.filter("right", "left", "osv"):
-      #    return False
-      return True
+   def get_xrandr(self):
+      from itertools import chain
+      return list(chain.from_iterable(x.get_xrandr() for x in self.outputs))
 
-   # run xrandr and wait for a screenChange event, or wait for a timeout of self.delay
-   def run_xrandr(self, xrandr_args, disp, dry=False):
-      win = None
-      try:
-         win = disp.screen().root.create_window(50, 50, 300, 200, 2, disp.screen().root_depth)
-         win.xrandr_select_input(randr.RRScreenChangeNotifyMask)
+   def get_outputs(self):
+      return self.outputs
 
-         start_internal("xrandr", self.xrandr + xrandr_args, dry=dry, hate_non_zero=True)
+   def get_output_names(self):
+      return [o.name for o in self.outputs]
 
-         d = self.delay
-         while True:
-            if d <= 0:
-               break
-
-            if disp.pending_events() == 0:
-               sleep(0.1)
-               d -= 0.1
-               continue
-
-            e = disp.next_event()
-            if e.__class__.__name__ == randr.ScreenChangeNotify.__name__:
-               break
-            else:
-               continue
-      finally:
-         if win:
-            win.destroy()
-
-   def _is_cant_apply(self, outputs):
-      if self.no_xrandr:
-         return False
-      return not outputs.all_connected(self.outputs)
-
-   def restart_all(self, dry, output):
-      if not dry:
-         pkill([p["name"] for p in self.programs], wait=False)
-
-      qu = self.programs.copy()
-      c = 0
-      while qu:
-         if c > 15:
-            break
-
-         if dry:
-            pgreps = [False for _ in qu]
-         else:
-            pgreps = pgrep([q["name"] for q in qu])
-
-         for a,q in zip(pgreps, qu):
-            if not a:
-               if "file" not in q:
-                  print(q["name"] + " is missing required field \"file\"", flush=True, file=sys.stderr)
-                  continue
-               start_external(q["file"], q.get("args"), q.get("env"), dry, output)
-
-         qu[:] = [q for a,q in zip(pgreps, qu) if a]
-         if qu:
-            sleep(0.3)
-            c += 1
-
-      for q in qu:
-         asd = "{} didn't die".format(q["name"])
-         notify_send(asd)
-         print(asd, flush=True, file=sys.stderr)
-
-   def apply(self, outputs, disp, force=False, dry=False, output=False):
-      if self._is_cant_apply(outputs):
-         return Mode.CANT_APPLY
-      if not force and self._is_already_applied(outputs):
-         return Mode.ALREADY_APPLIED
-
-      if not self.no_xrandr or force:
-         xrandr_args = outputs.get_comp_xrandr_args(self.outputs)
-         self.run_xrandr(xrandr_args, disp, dry=dry)
-
-      self.restart_all(dry, output)
+   def get_programs(self):
+      return self.programs
 
    def __str__(self):
       return "default: {}, outputs: {}, xrandr: {}, no_xrandr: {}, programs: {}, delay: {}".format(self.default, self.outputs, self.xrandr, self.no_xrandr, self.programs, self.delay)
@@ -380,6 +368,145 @@ def read_config():
    except json.JSONDecodeError as e:
       raise DisplayException("config parse error: " + str(e))
 
+def seg_intersect(a, b):
+   return not (a[1] < b[0] or a[0] > b[1])
+
+def is_already_applied(modes, xoutput):
+   mo = modes.get_outputs()
+   xo = xoutput.get_all_alive()
+
+   if len(xo) != len(mo):
+      return False
+
+   pairs = []
+   for m in mo:
+      p = next((x for x in xo if x.name == m.name), None)
+      if not p:
+         return False
+      pairs.append((m, p))
+
+   for m, x in pairs:
+      if (m.auto != x.auto or
+          m.rotation != x.get_rotation() or
+          m.primary != x.primary):
+         return False
+
+      for m2, x2 in pairs:
+         for f in ["is_sameas", "is_leftof", "is_rightof", "is_aboveof", "is_belowof"]:
+            if getattr(m, f)(m2) and not getattr(x, f)(x2):
+               return False
+
+   return True
+
+def can_apply(modes, xoutput):
+   return modes.get_output_names() <= [o.name for o in xoutput.get_all_connected()]
+
+# run xrandr and wait for a screenChange event, or wait for a timeout
+def run_xrandr(xrandr_args, disp, timeout, dry=False):
+   if not xrandr_args:
+      return
+   if dry:
+      start_internal("xrandr", xrandr_args, dry=True)
+      return
+
+   win = None
+   try:
+      win = disp.screen().root.create_window(50, 50, 300, 200, 2, disp.screen().root_depth)
+      win.xrandr_select_input(randr.RRScreenChangeNotifyMask)
+
+      start_internal("xrandr", xrandr_args, hate_non_zero=True)
+
+      d = timeout
+      while True:
+         if d <= 0:
+            break
+
+         if disp.pending_events() == 0:
+            sleep(0.1)
+            d -= 0.1
+            continue
+
+         ev = disp.next_event()
+         if ev.__class__.__name__ == randr.ScreenChangeNotify.__name__:
+            break
+         else:
+            continue
+   finally:
+      if win:
+         win.destroy()
+
+def restart_all_programs(programs, dry=False, enable_output=False):
+   if not dry:
+      pkill([p["name"] for p in programs], wait=False)
+
+   qu = programs.copy()
+   c = 0
+   while qu:
+      if c > 15:
+         break
+
+      if dry:
+         pgreps = [False for _ in qu]
+      else:
+         pgreps = pgrep([q["name"] for q in qu])
+
+      for a,q in zip(pgreps, qu):
+         if not a:
+            if "file" not in q:
+               print(q["name"] + " is missing required field \"file\"", flush=True, file=sys.stderr)
+               continue
+            start_external(q["file"], q.get("args"), q.get("env"), dry, enable_output)
+
+      qu[:] = [q for a,q in zip(pgreps, qu) if a]
+      if qu:
+         sleep(0.3)
+         c += 1
+
+   for q in qu:
+      asd = "{} didn't die".format(q["name"])
+      notify_send(asd)
+      print(asd, flush=True, file=sys.stderr)
+
+# try to apply mode (the class)
+def apply(mode, xoutput, disp, force=False, dry=False):
+   if not can_apply(mode, xoutput):
+      return CANT_APPLY
+   if not force and is_already_applied(mode, xoutput):
+      return ALREADY_APPLIED
+
+   xrandr_args = xoutput.get_comp_xrandr_args(mode.get_output_names())
+   run_xrandr(mode.get_xrandr() + xrandr_args, disp, mode.delay, dry=dry)
+   return APPLY_SUCCESS
+
+# kill all dead outputs
+def kill_dead(xoutput, dry=False):
+   xrandr_dead = xoutput.get_comp_xrandr_args(None)
+   if xrandr_dead:
+      start_internal("xrandr", xrandr_dead, dry=dry, hate_non_zero=True)
+      notify_send("killed dead outputs")
+
+def run_mode(modename, conf, xoutput, disp, force=False, dry=False):
+   mode = Mode(conf, modename)
+
+   if mode.no_xrandr:
+      return mode
+
+   res = apply(mode, xoutput, disp, force, dry)
+
+   if res == APPLY_SUCCESS:
+      notify_send("success")
+      return mode
+   elif res == ALREADY_APPLIED:
+      notify_send("nothing to do")
+      return None
+   elif res == CANT_APPLY:
+      if mode.default:
+         return run_mode(mode.default, conf, xoutput, disp, force, dry)
+      else:
+         notify_send("can't apply mode")
+
+   return None
+
 def main():
    parser = A.ArgumentParser()
    group = parser.add_mutually_exclusive_group(required=True)
@@ -391,6 +518,7 @@ def main():
    parser.add_argument("-d", "--dry-run", action="store_true", help="do everything except actually spawning programs and running xrandr")
    parser.add_argument("-k", "--keep-dead", action="store_true", help="don't disable dead outputs if mode can't be applied or is already applied (default is to kill)")
    parser.add_argument("-q", "--quiet", action="store_true", help="close stdout and stderr for forked programs")
+   parser.add_argument("-n", "--no-programs", action="store_true", help="don't start any programs")
    args = parser.parse_args()
 
    conf = read_config()
@@ -401,37 +529,25 @@ def main():
       for k in conf["modes"]:
          print(k, flush=True)
       return
-   else:
-      disp = display.Display()
-      outs = Outputs.fromDisplay(disp)
-      def kill_dead():
-         xrandr_dead = outs.get_comp_xrandr_args(None)
-         if xrandr_dead:
-            start_internal("xrandr", xrandr_dead, dry=args.dry_run, hate_non_zero=False)
-            notify_send("killed dead outputs")
-      def run_mode(mode):
-         mod = Mode(conf, mode)
-         res = mod.apply(outs, disp, args.force, args.dry_run, not args.quiet)
-         if res == Mode.APPLY_SUCCESS:
-            notify_send("success")
-         elif res == Mode.ALREADY_APPLIED:
-            notify_send("nothing to do")
-         elif res == Mode.CANT_APPLY:
-            if mod.default:
-               run_mode(mod.default)
-               return
-            else:
-               notify_send("I literally can't even")
 
-         if res != Mode.APPLY_SUCCESS and not args.keep_dead:
-            kill_dead()
+   disp = display.Display()
+   xoutput = XOutputs.fromDisplay(disp)
 
-      if args.state:
-         print(outs)
-      elif args.cleanup:
-         kill_dead()
-      else:
-         run_mode(args.mode)
+   if args.state:
+      print(xoutput)
+      return
+
+   if args.cleanup:
+      kill_dead(xoutput, dry=args.dry_run)
+      return
+
+   succ_mode = run_mode(args.mode, conf, xoutput, disp, force=args.force, dry=args.dry_run)
+
+   if not succ_mode and not args.keep_dead:
+      kill_dead(xoutput, dry=args.dry_run)
+
+   if succ_mode and not args.no_programs:
+      restart_all_programs(succ_mode.get_programs(), dry=args.dry_run, enable_output=not args.quiet)
 
 if __name__ == "__main__":
    #pylint: disable=broad-except
