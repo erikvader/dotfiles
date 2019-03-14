@@ -36,21 +36,33 @@ def handle_block(action, device):
    head = "block device added" if action == "add" else "block device removed"
    send_notification(head, msg, icon="media-removable")
 
+def handle_disp(action, _device):
+   send_notification("Display", "Something display related happened! ({})".format(action), icon="video-display")
+
 def main():
    context = pyudev.Context()
    usb_mon = pyudev.Monitor.from_netlink(context)
    usb_mon.filter_by('usb', 'usb_device')
    block_mon = pyudev.Monitor.from_netlink(context)
    block_mon.filter_by('block', 'partition')
+   disp_mon = pyudev.Monitor.from_netlink(context)
+   disp_mon.filter_by("drm")
 
    usb_obs = pyudev.MonitorObserver(usb_mon, handle_usb)
    block_obs = pyudev.MonitorObserver(block_mon, handle_block)
+   disp_obs = pyudev.MonitorObserver(disp_mon, handle_disp)
 
    usb_obs.daemon = False
    block_obs.daemon = False
+   disp_obs.daemon = False
 
    usb_obs.start()
    block_obs.start()
+   disp_obs.start()
+
+   # monitor = pyudev.Monitor.from_netlink(context)
+   # for device in iter(monitor.poll, None):
+   #    print(list(device.properties.items()))
 
 if __name__ == "__main__":
    main()
