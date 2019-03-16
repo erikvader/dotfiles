@@ -136,7 +136,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- rofi
     ((modm, xK_x), spawn "fzf_run"),
-    ((modm, xK_Escape), spawn "rofi -show window"), -- TODO: replace with fzf
+    ((modm, xK_Escape), spawn "fzf_window_switcher"),
     ((modm, xK_r), spawn "rofi_script_selector"),
     ((modm .|. shiftMask, xK_r), spawn "open_downloaded_pdf"),
 

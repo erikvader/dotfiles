@@ -3,4 +3,5 @@ rofi
 xclip
 python-colorama
 python-pyudev
+python-xlib
 fzf
