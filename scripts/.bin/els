@@ -3,7 +3,6 @@
 # TODO: add documentation
 
 import re
-import sys
 import subprocess as S
 import math
 from shutil import which
@@ -12,12 +11,16 @@ import stat
 import pwd
 import grp
 import argparse
+from tabulate import tabulate, LEFT, RIGHT, IGNORE
 
 uid = os.getuid()
 showNames = False
 colors = {}
 hasCowsay = which("cowsay")
 args = None
+
+def visibleLen(s):
+   return len(re.sub(r"\x1b\[.+?m", "", s))
 
 def resetColor():
    return "\x1b[0m"
@@ -197,21 +200,7 @@ def removeEmptyColumn(fs, c):
    if allEmpty:
       for l in fs:
          del l[c]
-
-# fields, column index, alignment (0=left, 1=right)
-def align(fs, c, a):
-   lens = []
-   for l in fs:
-      if c >= len(l):
-         return
-      lens.append(len(l[c]))
-
-   maximum = max(lens)
-
-   for l in fs:
-      dlen = maximum - lens[0]
-      l[c] = " "*dlen*a + l[c] + " "*dlen*abs(a-1)
-      lens = lens[1:]
+   return allEmpty
 
 def cowsay(s):
    if hasCowsay:
@@ -259,6 +248,7 @@ def main():
       return 1
 
    sort = sort_scandir(ite)
+   ite.close()
 
    if len(sort) <= 0:
       cowsay("There's nothing here...")
@@ -268,15 +258,14 @@ def main():
 
    fields = list(map(formatLine, sort))
 
-   align(fields, 1, 1)
-   align(fields, 2, 1)
+   removed = removeEmptyColumn(fields, 1)
 
-   removeEmptyColumn(fields, 1)
+   if removed:
+      align = (LEFT, RIGHT, IGNORE)
+   else:
+      align = (LEFT, RIGHT, RIGHT, IGNORE)
 
-   for f in fields:
-      print(" ".join(f))
-
-   ite.close()
+   print(tabulate(fields, align=align, separators=(" ",), lenfun=visibleLen))
 
 if __name__ == "__main__":
    main()
