@@ -4,15 +4,17 @@
 PAC := yay
 PACLIST := $(PAC) -Qq
 PACINSTALL := $(PAC) -S
+PIPLIST := pip list --user --format freeze | sed 's/==.*$$//'
+PIPINSTALL := pip install --user
 
 IGNOREDIR := stow_ignore
 STOWFLAGS := --ignore='^$(IGNOREDIR)$$'
 
 # $(call maybe-install,package1 package2 ...)
-maybe-install = $(call install,$(call not-installed,$1))
-install = $(if $1,$(PACINSTALL) $1,@echo packages already installed for $@)
-not-installed = $(filter-out $(filter $1,$(shell $(PACLIST))),$1)
-install-from = $(if $(wildcard $1),$(call maybe-install,$(shell cat "$1")),)
+maybe-install = $(call install,$(call not-installed,$1,$2),$2)
+install = $(if $1,$($2INSTALL) $1,@echo packages '($2)' already installed for $(patsubst %:install,%,$@))
+not-installed = $(filter-out $(filter $1,$(shell $($2LIST))),$1)
+install-from = $(if $(wildcard $1),$(call maybe-install,$(shell cat "$1"),$2),)
 
 maybe-make = $(if $(wildcard $1/[Mm]akefile),$(MAKE) -C $1 $2,)
 
@@ -52,7 +54,8 @@ all: $(dirs)
 $(dirs): %: %\:install %\:add
 
 $(dirsinstall):
-	$(call install-from,$(patsubst %:install,%,$@)/$(IGNOREDIR)/packages)
+	$(call install-from,$(patsubst %:install,%,$@)/$(IGNOREDIR)/packages,PAC)
+	$(call install-from,$(patsubst %:install,%,$@)/$(IGNOREDIR)/pippackages,PIP)
 	$(call maybe-make,$(patsubst %:install,%,$@)/$(IGNOREDIR),install)
 
 $(dirsadd):
