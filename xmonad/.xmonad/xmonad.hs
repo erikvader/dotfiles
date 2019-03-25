@@ -437,6 +437,8 @@ main = do
   xmonad $ indiPP $ withUrgencyHook NoUrgencyHook $ ewmh $ docks $ myConfig {
     layoutHook = avoidStruts myLayoutHook,
     handleEventHook = handleEventHook myConfig <+> fullscreenEventHook,
-    logHook = logHook myConfig <+> workspaceHistoryHook <+> workspaceNamesClearerLogHook <+> multiPP myFocusPPXin myNonfocusPPXin multiPrepare
+    logHook = logHook myConfig <+> workspaceHistoryHook <+> workspaceNamesClearerLogHook <+> statusbar,
+    startupHook = startupHook myConfig <+> statusbar
     }
-
+  where
+    statusbar = multiPP myFocusPPXin myNonfocusPPXin multiPrepare
