@@ -1,5 +1,7 @@
 #!/bin/python
 
+# TODO: add a column maxlength
+
 from itertools import zip_longest
 
 LEFT = 0

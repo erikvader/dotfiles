@@ -10,7 +10,7 @@ alias ppss='ps -Ho pid,ppid,pgid,command'
 
 alias lsnet="sudo ss -tulpn"
 
-alias cdiff="diff --color=auto"
+alias diff="diff --color=auto"
 
 alias mi="mediainfo"
 
@@ -150,4 +150,8 @@ function ec {
     else
         emacsclient -nc "$@"
     fi
+}
+
+function wp {
+    export WINEPREFIX="$PWD/$1"
 }

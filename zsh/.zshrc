@@ -47,7 +47,7 @@ DISABLE_AUTO_TITLE=true
 
 # fzf stuff
 # $args $ignore_list $restrictions
-export FZF_BASE_COMMAND='find -L . -mindepth 1 %s \\( -fstype dev -o -fstype proc %s \\) -prune -o \\( -name .git \\) -prune -printf "%%P\\n" -o %s -printf "%%P\\n" 2>/dev/null'
+export FZF_BASE_COMMAND='find -L . -mindepth 1 %s \\( -fstype dev -o -fstype proc %s \\) -prune -o \\( -name .git -o -name dosdevices \\) -prune -printf "%%P\\n" -o %s -printf "%%P\\n" 2>/dev/null'
 
 export FZF_DEFAULT_COMMAND=$(printf "$FZF_BASE_COMMAND" "" "" "")
 # export FZF_ALT_C_COMMAND=$(printf "$FZF_BASE_COMMAND" "" "" "-type d")
@@ -123,8 +123,8 @@ zle -N zle-keymap-select
 
 export KEYTIMEOUT=1
 
-bindkey '^b' vi-backward-blank-word
-bindkey '^f' vi-forward-blank-word
+# bindkey '^b' vi-backward-blank-word
+# bindkey '^f' vi-forward-blank-word
 
 # # allow v to edit the command line (standard behaviour)
 # autoload -Uz edit-command-line
