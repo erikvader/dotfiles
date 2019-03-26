@@ -53,6 +53,9 @@ import Erik.ThreeColP
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
 
+import qualified DBus as D
+import qualified DBus.Client as D
+
 myModMask = mod4Mask
 
 scratchWS = "S"
@@ -372,17 +375,15 @@ myNonfocusPPXin = myFocusPPXin {
 --   ppVisible = wrap "%{u#0086b3 +u}  " "  %{-u}"
 --   }
 
-multiPrepare :: String -> PP -> X PP
-multiPrepare output pp = do
-  d <- asks display
-  r <- asks theRoot
+multiPrepare :: D.Client -> String -> PP -> X PP
+multiPrepare dbus output pp = do
   L.updateCurrentState
   showWindows <- ppShowWindows
   wsName <- getWorkspaceNames'
   return $
     decoratePP
       (\w -> concatMap ($ w) [colorize, showWindows, maybe "" (":"++) . wsName])
-      (pp {ppOutput = rootOutput d r output . fixXinerama})
+      (pp {ppOutput = dbusOutput dbus . (output ++) . fixXinerama})
   where
     colorize = wrap "%{F#ffffff T5}" "%{F- T-}"
 
@@ -401,9 +402,6 @@ multiPrepare output pp = do
     removeIndices c (s:ss) (i:is) | c == i    = removeIndices (c+1) ss is
                                   | otherwise = s:removeIndices (c+1) ss (i:is)
 
-    rootOutput :: Display -> Window -> String -> String -> IO ()
-    rootOutput d r output str = internAtom d ("_XMONAD_STATUS_" ++ output) False >>= setTextProperty d r (UTF8.decodeString str)
-
 baseConfig = desktopConfig {
   modMask = myModMask,
   borderWidth = 0,
@@ -419,11 +417,26 @@ myConfig = baseConfig {
   logHook = logHook baseConfig <+> myUpdatePointer
   }
 
+dbusOutput :: D.Client -> String -> IO ()
+dbusOutput dbus str = do
+    let signal = (D.signal objectPath interfaceName memberName) {
+            D.signalBody = [D.toVariant $ UTF8.decodeString str]
+        }
+    D.emit dbus signal
+  where
+    objectPath = D.objectPath_ "/org/xmonad/Log"
+    interfaceName = D.interfaceName_ "org.xmonad.Log"
+    memberName = D.memberName_ "Update"
+
 errorFile :: FilePath
 errorFile = "/tmp/xmonad-error"
 
 main :: IO ()
 main = do
+  dbus <- D.connectSession
+      -- Request access to the DBus name
+  _ <- D.requestName dbus (D.busName_ "org.xmonad.Log") [D.nameAllowReplacement, D.nameReplaceExisting, D.nameDoNotQueue]
+
   -- custom .xsession-error
   catch (do
             closeFd stdError
@@ -437,8 +450,6 @@ main = do
   xmonad $ indiPP $ withUrgencyHook NoUrgencyHook $ ewmh $ docks $ myConfig {
     layoutHook = avoidStruts myLayoutHook,
     handleEventHook = handleEventHook myConfig <+> fullscreenEventHook,
-    logHook = logHook myConfig <+> workspaceHistoryHook <+> workspaceNamesClearerLogHook <+> statusbar,
-    startupHook = startupHook myConfig <+> statusbar
+    logHook = logHook myConfig <+> workspaceHistoryHook <+> workspaceNamesClearerLogHook <+> multiPP myFocusPPXin myNonfocusPPXin (multiPrepare dbus)
     }
-  where
-    statusbar = multiPP myFocusPPXin myNonfocusPPXin multiPrepare
+

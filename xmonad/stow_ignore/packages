@@ -1,4 +1,5 @@
 xmonad
 xmonad-contrib
 xmonad-utils
+haskell-dbus
 haskell-regex-compat
