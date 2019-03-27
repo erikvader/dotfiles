@@ -274,3 +274,20 @@ class extract_prepare(Command):
             else:
                 self.fm.notify("something is already named \"{}\", can't create directory".format(g), bad=True)
                 return
+
+class my_quit(Command):
+    """:my_quit
+
+    Same as :quit, but doesn't close tabs.
+    """
+    def _exit_no_work(self):
+        if self.fm.loader.has_work():
+            self.fm.notify('Not quitting: Tasks in progress: Use `quit!` to force quit')
+        else:
+            self.fm.exit()
+
+    def execute(self):
+        if len(self.fm.tabs) == 1:
+            self._exit_no_work()
+        else:
+            self.fm.notify("Not quitting: multiple tabs are open")
