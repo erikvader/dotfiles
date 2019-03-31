@@ -7,9 +7,9 @@ import Control.Exception (catch,SomeException)
 import System.Directory (doesFileExist,removeFile,executable,getPermissions,getHomeDirectory)
 import System.FilePath ((</>))
 import System.Exit
-import Control.Monad (when)
+import Control.Monad (when,join)
 import Data.List
-import Data.Maybe (maybe)
+import Data.Maybe (maybe,maybeToList)
 
 import Graphics.X11.ExtraTypes.XF86
 
@@ -402,6 +402,20 @@ multiPrepare dbus output pp = do
     removeIndices c (s:ss) (i:is) | c == i    = removeIndices (c+1) ss is
                                   | otherwise = s:removeIndices (c+1) ss (i:is)
 
+-- advertise fullscreen support (which isn't done by the
+-- ewmh/fullscreen package for some reason)
+-- https://github.com/xmonad/xmonad-contrib/issues/288
+fullscreenStartupHook :: X ()
+fullscreenStartupHook = withDisplay $ \dpy -> do
+    r <- asks theRoot
+    a <- getAtom "_NET_SUPPORTED"
+    c <- getAtom "ATOM"
+    f <- getAtom "_NET_WM_STATE_FULLSCREEN"
+    io $ do
+        sup <- join . maybeToList <$> getWindowProperty32 dpy a r
+        when (fromIntegral f `notElem` sup) $
+            changeProperty32 dpy r a c propModeAppend [fromIntegral f]
+
 baseConfig = desktopConfig {
   modMask = myModMask,
   borderWidth = 0,
@@ -413,7 +427,7 @@ baseConfig = desktopConfig {
 
 myConfig = baseConfig {
   manageHook = composeAll [ isDialog <||> appName =? "URxvtFZF" --> doCenterFloat ] <+> manageHook baseConfig,
-  startupHook = startupHook baseConfig <+> myStartupHook,
+  startupHook = startupHook baseConfig <+> myStartupHook <+> fullscreenStartupHook,
   logHook = logHook baseConfig <+> myUpdatePointer
   }
 
