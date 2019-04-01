@@ -1,9 +1,0 @@
-[Unit]
-Description=battery-checker system timer
-
-[Timer]
-OnBootSec=1m
-OnUnitActiveSec=2m
-
-[Install]
-WantedBy=timers.target
