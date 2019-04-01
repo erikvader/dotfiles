@@ -18,7 +18,7 @@ alias pg='pgrep -l'
 
 alias cclip="xclip -selection clipboard"
 
-alias rsd='rsync -avhsn --delete'
+alias rsd='rsync -avhs --dry-run --delete'
 alias rs='rsync -avhs --delete --progress'
 alias rc='rsync -avhs --progress'
 
