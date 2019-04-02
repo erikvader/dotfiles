@@ -3,7 +3,7 @@
 #
 #
 
-export QT_QPA_PLATFORMTHEME='qt5ct'
+export QT_QPA_PLATFORMTHEME=gtk2
 
 export PATH="$HOME/.bin:$HOME/.local/bin:$PATH"
 export PYTHONPATH="$HOME/.pythonlibs:$PYTHONPATH"
