@@ -94,7 +94,13 @@ multiPP' screens dynlStr focusPP unfocusPP ppmod = do
     =<< execWriterT . mapM pickPP . catMaybes
     =<< mapM (\(s,o) -> screenWorkspace s >>= (\w -> return ((,o) <$> w))) screens
 
-indiPP :: XConfig a -> XConfig a
-indiPP c = c {startupHook = startupHook c <+> indiPPStartupHook, handleEventHook = handleEventHook c <+> indiPPEventHook}
+-- adds format and other hooks to the right places
+-- This also runs format on the startupHook
+indiPP :: X () -> XConfig a -> XConfig a
+indiPP format c = c {
+  startupHook = indiPPStartupHook <+> format <+> startupHook c,
+  logHook = logHook c <+> format,
+  handleEventHook = handleEventHook c <+> indiPPEventHook
+  }
 
 

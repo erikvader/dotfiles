@@ -1,4 +1,4 @@
 #!/bin/bash
 
-dbus-monitor --session "type='signal',path='/org/xmonad/Log',interface='org.xmonad.Log',member='Update'" | sed -uEn -e '2d' -e '4d' -e '/^ *string/!d' -e 's/^ *string "//; s/"$//' -e "/^$MONITOR/!d" -e "s/^$MONITOR// p"
+xprop -root -spy 8u "_XMONAD_STATUS_$MONITOR" | sed -uEn -e 's/^_XMONAD_STATUS_'"$MONITOR"'\(STRING\) = "//; s/"$//; s/\\"/"/g; p'
 
