@@ -36,6 +36,7 @@ scripts['Man']="rofi_man"
 scripts['Emoji selector']='rofi_iconfont emoji "$HOME/.emoji"'
 scripts['Font Awesome 4.7 selector']='rofi_iconfont awesome "$HOME/.awesome47"'
 scripts['Emotion selector']='rofi_emoticon'
+scripts['Mount/Unmount Removable Media']='usbmounter'
 
 choice=$(printf '%s\n' "${!scripts[@]}" | sort | fzf_dmenu)
 

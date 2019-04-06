@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Shows an interactive menu for mounting and unmounting removable
+# media using udisksctl.
+# If an item has a star next to its device path it means that it is
+# mounted and will be unmounted if selected.
+# If an item doesn't have a star it will instead be mounted if
+# selected.
+
+removables=()
+
+for r in /sys/class/block/*/removable; do
+    read -r isrem < "$r"
+    if [[ $isrem -eq 1 ]]; then
+        removables+=( "${r%/*}" )
+    fi
+done
+
+function getmntline {
+    r=$1
+    p=$2
+    devname=$(echo -n /dev/; echo -n "${p##*/}")
+    (echo -n "$devname"
+     if findmnt --source "$devname" &>/dev/null; then
+         echo -n '*'
+     fi
+     echo
+     cat "$r"/device/{vendor,model}
+    ) | paste -sd ' '
+}
+
+partitions=()
+
+for r in "${removables[@]}"; do
+    for p in "$r"*/partition; do
+        read -r ispart < "$p"
+        if [[ $ispart -eq 1 ]]; then
+            partitions+=( "$(getmntline "$r" "${p%/*}")" )
+        fi
+    done
+done
+
+if [[ "${#partitions[@]}" -eq 0 ]]; then
+    notify-send "Did not find any removable media :("
+    exit
+fi
+
+selected=$(printf '%s\n' "${partitions[@]}" | fzf_dmenu --prompt="mount: ")
+
+if [[ $selected ]]; then
+    read -r mp rest <<< "$selected"
+    if grep -qE '\*$' <<< "$mp"; then
+        notify-send "$(udisksctl unmount -b "${mp%\*}" 2>&1)"
+    else
+        notify-send "$(udisksctl mount -b "$mp" 2>&1)"
+    fi
+fi
