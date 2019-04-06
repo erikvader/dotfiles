@@ -4,8 +4,9 @@
 
 import ewmh
 from Xlib import X
-import subprocess as P
 from tabulate import tabulate
+from fzf_dmenu import fzf_dmenu
+import subprocess as P
 
 def getTitle(e, w):
    return e.getWmName(w).decode() or w.get_wm_name()
@@ -36,10 +37,10 @@ def main():
 
    tab = tabulate(fields)
 
-   res = P.run(["fzf_dmenu", "--nth=2..", "--with-nth=2.."], input=tab, text=True, stdout=P.PIPE)
+   res = fzf_dmenu(tab, fzf_options=["--nth=2..", "--with-nth=2.."])
 
-   if res.stdout:
-      cind = int(res.stdout.split("  ")[0])
+   if res:
+      cind = int(res.split("  ")[0])
       # FIXME: so ugly
       P.run(["wmctrl", "-i", "-a", str(all[cind].id)])
       # e.setActiveWindow(all[cind])
