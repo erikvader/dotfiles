@@ -49,7 +49,7 @@ selected=$(printf '%s\n' "${partitions[@]}" | fzf_dmenu --prompt="mount: ")
 
 if [[ $selected ]]; then
     read -r mp rest <<< "$selected"
-    if grep -qE '\*$' <<< "$mp"; then
+    if [[ "$mp" =~ \*$ ]]; then
         notify-send "$(udisksctl unmount -b "${mp%\*}" 2>&1)"
     else
         notify-send "$(udisksctl mount -b "$mp" 2>&1)"
