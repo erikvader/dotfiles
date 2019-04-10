@@ -11,6 +11,10 @@ else
     local user_symbol='$'
 fi
 
+if [[ $SSH_CLIENT || $SSH_CONNECTION || $SSH_TTY ]]; then
+    local user_host='%{$terminfo[bold]$fg[yellow]%}%n@%m%{$reset_color%}'
+fi
+
 local current_dir='%{$terminfo[bold]$fg[blue]%}$(shrink_path -l -t)%{$reset_color%}'
 
 # local MODE_INDICATOR="──[%{$fg_bold[yellow]%}NORMAL%{$reset_color%}]"
@@ -35,7 +39,6 @@ function wine_prompt {
     fi
     echo "%{$reset_color%}"
 }
-
 
 PROMPT="┌─[${user_host}]──[${current_dir}]"'$(git_prompt_info)$(ranger_prompt)$(wine_prompt)'"
 └─%B${user_symbol}%b "
