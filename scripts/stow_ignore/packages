@@ -5,3 +5,7 @@ python-colorama
 python-pyudev
 python-xlib
 fzf
+python-google-api-python-client
+python-google-auth
+python-google-auth-httplib2
+python-lark-parser
