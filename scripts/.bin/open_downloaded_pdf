@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# open a pdf from downloads with xdg-open
+# open a pdf from downloads with rifle
 
 root="$HOME/Downloads"
 
 choice=$(find -H "$root" -name '*.pdf' -printf '%T@ %P\n' 2>/dev/null | LC_ALL=C sort --key=1nr,1 | cut -d ' ' -f 2- | URXVTFZF_GEOMETRY=150x35 fzf_dmenu --prompt="Open: " --preview="pdftotext $root/{} -" --preview-window="right:60%" --bind=ctrl-n:preview-page-down,ctrl-p:preview-page-up)
 
 if [[ -n $choice ]]; then
-    exec xdg-open "$root/$choice"
+    exec rifle "$root/$choice"
 fi
 
