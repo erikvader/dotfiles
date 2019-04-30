@@ -11,16 +11,13 @@ import stat
 import pwd
 import grp
 import argparse
-from tabulate import tabulate, LEFT, RIGHT, IGNORE
+from tabulate import tabulate, LEFT, RIGHT, IGNORE, ansiLength
 
 uid = os.getuid()
 showNames = False
 colors = {}
 hasCowsay = which("cowsay")
 args = None
-
-def visibleLen(s):
-   return len(re.sub(r"\x1b\[.+?m", "", s))
 
 def resetColor():
    return "\x1b[0m"
@@ -265,7 +262,7 @@ def main():
    else:
       align = (LEFT, RIGHT, RIGHT, IGNORE)
 
-   print(tabulate(fields, align=align, separators=(" ",), lenfun=visibleLen))
+   print(tabulate(fields, align=align, separators=(" ",), lenfun=ansiLength))
 
 if __name__ == "__main__":
    main()

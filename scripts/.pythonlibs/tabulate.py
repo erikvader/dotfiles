@@ -1,8 +1,7 @@
 #!/bin/python
 
-# TODO: add a column maxlength
-
 from itertools import zip_longest
+import re
 
 LEFT = 0
 RIGHT = 1
@@ -26,7 +25,9 @@ def _align(c, ls, ml, a):
       if cc is None:
          return None
       d = ml - l
-      if a == LEFT:
+      if d < 0:
+         return cc[:ml]
+      elif a == LEFT:
          return cc + " "*d
       elif a == RIGHT:
          return " "*d + cc
@@ -34,14 +35,21 @@ def _align(c, ls, ml, a):
          return cc
    return [f(cc, l) for cc, l in zip(c,ls)]
 
-# tabulates fields into a string
-# align is a tuple of alignments applied in order. The last one is repeated indefinitely
-# separators is a tuple of string to put between each column. Last is repeated
-def tabulate(fields, align=(LEFT,), separators=("  ",), lenfun=len):
+# tabulates fields into a string.
+# fields: is an iterable of iterables align: is a tuple of alignments
+#         applied in order. The last one is repeated indefinitely
+# separators: is a tuple of string to put between each column, last is
+#             repeated
+# widths: is a tuple of fixed column widths. A value of 0 means that
+#         the column gets as wide as needed
+# lenfun: is a function to calculate the length of every field
+# end: is a string to join each line with
+# end_on_last_line: if True will put an end at the end of the table
+def tabulate(fields, align=(LEFT,), separators=("  ",), widths=(0,), lenfun=len, end='\n', end_on_last_line=False):
    fields = [[str(ff) for ff in f] for f in fields]
    cols = _transpose(fields)
    lens = [[lenfun(cc) if cc else 0 for cc in c] for c in cols]
-   maxlens = (max(c) for c in lens)
+   maxlens = (max(c) if w == 0 else w for c,w in zip(lens, _repeat(widths)))
    cols = (_align(*args) for args in zip(cols, lens, maxlens, _repeat(align)))
    rows = _transpose(cols)
    lines = []
@@ -54,4 +62,8 @@ def tabulate(fields, align=(LEFT,), separators=("  ",), lenfun=len):
          l.append(s)
       s = "".join(l[:-1])
       lines.append(s.rstrip(" "))
-   return "\n".join(lines)
+   return end.join(lines) + (end if end_on_last_line else "")
+
+# calculates len(s) with ANSI escape codes removed
+def ansiLength(s):
+   return len(re.sub(r"\x1b\[[0-9;:<=>?]*[ !\"#$%&'()*+,\-./]*[a-zA-Z[\]^_`\-~{}|@]", "", s))
