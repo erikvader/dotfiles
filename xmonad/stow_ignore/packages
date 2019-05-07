@@ -2,3 +2,4 @@ xmonad
 xmonad-contrib
 xmonad-utils
 haskell-regex-compat
+playerctl
