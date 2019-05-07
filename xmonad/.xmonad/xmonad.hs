@@ -53,6 +53,13 @@ import Erik.ThreeColP
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
 
+import XMonad.Prompt
+
+myXPConfig :: XPConfig
+myXPConfig = def {
+  font = "xft:DejaVu Sans:pixelsize=12"
+  }
+
 myModMask = mod4Mask
 
 scratchWS = "S"
@@ -237,7 +244,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_comma), swapTo Prev),
 
     -- rename workspaces
-    ((modm, xK_v), renameWorkspace def),
+    ((modm, xK_v), renameWorkspace myXPConfig),
     ((modm .|. shiftMask, xK_v), setCurrentWorkspaceName ""),
     ((modm .|. mod1Mask, xK_v), mapWorkspaces $ flip setWorkspaceName ""),
 
@@ -271,8 +278,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_s), toggleMapStruts),
 
     -- Quit xmonad
-    ((modm .|. shiftMask, xK_0), confirmPrompt def "logout?" $ io exitSuccess),
-    ((modm, xK_0), confirmPrompt def "power off?" $ spawn "poweroff"),
+    ((modm .|. shiftMask, xK_0), confirmPrompt myXPConfig "logout?" $ io exitSuccess),
+    ((modm, xK_0), confirmPrompt myXPConfig "power off?" $ spawn "poweroff"),
 
     -- Restart xmonad
     ((modm .|. shiftMask, xK_c), spawn "if xmonad --recompile; then xmonad --restart; notify-send 'XMonad restarted'; else notify-send 'XMonad failed to compile'; fi"),
