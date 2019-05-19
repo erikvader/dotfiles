@@ -1,5 +1,5 @@
 #
-# ~/.profile
+# ~/.zprofile
 #
 #
 
@@ -19,4 +19,4 @@ export PYTHONDONTWRITEBYTECODE=1
 
 export EDITOR='/usr/bin/vim'
 
-[[ -f $HOME/.profile.local ]] && . "$HOME/.profile.local"
+[[ -f $HOME/.zprofile.local ]] && . "$HOME/.zprofile.local"
