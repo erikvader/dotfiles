@@ -9,3 +9,4 @@ python-google-api-python-client
 python-google-auth
 python-google-auth-httplib2
 python-lark-parser
+wmctrl

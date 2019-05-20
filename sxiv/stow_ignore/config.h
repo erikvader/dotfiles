@@ -10,6 +10,11 @@ enum {
 	WIN_HEIGHT = 600
 };
 
+/* colors and font are configured with 'background', 'foreground' and
+ * 'font' X resource properties.
+ * See X(7) section Resources and xrdb(1) for more information.
+ */
+
 #endif
 #ifdef _IMAGE_CONFIG
 
