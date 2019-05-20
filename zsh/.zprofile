@@ -20,3 +20,8 @@ export PYTHONDONTWRITEBYTECODE=1
 export EDITOR='/usr/bin/vim'
 
 [[ -f $HOME/.zprofile.local ]] && . "$HOME/.zprofile.local"
+
+# Auto startx depending on the tty
+# https://wiki.gentoo.org/wiki/X_without_Display_Manager
+[[ -z $DISPLAY ]] && (( $EUID != 0 )) && [[ ${TTY/tty} != $TTY ]] && (( ${TTY:8:1} == 1 )) && startx
+
