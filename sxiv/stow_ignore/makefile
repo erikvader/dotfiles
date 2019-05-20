@@ -1,9 +1,16 @@
+# make install
+# make install force=t
+# force=t make install
 
-BUILDDIR = /tmp/sxiv-build
-TARGET = /usr/local/bin/sxiv
+BUILDDIR := /tmp/sxiv-build
+TARGET := /usr/local/bin/sxiv
 
 .PHONY: install
 install: $(TARGET)
+
+ifdef force
+.PHONY: $(TARGET)
+endif
 
 $(TARGET):
 	@echo 'creating a new build dir'
@@ -11,8 +18,10 @@ $(TARGET):
 	mkdir -p $(BUILDDIR)
 	@echo 'curling...'
 	curl -L https://github.com/muennich/sxiv/archive/master.tar.gz | tar -C $(BUILDDIR) -xz --strip-components 1
+	@echo 'uninstalling...'
+	sudo $(MAKE) -C $(BUILDDIR) uninstall
 	@echo 'linking in config'
-	ln -srt $(BUILDDIR) config.h
+	cp -t $(BUILDDIR) config.h
 	@echo 'building...'
 	$(MAKE) -C $(BUILDDIR)
 	@echo 'installing...'
