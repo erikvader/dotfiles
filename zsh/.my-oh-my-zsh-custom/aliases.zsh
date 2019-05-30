@@ -90,6 +90,10 @@ function ediff {
     emacsclient -n -c -e '(same-buffer (ediff "'"$1"'" "'"$2"'"))' >/dev/null
 }
 
+function emacsdiff {
+    emacsclient -n -c -e '(same-buffer (diff "'"$1"'" "'"$2"'"))' >/dev/null
+}
+
 function magit {
     emacsclient -n -c -e '(same-buffer (magit-status))' >/dev/null
 }
