@@ -1,31 +1,7 @@
 define(`FG_COLOR', ifdef(`white', `ebebeb', `030303'))dnl
 define(`BG_PATH', ifdef(`bg-white', `~/.config/conky/conky_bg_white.png', ifdef(`bg-black', `~/.config/conky/conky_bg_black.png')))dnl
 undefine(`white', `black', `bg-black', `bg-white')dnl
---[[
-Conky, a system monitor, based on torsmo
-
-Any original torsmo code is licensed under the BSD license
-
-All code written since the fork of torsmo is licensed under the GPL
-
-Please see COPYING for details
-
-Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
-Copyright (c) 2005-2012 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
-All rights reserved.
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-]]
+define(`NETIF', esyscmd(`echo -n $CONKYIF'))dnl
 
 conky.config = {
     alignment = 'top_left',
@@ -97,9 +73,9 @@ $hr
  $color1/$color    $color${fs_used_perc /}%$color1/$color${fs_size /} ${fs_bar 6 /}
  ${color1}data$color $color${fs_used_perc /media/data}%$color1/$color${fs_size /media/data} ${fs_bar 6 /media/data}
 $hr
-${color1}ip: $color${addr wlp1s0}${alignr}DNS: ${nameserver 0}
-${color1}Up:$color ${upspeed wlp1s0}${color}${alignr}${color1}Down:$color ${downspeed wlp1s0}
-${color}Total: ${totalup wlp1s0}${alignr}Total: ${totaldown wlp1s0}
+${color1}ip: $color${addr NETIF}${alignr}DNS: ${nameserver 0}
+${color1}Up:$color ${upspeed NETIF}${color}${alignr}${color1}Down:$color ${downspeed NETIF}
+${color}Total: ${totalup NETIF}${alignr}Total: ${totaldown NETIF}
 $hr
 ${color}Processes: $processes
 ${color}${alignc}${cpugauge cpu1 30,50}  ${cpugauge cpu2 30,50}  ${cpugauge cpu3 30,50}  ${cpugauge cpu4 30,50}
