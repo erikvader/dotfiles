@@ -49,6 +49,7 @@ import Erik.MyStuff
 import Erik.IndiPP
 import qualified Erik.MyLimitWindows as L
 import Erik.ThreeColP
+import Erik.DoubleMaster
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
@@ -70,6 +71,7 @@ myWorkspaces = map show [1..9] ++ [scratchWS]
 #define GRID GV.Grid 1
 #define TALL Tall 1 (3/100) (1/2)
 #define TEMPLATE(X,Y,F1,F2) F1 X F2 \
+                            F1 DoubleMaster (2/3) (1/2) F2 \
                             F1 (simplestFloat :: _ Window) F2 \
                             F1 Y F2 \
                             F1 ThreeColMid 1 (3/100) (1/3) (1/2) F2 \
@@ -258,10 +260,18 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- ((modm, xK_s), sendMessage Reset),
 
     -- Increment the number of windows in the master area
-    ((modm .|. shiftMask, xK_h), onLayout [("SplitGrid", sendMessage $ GV.IncMasterRows 1)] (sendMessage (IncMasterN 1))),
+    ((modm .|. shiftMask, xK_h), onLayout [
+          ("SplitGrid", sendMessage $ GV.IncMasterRows 1),
+          ("DoubleMaster", sendMessage MasterShrink)
+        ]
+      (sendMessage (IncMasterN 1))),
 
     -- Deincrement the number of windows in the master area
-    ((modm .|. shiftMask, xK_l), onLayout [("SplitGrid", sendMessage $ GV.IncMasterRows (-1))] (sendMessage (IncMasterN (-1)))),
+    ((modm .|. shiftMask, xK_l), onLayout [
+          ("SplitGrid", sendMessage $ GV.IncMasterRows (-1)),
+          ("DoubleMaster", sendMessage MasterExpand)
+        ]
+      (sendMessage (IncMasterN (-1)))),
 
     ((modm .|. controlMask, xK_h), onLayout [("SplitGrid", sendMessage $ GV.IncMasterCols 1)] (return ())),
     ((modm .|. controlMask, xK_l), onLayout [("SplitGrid", sendMessage $ GV.IncMasterCols (-1))] (return ())),
