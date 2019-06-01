@@ -29,7 +29,7 @@ def main():
    for w in all:
       dname = names[e.getWmDesktop(w)]
       clas = getClass(w)
-      if w.id == active.id:
+      if active and w.id == active.id:
          clas = "*" + clas
       tit = getTitle(e, w)
       fields.append((i, dname, clas, tit))
