@@ -24,13 +24,20 @@ alias rc='rsync -avhs --progress'
 
 alias y='yay'
 alias ys='yay -S'
-alias yo='yay -Qdt' # list orphans
-alias yor='yay -Rn $(yay -Qqdt)' # remove orphans non-recursively
 alias yc='yay -Sc'
 alias yr='yay -Rn'
 alias yrr='yay -Rsn'
 alias yrrr='yay -Rsnc'
 alias ylibc="yay -S --aur --mflags '--nocheck' libc++ libc++abi libc++experimental"
+alias yo='yay -Qdt' # list orphans
+alias yor='yay -Rn $(yay -Qqdt)' # remove orphans non-recursively
+function yorr { # remove orphans recursively
+    local orphans=($(yay -Qqdt))
+    if [[ "${#orphans[@]}" > 0 ]]; then
+        yay --noconfirm -Rn "${orphans[@]}"
+        yor
+    fi
+}
 
 alias l='ls -Av'
 alias ll='els -s'
