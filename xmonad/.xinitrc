@@ -10,7 +10,10 @@ if [ -f $sysresources ]; then
     xrdb -merge $sysresources
 fi
 
-find "$HOME" -maxdepth 1 -mindepth 1 -xtype f -name '*.Xresources' -print0 | xargs -0 -n1 -r xrdb -merge
+# load all xresources in home
+for f in "$HOME"/.*.Xresources; do
+    [ -f "$f" ] && xrdb -merge "$f"
+done
 
 # was in here already
 sysmodmap=/etc/X11/xinit/.Xmodmap
