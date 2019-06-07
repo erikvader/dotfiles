@@ -1,5 +1,22 @@
+--[[
+This is a template for generating a config file for a system monitor conky.
+The GNU m4 pre-processor is used for the generation.
+
+To set the conkys colors, define some macros with empty values.
+This can be done on invocation as: m4 -D white -D bg-black
+If "white" is defined then set the text color to white.
+If "bg-white" or "bg-black" is defined then add a tinted background with that color.
+
+The environment variable "CONKYIF" specifies what network interface
+that should be used. This variable should be a m4 quoted string
+(backtick and normal quote).
+
+The environment variable "CONKYFS" is a comma-separated list of m4
+quoted strings of paths to mounted filesystems.
+
+]]
 define(`FG_COLOR', ifdef(`white', `ebebeb', `030303'))dnl
-define(`BG_PATH', ifdef(`bg-white', `~/.config/conky/conky_bg_white.png', ifdef(`bg-black', `~/.config/conky/conky_bg_black.png')))dnl
+define(`BG_PATH', ifdef(`bg-white', `~/.config/conky/conky_bg_white.png', ifdef(`bg-black', ``~/.config/conky/conky_bg_black.png'')))dnl
 undefine(`white', `black', `bg-black', `bg-white')dnl
 define(`NETIF', esyscmd(`echo -n $CONKYIF'))dnl
 
@@ -21,7 +38,7 @@ conky.config = {
     gap_x = 50,
     gap_y = 100,
     minimum_height = 5,
-	minimum_width = 5,
+    minimum_width = 5,
     net_avg_samples = 2,
     no_buffers = true,
     double_buffer = true,
@@ -61,24 +78,22 @@ conky.config = {
 }
 
 conky.text = [[
-ifelse(BG_PATH, `', `', ${image BG_PATH -p -5`,'0}
-)dnl
-# ${scroll 30 $nodename - $sysname $kernel on $machine | }
-# $hr
-# ${color}Uptime:$color $uptime
-# ${color}Swap Usage:$color $swap/$swapmax - $swapperc% ${swapbar 4}
+ifelse(BG_PATH, `', `', `${image BG_PATH -p -5,0}
+')dnl
 ${alignc}$kernel
 ${alignc}${uptime}
 $hr
- $color1/$color    $color${fs_used_perc /}%$color1/$color${fs_size /} ${fs_bar 6 /}
- ${color1}data$color $color${fs_used_perc /media/data}%$color1/$color${fs_size /media/data} ${fs_bar 6 /media/data}
+define(`generate_fs', `ifelse(`$1', , , ` ${color1}esyscmd(`printf "\\x60%-10.10s\\x27" "$(basename "$1")"')${color}${fs_used_perc `$1'}%${color1}/${color}${fs_size `$1'} ${fs_bar 6 `$1'}
+generate_fs(shift($@))')')dnl
+generate_fs(esyscmd(`IFS= echo -n $CONKYFS'))dnl
+undefine(`generate_fs')dnl
 $hr
 ${color1}ip: $color${addr NETIF}${alignr}DNS: ${nameserver 0}
 ${color1}Up:$color ${upspeed NETIF}${color}${alignr}${color1}Down:$color ${downspeed NETIF}
 ${color}Total: ${totalup NETIF}${alignr}Total: ${totaldown NETIF}
 $hr
 ${color}Processes: $processes
-${color}${alignc}${cpugauge cpu1 30,50}  ${cpugauge cpu2 30,50}  ${cpugauge cpu3 30,50}  ${cpugauge cpu4 30,50}
+${color}${alignc}${cpugauge cpu1 30,50}  ${cpugauge cpu2 30,50}  ${cpugauge cpu3 30,50}  ${cpugauge cpu4 30,50}  ${cpugauge cpu5 30,50}  ${cpugauge cpu6 30,50}
 ${color1} Name          CPU% | Name          MEM%$color
 ${color} ${top name 1} ${top cpu 1} | ${top_mem name 1} ${top_mem mem 1}
 ${color} ${top name 2} ${top cpu 2} | ${top_mem name 2} ${top_mem mem 2}
