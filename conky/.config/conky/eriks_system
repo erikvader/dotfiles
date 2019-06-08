@@ -8,17 +8,22 @@ If "white" is defined then set the text color to white.
 If "bg-white" or "bg-black" is defined then add a tinted background with that color.
 
 The environment variable "CONKYIF" specifies what network interface
-that should be used. This variable should be a m4 quoted string
-(backtick and normal quote).
+that should be used.
+CONKYIF=wlp1s0
 
-The environment variable "CONKYFS" is a comma-separated list of m4
-quoted strings of paths to mounted filesystems.
+The environment variable "CONKYFS" is a comma-separated list of paths
+to mounted filesystems.
+CONKYFS=/media/asd,/,/home
+
+The environment variable "CONKYCPU" is an integer specifying the
+amount of cores.
+CONKYCPU=4
 
 ]]
 define(`FG_COLOR', ifdef(`white', `ebebeb', `030303'))dnl
 define(`BG_PATH', ifdef(`bg-white', `~/.config/conky/conky_bg_white.png', ifdef(`bg-black', ``~/.config/conky/conky_bg_black.png'')))dnl
 undefine(`white', `black', `bg-black', `bg-white')dnl
-define(`NETIF', esyscmd(`echo -n $CONKYIF'))dnl
+define(`NETIF', esyscmd(`echo -en "\\x60"$CONKYIF"\\x27"'))dnl
 
 conky.config = {
     alignment = 'top_left',
@@ -84,8 +89,8 @@ ${alignc}$kernel
 ${alignc}${uptime}
 $hr
 define(`generate_fs', `ifelse(`$1', , , ` ${color1}esyscmd(`printf "\\x60%-10.10s\\x27" "$(basename "$1")"')${color}${fs_used_perc `$1'}%${color1}/${color}${fs_size `$1'} ${fs_bar 6 `$1'}
-generate_fs(shift($@))')')dnl
-generate_fs(esyscmd(`IFS= echo -n $CONKYFS'))dnl
+$0(shift($@))')')dnl
+generate_fs(esyscmd(`echo -n "$CONKYFS" | sed "s/^/\\x60/;s/$/\\x27/;s/,/\\x27,\\x60/g"'))dnl
 undefine(`generate_fs')dnl
 $hr
 ${color1}ip: $color${addr NETIF}${alignr}DNS: ${nameserver 0}
@@ -93,7 +98,9 @@ ${color1}Up:$color ${upspeed NETIF}${color}${alignr}${color1}Down:$color ${downs
 ${color}Total: ${totalup NETIF}${alignr}Total: ${totaldown NETIF}
 $hr
 ${color}Processes: $processes
-${color}${alignc}${cpugauge cpu1 30,50}  ${cpugauge cpu2 30,50}  ${cpugauge cpu3 30,50}  ${cpugauge cpu4 30,50}  ${cpugauge cpu5 30,50}  ${cpugauge cpu6 30,50}
+define(`generate_cpu', `ifelse(eval(`$1 <= 0'), `1', , `${cpugauge cpu`'$1 30,50}ifelse(eval(`$1 > 1'), `1', `  $0(decr(`$1'))')')')dnl
+${color}${alignc}generate_cpu(esyscmd(`echo -en "\\x60"${CONKYCPU:-0}"\\x27"'))
+undefine(`generate_cpu')dnl
 ${color1} Name          CPU% | Name          MEM%$color
 ${color} ${top name 1} ${top cpu 1} | ${top_mem name 1} ${top_mem mem 1}
 ${color} ${top name 2} ${top cpu 2} | ${top_mem name 2} ${top_mem mem 2}
