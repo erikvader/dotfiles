@@ -8,7 +8,7 @@ from tabulate import tabulate, RIGHT, LEFT
 DELAY = 2
 
 def clear_screen():
-   print('\x1b[2J\x1b[H',end='')
+   print('\x1b[?1049h\x1b[2J\x1b[H',end='')
 
 def print_bytes(b):
    prefixes = ["B", "KB", "MB", "GB", "TB"]
@@ -65,13 +65,16 @@ def main():
             widths=(0, 8),
             align=(LEFT,RIGHT)
          ),
-         end='')
+         end='\x1b[J' # delete all text to end of terminal
+      )
       diskprev = cur
 
       try:
          sleep(DELAY)
       except KeyboardInterrupt:
          break
+
+   print('\x1b[?1049l',end='') # restore previous state
 
 if __name__ == "__main__":
    main()
