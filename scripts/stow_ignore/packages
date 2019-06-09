@@ -4,6 +4,7 @@ xclip
 python-colorama
 python-pyudev
 python-xlib
+python-psutil
 fzf
 python-google-api-python-client
 python-google-auth
