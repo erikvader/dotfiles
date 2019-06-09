@@ -399,7 +399,7 @@ def is_already_applied(modes, xoutput):
    return True
 
 def can_apply(modes, xoutput):
-   return modes.get_output_names() <= [o.name for o in xoutput.get_all_connected()]
+   return set(modes.get_output_names()) <= {o.name for o in xoutput.get_all_connected()}
 
 # run xrandr and wait for a screenChange event, or wait for a timeout
 def run_xrandr(xrandr_args, disp, timeout, dry=False):
