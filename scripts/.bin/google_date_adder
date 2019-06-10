@@ -251,7 +251,25 @@ class Google():
       #pylint: disable=no-member
       return self.service.events().insert(calendarId='primary', body=body).execute()
 
+def printHelp():
+   print(
+"""\
+Commands are given in standard input.
+
+To add a new calendar event:
+ "add" title (date "to" date | date "for" relative) ["heldag"] ["at" place] ["desc" description] ["reminder" relative]
+
+where
+ date: (Y-M-D | D/M[-Y] | "today" | relative) and/or (HH:MM | relative)
+ relative: ("mån" | "tis" | ... | N("d" | "m" | "y" | "w")+) and/or ~HH:MM
+""", end='')
+
 def main():
+   import sys
+   if len(sys.argv) >= 2 and (sys.argv[1] == "-h" or sys.argv[1] == "--help"):
+      printHelp()
+      return
+
    p = Parser()
 
    try:
