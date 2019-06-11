@@ -33,7 +33,7 @@ alias yo='yay -Qdt' # list orphans
 alias yor='yay -Rn $(yay -Qqdt)' # remove orphans non-recursively
 function yorr { # remove orphans recursively
     local orphans=($(yay -Qqdt))
-    if [[ "${#orphans[@]}" > 0 ]]; then
+    if [[ "${#orphans[@]}" -gt 0 ]]; then
         yay --noconfirm -Rn "${orphans[@]}"
         yor
     fi
