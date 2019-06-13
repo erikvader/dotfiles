@@ -57,9 +57,9 @@ font-2 = noto color emoji:scale=10;1
 font-3 = droidsansfallback:pixelsize=11
 font-4 = LiberationSans:bold:pixelsize=11;2
 
-modules-left = xmonad
-modules-center =
-modules-right = screenmng powersave volume progmode temperature memory cpu wlan battery date
+modules-left = ${env:MODULESLEFT:xmonad}
+modules-center = ${env:MODULESMIDDLE: }
+modules-right = ${env:MODULESRIGHT:screenmng powersave volume progmode temperature memory cpu wlan battery date}
 
 tray-position = center
 tray-padding = 2
@@ -92,13 +92,6 @@ tray-position =
 modules-left = xmonad
 modules-center =
 modules-right = date
-
-[bar/example2]
-inherit = bar/example
-
-modules-left = xmonad
-modules-center =
-modules-right = deluge screenmng volume progmode temperature2 temperature memory cpu date
 
 [module/xmonad]
 type = custom/script
