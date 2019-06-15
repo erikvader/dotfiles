@@ -3,36 +3,41 @@
 import argparse as A
 import shlex
 import subprocess as S
-import sys
 import os
 
-# def splitEmpty(seq, delim):
-#    return [x for x in seq.split(delim) if x]
+TEMPVARS = ["HWMONCPU", "HWMONGPU"]
 
-def addTempEnv(info):
+def addTempEnv(var):
+   if var not in os.environ:
+      return
+   ind = os.environ[var].find("/")
+   filename = os.environ[var][:ind]
+   sensorname = os.environ[var][ind+1:]
    for hw in os.scandir("/sys/class/hwmon"):
       if hw.name.startswith("hwmon"):
          with open(os.path.join(hw.path, "name"), "r") as f:
-            if f.read().rstrip("\n") == info[1]:
-               os.environ[info[0]] = os.path.join(hw.path, info[2])
+            if f.read().rstrip("\n") == sensorname:
+               os.environ[var] = os.path.join(hw.path, filename)
                break
 
 def getPolybarOutputs():
    res = S.run(["polybar", "-m"], stdout=S.PIPE, text=True)
    return {l.split(":")[0] for l in res.stdout.split("\n") if l}
 
-def startPolybar(args, monitors):
+def startPolybar(args, monitor, monitorfallback=None):
    args = shlex.split(args)
-   for m in monitors:
-      S.Popen(["polybar", *args], env={"MONITOR": m, **os.environ})
+   moreenv = {"MONITOR": monitor}
+   if monitorfallback:
+      moreenv["MONITORFALL"] = monitorfallback
+   S.Popen(["polybar", *args], env={**moreenv, **os.environ})
 
 def main():
-   parser = A.ArgumentParser(description="helper script for starting polybar on multiple screens")
+   parser = A.ArgumentParser(description="helper script for starting polybar on multiple screens. "+str(TEMPVARS)+" are special environment variables on the form 'inputfile/sensorname'. This program modifies these variables so that they point to inputfile of the sensor with sensorname.")
    parser.add_argument("primary", nargs="+", help="primary outputs to start polybar on")
    parser.add_argument("-p", "--primary-args", help="string of to-be-split arguments given to the primary polybars", required=True)
    parser.add_argument("-s", "--secondary-args", help="string of to-be-split arguments given to the secondary polybars")
-   parser.add_argument("-t", "--sensor", default=[], nargs=3, action="append", metavar=("env", "sensor", "input_file"), help="sets env to be the path to input_file of sensor sensor, can be supplied more than once")
    parser.add_argument("-m", "--secondaries", action="store_true", help="whether to start secondary polybars on all other outputs")
+   parser.add_argument("-f", "--fallback", default=[], nargs=2, action="append", metavar=("OUTPUT", "FALLBACK"), help="sets FALLBACK to be the fallback monitor of OUTPUT. An OUTPUT can have multiple fallbacks. This is used to compensate for polybar's fact that it reports incorrect available outputs when mirroring.")
 
    args = parser.parse_args()
 
@@ -40,15 +45,40 @@ def main():
       parser.error("--secondary-args required if --secondaries")
 
    availableOutputs = getPolybarOutputs()
+   if not availableOutputs:
+      raise Exception("no available outputs :O")
+
    primaries = set(args.primary)
 
-   for t in args.sensor:
+   for t in TEMPVARS:
       addTempEnv(t)
 
-   startPolybar(args.primary_args, availableOutputs & primaries)
+   fallbacks = {}
+   for m,f in args.fallback:
+      if m in fallbacks:
+         fallbacks[m].append(f)
+      else:
+         fallbacks[m] = [f]
+
+   used = set()
+   for p in primaries:
+      fallback = None
+      if p not in availableOutputs:
+         for f in fallbacks.get(p, []):
+            if f in availableOutputs:
+               fallback = f
+               break
+
+      if fallback:
+         used.add(fallback)
+      else:
+         used.add(p)
+
+      startPolybar(args.primary_args, p, fallback)
 
    if args.secondaries:
-      startPolybar(args.secondary_args, availableOutputs - primaries)
+      for s in availableOutputs - used:
+         startPolybar(args.secondary_args, s)
 
 if __name__ == "__main__":
    main()
