@@ -1,9 +1,5 @@
 #!/bin/python
 
-# TODO: config option to run all programs anyway if we only killed
-#       dead outputs. good if we want to have status bars or something
-#       on temporary screens.
-
 from Xlib import display
 from Xlib.ext import randr
 import os, json, sys, re
@@ -481,29 +477,28 @@ def kill_dead(xoutput, dry=False):
    xrandr_dead = xoutput.get_comp_xrandr_args(None)
    if xrandr_dead:
       start_internal("xrandr", xrandr_dead, dry=dry, hate_non_zero=True)
-      notify_send("killed dead outputs")
+      return True
+   return False
 
 def run_mode(modename, conf, xoutput, disp, force=False, dry=False):
    mode = Mode(conf, modename)
 
    if mode.no_xrandr:
-      return mode
+      return APPLY_SUCCESS, mode
 
    res = apply(mode, xoutput, disp, force, dry)
 
    if res == APPLY_SUCCESS:
-      notify_send("success")
-      return mode
+      return res, mode
    elif res == ALREADY_APPLIED:
-      notify_send("nothing to do")
-      return None
+      return res, mode
    elif res == CANT_APPLY:
       if mode.default:
          return run_mode(mode.default, conf, xoutput, disp, force, dry)
       else:
-         notify_send("can't apply mode")
+         return res, mode
 
-   return None
+   raise Exception("unreachable")
 
 def main():
    parser = A.ArgumentParser()
@@ -517,6 +512,7 @@ def main():
    parser.add_argument("-k", "--keep-dead", action="store_true", help="don't disable dead outputs if mode can't be applied or is already applied (default is to kill)")
    parser.add_argument("-q", "--quiet", action="store_true", help="close stdout and stderr for forked programs")
    parser.add_argument("-n", "--no-programs", action="store_true", help="don't start any programs")
+   parser.add_argument("-a", "--always-run-programs", action="store_true", help="start mode's programs even if already applied")
    args = parser.parse_args()
 
    conf = read_config()
@@ -539,13 +535,24 @@ def main():
       kill_dead(xoutput, dry=args.dry_run)
       return
 
-   succ_mode = run_mode(args.mode, conf, xoutput, disp, force=args.force, dry=args.dry_run)
+   status, mode = run_mode(args.mode, conf, xoutput, disp, force=args.force, dry=args.dry_run)
 
-   if not succ_mode and not args.keep_dead:
-      kill_dead(xoutput, dry=args.dry_run)
+   if status == CANT_APPLY:
+      notify_send("can't apply mode")
+   elif status == ALREADY_APPLIED and args.always_run_programs:
+      notify_send("already applied, but running programs anyway")
+   elif status == ALREADY_APPLIED:
+      notify_send("nothing to do")
+   elif status == APPLY_SUCCESS:
+      notify_send("success")
 
-   if succ_mode and not args.no_programs:
-      restart_all_programs(succ_mode.get_programs(), dry=args.dry_run, enable_output=not args.quiet)
+   if not mode.no_xrandr and status != APPLY_SUCCESS and not args.keep_dead:
+      if kill_dead(xoutput, dry=args.dry_run):
+         notify_send("killed dead outputs")
+
+   if ((status == APPLY_SUCCESS and not args.no_programs) or
+       (status == ALREADY_APPLIED and args.always_run_programs)):
+      restart_all_programs(mode.get_programs(), dry=args.dry_run, enable_output=not args.quiet)
 
 if __name__ == "__main__":
    #pylint: disable=broad-except
