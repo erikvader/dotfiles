@@ -159,7 +159,7 @@ class MOutput:
            + (["--right-of", self.rightof] if self.rightof else [])
            + (["--above", self.above] if self.above else [])
            + (["--below", self.below] if self.below else [])
-           + (["--sameas", self.sameas] if self.sameas else []))
+           + (["--same-as", self.sameas] if self.sameas else []))
 
    def is_sameas(self, other):
       return self.sameas == other.name or other.sameas == self.name
