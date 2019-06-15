@@ -1,57 +1,64 @@
-#!/bin/bash
+#!/bin/python
 
-# Shows an interactive menu for mounting and unmounting removable
-# media using udisksctl.
-# If an item has a star next to its device path it means that it is
-# mounted and will be unmounted if selected.
-# If an item doesn't have a star it will instead be mounted if
-# selected.
+import subprocess as S
+import json
+import sys
+from fzf_dmenu import fzf_dmenu
+from notify_send import notify_send
 
-removables=()
+def get_drives():
+   res = S.run(["lsblk", "-JO"], stdout=S.PIPE)
+   res.check_returncode()
+   lsblk = json.loads(res.stdout)
+   usb_drives = [x for x in lsblk["blockdevices"] if x["tran"] == "usb"]
+   return usb_drives
 
-for r in /sys/class/block/*/removable; do
-    read -r isrem < "$r"
-    if [[ $isrem -eq 1 ]]; then
-        removables+=( "${r%/*}" )
-    fi
-done
+def get_partitions(drives, mounted=False):
+   parts = []
+   for d in drives:
+      p = [p for p in d["children"] if mounted == bool(p["mountpoint"])]
+      for x in p:
+         x["vendor"] = d["vendor"]
+         x["model"] = d["model"]
+      parts.extend(p)
+   return parts
 
-function getmntline {
-    r=$1
-    p=$2
-    devname=$(echo -n /dev/; echo -n "${p##*/}")
-    (echo -n "$devname"
-     if findmnt --source "$devname" &>/dev/null; then
-         echo -n '*'
-     fi
-     echo
-     cat "$r"/device/{vendor,model}
-    ) | paste -sd ' '
-}
+def get_removable_drives(drives):
+   return [d for d in drives if not get_partitions([d], mounted=True)]
 
-partitions=()
+def run_udisks(choices, cmd):
+   if not choices:
+      notify_send("There were no relevant drives")
+      return
 
-for r in "${removables[@]}"; do
-    for p in "$r"*/partition; do
-        read -r ispart < "$p"
-        if [[ $ispart -eq 1 ]]; then
-            partitions+=( "$(getmntline "$r" "${p%/*}")" )
-        fi
-    done
-done
+   formatted_choices = ["{} {} {}".format(part["path"], part.get("vendor", ""), part.get("model", "")) for part in choices]
 
-if [[ "${#partitions[@]}" -eq 0 ]]; then
-    notify-send "Did not find any removable media :("
-    exit
-fi
+   c = fzf_dmenu(formatted_choices, fzf_options=["--prompt", cmd+": "])
+   if not c:
+      return
 
-selected=$(printf '%s\n' "${partitions[@]}" | fzf_dmenu --prompt="mount: ")
+   cpath = c.split(" ")[0]
+   res = S.run(["udisksctl", cmd, "-b", cpath], text=True, stdout=S.PIPE, stderr=S.PIPE)
+   noti = res.stdout + res.stderr
+   if noti:
+      notify_send(noti)
 
-if [[ $selected ]]; then
-    read -r mp rest <<< "$selected"
-    if [[ "$mp" =~ \*$ ]]; then
-        notify-send "$(udisksctl unmount -b "${mp%\*}" 2>&1)"
-    else
-        notify-send "$(udisksctl mount -b "$mp" 2>&1)"
-    fi
-fi
+def main():
+   usb_drives = get_drives()
+   if len(sys.argv) == 2:
+      if sys.argv[1] == "mount":
+         run_udisks(get_partitions(usb_drives, mounted=False), "mount")
+      elif sys.argv[1] == "unmount":
+         run_udisks(get_partitions(usb_drives, mounted=True), "unmount")
+      elif sys.argv[1] == "poweroff":
+         run_udisks(get_removable_drives(usb_drives), "power-off")
+      else:
+         raise Exception("invalid mode")
+   else:
+      raise Exception("i need a mode")
+
+
+if __name__ == "__main__":
+   main()
+
+
