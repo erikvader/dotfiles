@@ -35,6 +35,7 @@ def _align(c, ls, ml, a):
          return cc
    return [f(cc, l) for cc, l in zip(c,ls)]
 
+# TODO: end=None to not join the lines
 # tabulates fields into a string.
 # fields: is an iterable of iterables align: is a tuple of alignments
 #         applied in order. The last one is repeated indefinitely
