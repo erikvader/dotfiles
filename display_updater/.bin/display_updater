@@ -12,6 +12,7 @@ import argparse as A
 from copy import deepcopy
 from time import sleep
 from traceback import print_exc
+from notify_send import notify_send
 
 CONFIG_FILE=os.path.join(os.environ["HOME"], ".display_updaterc")
 APPLY_SUCCESS = 0
@@ -351,9 +352,6 @@ def start_internal(file, args=None, dry=False, hate_non_zero=False):
    if hate_non_zero and res.returncode != 0:
       raise DisplayException("{} exited with exit status {}".format(file, res.returncode))
    return res.returncode
-
-def notify_send(*msg):
-   start_internal("notify-send", list(msg))
 
 def read_config():
    if not os.path.isfile(CONFIG_FILE):

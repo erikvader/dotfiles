@@ -2,9 +2,7 @@
 
 import pyudev
 import subprocess as S
-
-def send_notification(head, msg, icon=""):
-   S.run(["notify-send"] + (["--icon={}".format(icon)] if icon else []) + [head, msg])
+from notify_send import notify_send
 
 def safe_get(device, *names):
    for n in names:
@@ -23,7 +21,7 @@ def handle_usb(action, device):
       safe_get(device, *manu)
    )
    head = "USB plugged in" if action == "add" else "USB disconnected"
-   send_notification(head, msg, icon="input-keyboard")
+   notify_send(head, msg, icon="input-keyboard")
 
 def handle_block(action, device):
    if action not in ["add", "remove"]:
@@ -34,10 +32,10 @@ def handle_block(action, device):
       safe_get(device, 'DEVNAME')
    )
    head = "block device added" if action == "add" else "block device removed"
-   send_notification(head, msg, icon="media-removable")
+   notify_send(head, msg, icon="media-removable")
 
 def handle_disp(action, _device):
-   send_notification("Display", "Something display related happened! ({})".format(action), icon="video-display")
+   notify_send("Display", "Something display related happened! ({})".format(action), icon="video-display")
 
 def main():
    context = pyudev.Context()
