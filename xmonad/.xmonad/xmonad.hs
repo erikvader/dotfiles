@@ -9,7 +9,7 @@ import System.FilePath ((</>))
 import System.Exit
 import Control.Monad (when,join)
 import Data.List
-import Data.Maybe (maybe,maybeToList)
+import Data.Maybe (maybe,maybeToList,fromMaybe)
 
 import Graphics.X11.ExtraTypes.XF86
 
@@ -126,7 +126,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_e), L.increaseLimit),
     ((modm, xK_c), L.toggleLimit),
     ((modm, xK_f), L.toggleFull),
-    ((modm .|. shiftMask, xK_f), sendMessage $ Toggle MIRROR),
+    ((modm, xK_w), sendMessage $ Toggle MIRROR),
 
     --cycle
     -- ((modm, xK_i), onLayout [("TwoPane", rotFocusedUp)] rotAllUp), --rotate current window in two pane pretty much
@@ -138,7 +138,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_i), L.rotateFocHiddenUp),
     ((modm .|. shiftMask, xK_u), L.rotateFocHiddenDown),
     -- ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
-    ((modm, xK_w), L.bury),
+    -- ((modm, xK_w), L.bury),
 
     ((modm, xK_o), windowsLowestEmpty W.view $ XMonad.workspaces conf),
     ((modm .|. shiftMask, xK_o), windowsLowestEmpty shiftView $ XMonad.workspaces conf),
@@ -365,10 +365,16 @@ myFocusPPXin = def
       ppWsSep = "",
       ppSep = " %{F#ffb52a}:%{F-} ",
       ppTitle = shorten 60,
+      ppLayout = colorLayout ["Mirror"],
       ppSort = getSortByXineramaPhysicalRule def,
       ppOrder = \(w:l:t:lwc:lwf:ldh:_) -> filter (not . null) [w, lwf ++ l, ldh, lwc, t],
       ppExtras = logLimitWindows
     }
+  where
+    colorLayout keywords s = fromMaybe s $ do
+      pre <- find (`isPrefixOf` s) keywords
+      strip <- stripPrefix pre s
+      return $ "%{F#eeee00}" ++ pre ++ "%{F-}" ++ strip
 
 myNonfocusPPXin :: PP
 myNonfocusPPXin = myFocusPPXin {
