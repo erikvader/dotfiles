@@ -35,7 +35,7 @@ function yorr { # remove orphans recursively
     local orphans=($(yay -Qqdt))
     if [[ "${#orphans[@]}" -gt 0 ]]; then
         yay --noconfirm -Rn "${orphans[@]}"
-        yor
+        yorr
     fi
 }
 
