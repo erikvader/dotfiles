@@ -51,7 +51,8 @@ function f {
 }
 
 # copy of glola
-alias gl='git log --graph --pretty='"'"'%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"'"' --all'
+alias gl='git log --graph --pretty='"'"'%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"'"
+alias gla='gl --all'
 alias gst='git status'
 alias gsts='git submodule foreach "git status"'
 
