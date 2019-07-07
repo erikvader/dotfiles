@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# Send a notification if there are any updates available
+
+# same as pacman's checkupdates except that every occurence of pacman
+# in that script is replaced with yay to support AUR packages.
+checkupdates_yay() {
+    sed -E 's/ pacman / yay /g; s/^pacman /yay /g' "$(command -v checkupdates)" | bash -s
+    return $?
+}
+
+if ! newupdates=$(checkupdates_yay); then
+    exit 1
+fi
+
+if [ -n "$newupdates" ]; then
+    notify-send "There are $(echo "$newupdates" | wc -l) updates available!"
+else
+    notify-send "There aren't any new updates"
+fi

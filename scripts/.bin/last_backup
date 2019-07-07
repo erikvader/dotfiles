@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Sends a notification for when the last backup occured
+
+if secs=$(nc -d -w 5 backup 1337) && [ -n "$secs" ]; then
+    now=$(date '+%s')
+    notify-send "Last backup was done $(( (now - secs) / (3600*24) )) days ago"
+else
+    notify-send "Backup server offline?"
+fi
