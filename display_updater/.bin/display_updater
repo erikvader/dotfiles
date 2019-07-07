@@ -325,19 +325,16 @@ def start_external(file, args=None, env=None, dry=False, output=False):
    if dry:
       print("{} {} {}".format(file, args, env))
       return
-   pid = os.fork()
-   if pid != 0:
-      return
-   os.setsid()
-   with open(os.devnull, "r") as r, open(os.devnull, "w") as w:
-      os.dup2(r.fileno(), sys.stdin.fileno())
-      if not output:
-         os.dup2(w.fileno(), sys.stdout.fileno())
-         os.dup2(w.fileno(), sys.stderr.fileno())
    eu = os.path.expanduser(file)
    args = args if args else []
    env = {**os.environ, **env} if env else os.environ
-   os.execvpe(eu, [eu] + args, env)
+   S.Popen([eu] + args,
+           stdin=None if output else S.DEVNULL,
+           stdout=None if output else S.DEVNULL,
+           stderr=None if output else S.DEVNULL,
+           env=env,
+           start_new_session=True,
+           close_fds=True)
 
 def start_internal(file, args=None, dry=False, hate_non_zero=False):
    if dry:
