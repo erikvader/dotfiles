@@ -30,7 +30,7 @@ function on {
             xcape -e 'Control_R=Escape'
         fi
         xset r rate 300 35 # keyboard repeat speed
-        echo on $no_caps > "$status_file"
+        echo on "$no_caps" > "$status_file"
        )
     then
         # notify-send 'Programming keyboard mode' 'on'
@@ -45,7 +45,7 @@ function sweon {
     xmodmap -e 'keycode 47 = odiaeresis Odiaeresis' \
             -e 'keycode 48 = adiaeresis Adiaeresis' \
             -e 'keycode 34 = aring Aring' &&
-    echo swe $no_caps > "$status_file"
+    echo swe "$no_caps" > "$status_file"
     # notify-send 'åäö mode' 'on'
 }
 
@@ -53,7 +53,7 @@ function sweoff {
     xmodmap -e 'keycode 47 = bracketleft braceleft odiaeresis Odiaeresis odiaeresis Odiaeresis' \
             -e 'keycode 48 = bracketright braceright adiaeresis Adiaeresis adiaeresis Adiaeresis' \
             -e 'keycode 34 = at backslash aring Aring aring Aring' &&
-    echo on $no_caps > "$status_file"
+    echo on "$no_caps" > "$status_file"
     # notify-send 'åäö mode' 'off'
 }
 
@@ -61,7 +61,7 @@ function off {
     if (set -e
         setxkbmap se
         pkill xcape 2>/dev/null
-        echo off $no_caps > "$status_file"
+        echo off "$no_caps" > "$status_file"
        )
     then
         # notify-send 'Programming keyboard mode' 'off'
