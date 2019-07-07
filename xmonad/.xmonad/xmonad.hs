@@ -464,12 +464,12 @@ main :: IO ()
 main = do
   -- custom .xsession-error
   catch (do
-            closeFd stdError
             fs <- doesFileExist errorFile
             when fs $ removeFile errorFile
             fd <- createFile errorFile (CMode 0o666)
             _ <- dupTo fd stdError
-            return ())
+            when (fd /= stdError) $ closeFd fd
+            )
     (\e -> trace (show (e :: SomeException)))
 
   xmonad $ indiPP format $ withUrgencyHook NoUrgencyHook $ ewmh $ docks $ myConfig {
