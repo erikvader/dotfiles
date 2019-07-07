@@ -68,6 +68,7 @@ source $ZSH/oh-my-zsh.sh
 
 setopt HIST_IGNORE_SPACE
 # unsetopt extended_glob
+unsetopt autocd
 
 # export MANPATH="/usr/local/man:$MANPATH"
 

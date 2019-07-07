@@ -39,6 +39,7 @@ function yorr { # remove orphans recursively # TODO: (yay -Yc ??)
     fi
 }
 
+alias ..='cd ..'
 alias l='ls -Av'
 alias ll='els -s'
 alias lle='els -se'
