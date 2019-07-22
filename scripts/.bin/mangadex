@@ -1,0 +1,140 @@
+#!/bin/python
+
+import urllib.request as U
+import urllib.parse as P
+import json
+import re
+from contextlib import contextmanager
+from shutil import copyfileobj
+
+class MangadexException(Exception):
+   pass
+
+class ChapterDownloader:
+   def __init__(self, chap_id):
+      self.chap_id = chap_id
+      self.chap_json = MangadexDownloader.fetch_json(
+         self.chap_id,
+         "chapter"
+      )
+      self.cur_page = 0
+      self.extractor = re.compile(r"^[a-zA-z]*([0-9]+)\.(.+)$")
+
+   def title(self):
+      return self.chap_json["title"]
+
+   def amount_of_pages(self):
+      return len(self.chap_json["page_array"])
+
+   def has_next(self):
+      return self.cur_page < self.amount_of_pages()
+
+   def next_page_info(self):
+      if not self.has_next():
+         raise MangadexException("no next page")
+
+      m = self.extractor.match(self.chap_json["page_array"][self.cur_page])
+      return m[1], m[2]
+
+   @contextmanager
+   def next_page(self):
+      if not self.has_next():
+         raise MangadexException("no next page")
+
+      url = "{}/{}/{}".format(
+         self.chap_json["server"].rstrip("/"),
+         self.chap_json["hash"],
+         self.chap_json["page_array"][self.cur_page]
+      )
+      with MangadexDownloader.fetch(url) as image:
+         yield image
+
+      self.cur_page += 1
+
+class MangadexDownloader:
+   HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64)"}
+   API_URL = "https://mangadex.org/api"
+
+   def __init__(self, manga_json):
+      self.manga_json = manga_json
+      self.chapter_info = {}
+      self._extract_chapter_info()
+
+   def get_manga_json(self):
+      return json.dumps(self.manga_json)
+
+   def set_preferred_group(self, group):
+      self.manga_json["settings"]["preferred_group"] = group
+
+   def get_available_chapters(self):
+      return list(self.chapter_info.keys())
+
+   def download_chapter(self, chap_num):
+      if chap_num not in self.chapter_info:
+         raise MangadexException("{} not an available chapter".format(chap_num))
+
+      return ChapterDownloader(self.chapter_info[chap_num])
+
+   def _extract_chapter_info(self):
+      all_chapters = self.manga_json["chapter"]
+      pref_group = self.manga_json["settings"].get("preferred_group", None)
+
+      for chap_id,vals in all_chapters.items():
+         chap_num = vals["chapter"]
+         if vals["lang_code"] != "gb":
+            continue
+
+         if (chap_num not in self.chapter_info or
+             (pref_group and vals["group_name"] == pref_group)):
+            self.chapter_info[chap_num] = chap_id
+
+   @classmethod
+   def from_url(cls, url):
+      manga_info = MangadexDownloader.fetch_json(
+         MangadexDownloader._extract_manga_id(url),
+         "manga"
+      )
+      manga_info["url"] = url
+      manga_info["settings"] = {}
+      return cls(manga_info)
+
+   @classmethod
+   def from_file(cls, json_file):
+      with open(json_file, "r") as f:
+         return cls(json.load(f))
+
+   @staticmethod
+   def _extract_manga_id(url):
+      # https://mangadex.org/title/2434/grappler-baki
+      m = re.match(r"^https?://mangadex.org/title/([0-9]+)/?", url)
+      if not m:
+         raise MangadexException("invalid url")
+      return m[1]
+
+   @staticmethod
+   @contextmanager
+   def fetch(url, getvars=None):
+      if getvars:
+         getvars = P.urlencode(getvars)
+         url = MangadexDownloader.API_URL + "?" + getvars
+      req = U.Request(url, headers=MangadexDownloader.HEADERS)
+      with U.urlopen(req) as response:
+         # TODO: kolla om 200?
+         yield response
+
+   @staticmethod
+   def fetch_json(mid, mtype):
+      getvars = {"id": mid, "type": mtype, "baseURL": "/api"}
+      with MangadexDownloader.fetch(MangadexDownloader.API_URL, getvars=getvars) as mjson:
+         return json.load(mjson)
+
+def main():
+   md = MangadexDownloader.from_url("https://mangadex.org/title/2434/grappler-baki")
+   cd = md.download_chapter("201")
+   while cd.has_next():
+      i, ext = cd.next_page_info()
+      with cd.next_page() as image, open("{}.{}".format(i, ext), "wb") as f:
+         copyfileobj(image, f)
+
+if __name__ == "__main__":
+   main()
