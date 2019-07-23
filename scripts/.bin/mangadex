@@ -5,7 +5,9 @@ import urllib.parse as P
 import json
 import re
 from contextlib import contextmanager
-from shutil import copyfileobj
+import zipfile as Z
+import os
+from math import log10, ceil
 
 class MangadexException(Exception):
    pass
@@ -20,7 +22,7 @@ class ChapterDownloader:
       self.cur_page = 0
       self.extractor = re.compile(r"^[a-zA-z]*([0-9]+)\.(.+)$")
 
-   def title(self):
+   def get_title(self):
       return self.chap_json["title"]
 
    def amount_of_pages(self):
@@ -34,7 +36,7 @@ class ChapterDownloader:
          raise MangadexException("no next page")
 
       m = self.extractor.match(self.chap_json["page_array"][self.cur_page])
-      return m[1], m[2]
+      return int(m[1]), m[2]
 
    @contextmanager
    def next_page(self):
@@ -63,11 +65,14 @@ class MangadexDownloader:
    def get_manga_json(self):
       return json.dumps(self.manga_json)
 
+   def get_title(self):
+      return self.manga_json["manga"]["title"]
+
    def set_preferred_group(self, group):
       self.manga_json["settings"]["preferred_group"] = group
 
    def get_available_chapters(self):
-      return list(self.chapter_info.keys())
+      return sorted(self.chapter_info.keys(), key=float)
 
    def download_chapter(self, chap_num):
       if chap_num not in self.chapter_info:
@@ -128,13 +133,72 @@ class MangadexDownloader:
       with MangadexDownloader.fetch(MangadexDownloader.API_URL, getvars=getvars) as mjson:
          return json.load(mjson)
 
+class Manager:
+   SYNCFILE = ".mangadex"
+
+   def __init__(self, path, downloader=None):
+      self.path = path
+      if not os.path.isdir(self.path):
+         raise MangadexException("not a valid directory")
+
+      self.syncfile = os.path.join(path, Manager.SYNCFILE)
+      if not os.path.isfile(self.syncfile):
+         raise MangadexException("can't find sync file")
+
+      self.downloader = downloader or MangadexDownloader.from_file(self.syncfile)
+      self.stats = []
+
+   @classmethod
+   def new(cls, basedir, url):
+      md = MangadexDownloader.from_url(url)
+      folder_name = md.get_title()
+      folder_name = "".join([c for c in folder_name if c.isalnum() or c == ' ']).strip()
+      manga_dir = os.path.join(basedir, folder_name)
+      os.mkdir(manga_dir)
+      with open(os.path.join(manga_dir, Manager.SYNCFILE), "w") as f:
+         f.write(md.get_manga_json())
+      return cls(manga_dir, downloader=md)
+
+   def _load_status(self):
+      if self.stats:
+         return self.stats
+      stats = []
+      x = re.compile(r"^(\*?)(.+?) (.+)$")
+      for f in os.scandir(self.path):
+         if f.name == Manager.SYNCFILE:
+            continue
+         m = x.match(f.name)
+         # unread, chapter, title
+         stats.append((m[1] == "*", m[2], m[3]))
+      self.stats = stats
+      return stats
+
+   def find_latest_downloaded_chapter(self):
+      self._load_status()
+      return max((c for (u,c,_) in self.stats if u), key=float) if self.stats else None
+
+   def download_chapter(self, chap_num):
+      cd = self.downloader.download_chapter(chap_num)
+      filename = "*{} {}.cbz".format(chap_num, cd.get_title())
+      filepath = os.path.join(self.path, filename)
+      if (os.path.exists(filepath) or
+          os.path.exists(os.path.join(self.path, filename.lstrip("*")))):
+         raise MangadexException("chapter {} is already downloaded".format(chap_num))
+      padlen = ceil(log10(cd.amount_of_pages()))
+      with Z.ZipFile(filepath, "w") as zf:
+         while cd.has_next():
+            i, ext = cd.next_page_info()
+            pagename = ("{:0"+str(padlen)+"d}.{}").format(i, ext)
+            with cd.next_page() as image:
+               zf.writestr(pagename, image.read())
+
 def main():
-   md = MangadexDownloader.from_url("https://mangadex.org/title/2434/grappler-baki")
-   cd = md.download_chapter("201")
-   while cd.has_next():
-      i, ext = cd.next_page_info()
-      with cd.next_page() as image, open("{}.{}".format(i, ext), "wb") as f:
-         copyfileobj(image, f)
+   # m = Manager.new(".", "https://mangadex.org/title/2434/grappler-baki")
+   m = Manager("Grappler Baki")
+   m.download_chapter("2")
+   print(m.find_latest_downloaded_chapter())
+   # print(m.downloader.get_available_chapters())
+   # md = MangadexDownloader.from_url("https://mangadex.org/title/2434/grappler-baki")
 
 if __name__ == "__main__":
    main()
