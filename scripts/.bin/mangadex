@@ -8,9 +8,44 @@ from contextlib import contextmanager
 import zipfile as Z
 import os
 from math import log10, ceil
+from bisect import insort
+import sys
+import subprocess as P
 
 class MangadexException(Exception):
    pass
+
+class StatusBar:
+   def __init__(self, name, maximum):
+      self.name = name
+      self.maximum = maximum
+      self.cur = 0
+      self.is_term = False
+      if os.isatty(sys.stdout.fileno()) and os.environ.get("TERM", "dumb") != "dumb":
+         self.is_term = True
+         self.term_width = os.get_terminal_size().columns
+         self._output()
+
+   def _clear_line(self):
+      if self.is_term:
+         print("\r\x1b[K", end="")
+
+   def _output(self):
+      self._clear_line()
+      beg = "{} ({}/{}) [".format(self.name, self.cur, self.maximum)
+      print(beg, end="")
+      left = self.term_width - len(beg) - 1
+      filled = int((self.cur/self.maximum)*left)
+      print("#"*filled, end="")
+      print("-"*(left-filled), end="")
+      print("]", end="", flush=True)
+
+   def step(self):
+      self.cur += 1
+      if self.cur >= self.maximum and not self.is_term:
+         print("{} ... done".format(self.name))
+      elif self.is_term:
+         self._output()
 
 class ChapterDownloader:
    def __init__(self, chap_id):
@@ -63,7 +98,7 @@ class MangadexDownloader:
       self._extract_chapter_info()
 
    def get_manga_json(self):
-      return json.dumps(self.manga_json)
+      return self.manga_json
 
    def get_title(self):
       return self.manga_json["manga"]["title"]
@@ -74,8 +109,11 @@ class MangadexDownloader:
    def get_available_chapters(self):
       return sorted(self.chapter_info.keys(), key=float)
 
+   def is_chapter(self, chap_num):
+      return chap_num in self.chapter_info
+
    def download_chapter(self, chap_num):
-      if chap_num not in self.chapter_info:
+      if not self.is_chapter(chap_num):
          raise MangadexException("{} not an available chapter".format(chap_num))
 
       return ChapterDownloader(self.chapter_info[chap_num])
@@ -102,11 +140,6 @@ class MangadexDownloader:
       manga_info["url"] = url
       manga_info["settings"] = {}
       return cls(manga_info)
-
-   @classmethod
-   def from_file(cls, json_file):
-      with open(json_file, "r") as f:
-         return cls(json.load(f))
 
    @staticmethod
    def _extract_manga_id(url):
@@ -136,17 +169,21 @@ class MangadexDownloader:
 class Manager:
    SYNCFILE = ".mangadex"
 
-   def __init__(self, path, downloader=None):
+   def __init__(self, path, downloader=None, syncdata=None, localdata=None):
       self.path = path
       if not os.path.isdir(self.path):
          raise MangadexException("not a valid directory")
 
       self.syncfile = os.path.join(path, Manager.SYNCFILE)
-      if not os.path.isfile(self.syncfile):
+      if not os.path.isfile(self.syncfile) and (syncdata is None or localdata is None):
          raise MangadexException("can't find sync file")
 
-      self.downloader = downloader or MangadexDownloader.from_file(self.syncfile)
-      self.stats = []
+      self.syncdata = syncdata
+      self.localdata = localdata
+      if self.syncdata is None or self.localdata is None:
+         self._load_syncfile()
+
+      self.downloader = downloader or MangadexDownloader(self.syncdata)
 
    @classmethod
    def new(cls, basedir, url):
@@ -155,50 +192,102 @@ class Manager:
       folder_name = "".join([c for c in folder_name if c.isalnum() or c == ' ']).strip()
       manga_dir = os.path.join(basedir, folder_name)
       os.mkdir(manga_dir)
-      with open(os.path.join(manga_dir, Manager.SYNCFILE), "w") as f:
-         f.write(md.get_manga_json())
-      return cls(manga_dir, downloader=md)
+      n = cls(manga_dir, downloader=md, syncdata=md.get_manga_json(), localdata={"unread": []})
+      n.save_syncfile()
+      return n
 
-   def _load_status(self):
-      if self.stats:
-         return self.stats
-      stats = []
-      x = re.compile(r"^(\*?)(.+?) (.+)$")
+   def _load_syncfile(self):
+      with open(self.syncfile, "r") as f:
+         everything = json.load(f)
+         self.syncdata = everything["sync"]
+         self.localdata = everything["local"]
+
+   def save_syncfile(self):
+      with open(self.syncfile, "w") as f:
+         everything = {"sync": self.syncdata, "local": self.localdata}
+         json.dump(everything, f)
+
+   def _query_fs(self):
+      x = re.compile(r"^Ch\.([0-9\.]+) - (.+)\.cbz$")
       for f in os.scandir(self.path):
          if f.name == Manager.SYNCFILE:
             continue
          m = x.match(f.name)
-         # unread, chapter, title
-         stats.append((m[1] == "*", m[2], m[3]))
-      self.stats = stats
-      return stats
+         yield (m[1], m[2], m[0])
+
+   def find_first_unread_chapter(self):
+      l = self.localdata["unread"]
+      return l[0] if l else None
 
    def find_latest_downloaded_chapter(self):
-      self._load_status()
-      return max((c for (u,c,_) in self.stats if u), key=float) if self.stats else None
+      return max((x[0] for x in self._query_fs()), key=float, default=None)
 
    def download_chapter(self, chap_num):
       cd = self.downloader.download_chapter(chap_num)
-      filename = "*{} {}.cbz".format(chap_num, cd.get_title())
+      filename = "Ch.{} - {}.cbz".format(chap_num, cd.get_title())
       filepath = os.path.join(self.path, filename)
-      if (os.path.exists(filepath) or
-          os.path.exists(os.path.join(self.path, filename.lstrip("*")))):
+      if os.path.exists(filepath):
          raise MangadexException("chapter {} is already downloaded".format(chap_num))
       padlen = ceil(log10(cd.amount_of_pages()))
+      bar = StatusBar("Ch.{}".format(chap_num), cd.amount_of_pages())
       with Z.ZipFile(filepath, "w") as zf:
          while cd.has_next():
             i, ext = cd.next_page_info()
             pagename = ("{:0"+str(padlen)+"d}.{}").format(i, ext)
             with cd.next_page() as image:
                zf.writestr(pagename, image.read())
+               bar.step()
+      insort(self.localdata["unread"], chap_num)
+
+   def download_next(self, n=1):
+      assert(n>0)
+      avail = self.downloader.get_available_chapters()
+      latest = self.find_latest_downloaded_chapter()
+      if latest:
+         start = avail.index(latest)+1 # TODO: bisect for binary search??
+      else:
+         start = 0
+      if start >= len(avail):
+         raise MangadexException("no new chapters to download")
+      for i in range(start, min(start+n, len(avail))):
+         self.download_chapter(avail[i])
+
+   def set_read(self, chap_num, flag):
+      if not self.downloader.is_chapter(chap_num):
+         raise MangadexException("{} is not a valid chapter".format(chap_num))
+
+      if flag:
+         try:
+            self.localdata["unread"].remove(chap_num)
+         except ValueError:
+            pass # chap_num not in localdata
+      else:
+         insort(self.localdata["unread"], chap_num)
+
+   def _find_chapter_file(self, chap_num):
+      for ch, _, filename in self._query_fs():
+         if ch == chap_num:
+            return filename
+      #pylint: disable=useless-else-on-loop
+      else:
+         raise MangadexException("Couldn't find file for chapter {}".format(chap_num))
+
+   def read(self):
+      n = self.find_first_unread_chapter()
+      if not n:
+         raise MangadexException("No more chapters to read")
+
+      filename = self._find_chapter_file(n)
+      p = P.run(["sxiv_zip", "--", os.path.join(self.path, filename)])
+      p.check_returncode()
+      self.set_read(n, True)
 
 def main():
    # m = Manager.new(".", "https://mangadex.org/title/2434/grappler-baki")
    m = Manager("Grappler Baki")
-   m.download_chapter("2")
-   print(m.find_latest_downloaded_chapter())
-   # print(m.downloader.get_available_chapters())
-   # md = MangadexDownloader.from_url("https://mangadex.org/title/2434/grappler-baki")
+   m.read()
+   m.save_syncfile()
+   # m.download_chapter("2")
 
 if __name__ == "__main__":
    main()
