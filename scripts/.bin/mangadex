@@ -1,5 +1,6 @@
 #!/bin/python
 
+import argparse as A
 import urllib.request as U
 import urllib.parse as P
 import json
@@ -10,7 +11,7 @@ import os
 from math import log10, ceil
 from bisect import insort
 import sys
-import subprocess as P
+import subprocess as S
 
 class MangadexException(Exception):
    pass
@@ -47,47 +48,6 @@ class StatusBar:
       elif self.is_term:
          self._output()
 
-class ChapterDownloader:
-   def __init__(self, chap_id):
-      self.chap_id = chap_id
-      self.chap_json = MangadexDownloader.fetch_json(
-         self.chap_id,
-         "chapter"
-      )
-      self.cur_page = 0
-      self.extractor = re.compile(r"^[a-zA-z]*([0-9]+)\.(.+)$")
-
-   def get_title(self):
-      return self.chap_json["title"]
-
-   def amount_of_pages(self):
-      return len(self.chap_json["page_array"])
-
-   def has_next(self):
-      return self.cur_page < self.amount_of_pages()
-
-   def next_page_info(self):
-      if not self.has_next():
-         raise MangadexException("no next page")
-
-      m = self.extractor.match(self.chap_json["page_array"][self.cur_page])
-      return int(m[1]), m[2]
-
-   @contextmanager
-   def next_page(self):
-      if not self.has_next():
-         raise MangadexException("no next page")
-
-      url = "{}/{}/{}".format(
-         self.chap_json["server"].rstrip("/"),
-         self.chap_json["hash"],
-         self.chap_json["page_array"][self.cur_page]
-      )
-      with MangadexDownloader.fetch(url) as image:
-         yield image
-
-      self.cur_page += 1
-
 class MangadexDownloader:
    HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64)"}
    API_URL = "https://mangadex.org/api"
@@ -103,6 +63,15 @@ class MangadexDownloader:
    def get_title(self):
       return self.manga_json["manga"]["title"]
 
+   def get_reported_last_chapter(self):
+      return self.manga_json["manga"]["last_chapter"]
+
+   def get_author(self):
+      return self.manga_json["manga"]["author"]
+
+   def get_mal_id(self):
+      return self.manga_json["manga"]["links"].get("mal", None)
+
    def set_preferred_group(self, group):
       self.manga_json["settings"]["preferred_group"] = group
 
@@ -112,11 +81,26 @@ class MangadexDownloader:
    def is_chapter(self, chap_num):
       return chap_num in self.chapter_info
 
+   def get_chapter_title(self, chap_num):
+      if not self.is_chapter(chap_num):
+         raise MangadexException("{} not an available chapter".format(chap_num))
+      chap_id = self.chapter_info[chap_num]
+      return self.manga_json["chapter"][chap_id]["title"]
+
    def download_chapter(self, chap_num):
       if not self.is_chapter(chap_num):
          raise MangadexException("{} not an available chapter".format(chap_num))
 
-      return ChapterDownloader(self.chapter_info[chap_num])
+      return MangadexDownloader.ChapterDownloader(self.chapter_info[chap_num])
+
+   def update(self):
+      url = self.manga_json["url"]
+      settings = self.manga_json["settings"]
+      new = MangadexDownloader.from_url(url)
+      self.manga_json = new.manga_json
+      self.manga_json["url"] = url
+      self.manga_json["settings"] = settings
+      self.chapter_info = new.chapter_info
 
    def _extract_chapter_info(self):
       all_chapters = self.manga_json["chapter"]
@@ -166,6 +150,47 @@ class MangadexDownloader:
       with MangadexDownloader.fetch(MangadexDownloader.API_URL, getvars=getvars) as mjson:
          return json.load(mjson)
 
+   class ChapterDownloader:
+      def __init__(self, chap_id):
+         self.chap_id = chap_id
+         self.chap_json = MangadexDownloader.fetch_json(
+            self.chap_id,
+            "chapter"
+         )
+         self.cur_page = 0
+         self.extractor = re.compile(r"^[a-zA-z]*([0-9]+)\.(.+)$")
+
+      def get_title(self):
+         return self.chap_json["title"]
+
+      def amount_of_pages(self):
+         return len(self.chap_json["page_array"])
+
+      def has_next(self):
+         return self.cur_page < self.amount_of_pages()
+
+      def next_page_info(self):
+         if not self.has_next():
+            raise Exception("no next page")
+
+         m = self.extractor.match(self.chap_json["page_array"][self.cur_page])
+         return int(m[1]), m[2]
+
+      @contextmanager
+      def next_page(self):
+         if not self.has_next():
+            raise Exception("no next page")
+
+         url = "{}/{}/{}".format(
+            self.chap_json["server"].rstrip("/"),
+            self.chap_json["hash"],
+            self.chap_json["page_array"][self.cur_page]
+         )
+         with MangadexDownloader.fetch(url) as image:
+            yield image
+
+         self.cur_page += 1
+
 class Manager:
    SYNCFILE = ".mangadex"
 
@@ -178,12 +203,11 @@ class Manager:
       if not os.path.isfile(self.syncfile) and (syncdata is None or localdata is None):
          raise MangadexException("can't find sync file")
 
-      self.syncdata = syncdata
       self.localdata = localdata
-      if self.syncdata is None or self.localdata is None:
-         self._load_syncfile()
+      if syncdata is None or self.localdata is None:
+         syncdata, self.localdata = self._load_syncfile()
 
-      self.downloader = downloader or MangadexDownloader(self.syncdata)
+      self.downloader = downloader or MangadexDownloader(syncdata)
 
    @classmethod
    def new(cls, basedir, url):
@@ -199,13 +223,15 @@ class Manager:
    def _load_syncfile(self):
       with open(self.syncfile, "r") as f:
          everything = json.load(f)
-         self.syncdata = everything["sync"]
-         self.localdata = everything["local"]
+         return everything["sync"], everything["local"]
 
    def save_syncfile(self):
       with open(self.syncfile, "w") as f:
-         everything = {"sync": self.syncdata, "local": self.localdata}
+         everything = {"sync": self.downloader.get_manga_json(), "local": self.localdata}
          json.dump(everything, f)
+
+   def update(self):
+      self.downloader.update()
 
    def _query_fs(self):
       x = re.compile(r"^Ch\.([0-9\.]+) - (.+)\.cbz$")
@@ -214,6 +240,40 @@ class Manager:
             continue
          m = x.match(f.name)
          yield (m[1], m[2], m[0])
+
+   def list_all_chapters(self):
+      local = set(x[0] for x in self._query_fs())
+      for c in self.downloader.get_available_chapters():
+         yield (
+            c,                                               # chapter number
+            self.downloader.get_chapter_title(c),            # chapter title
+            c in local,                                      # is downloaded?
+            c not in self.localdata["unread"] and c in local # is read?
+         )
+
+   def get_stats(self):
+      downloaded = 0
+      total = 0
+      first_down = None
+      last_down = None
+      for chnum, _, down, _ in self.list_all_chapters():
+         total += 1
+         if down:
+            downloaded += 1
+            first_down = min(first_down, chnum, key=float) if first_down else chnum
+            last_down = max(last_down, chnum, key=float) if last_down else chnum
+
+      return {
+         "title": self.downloader.get_title(),
+         "mal": self.downloader.get_mal_id(),
+         "author": self.downloader.get_author(),
+         "reported_last_chapter": self.downloader.get_reported_last_chapter(),
+         "next_chapter": self.find_first_unread_chapter(),
+         "latest_downloaded": last_down,
+         "first_downloaded": first_down,
+         "total_available_chapters": total,
+         "total_downloaded_chapters": downloaded
+      }
 
    def find_first_unread_chapter(self):
       l = self.localdata["unread"]
@@ -278,16 +338,62 @@ class Manager:
          raise MangadexException("No more chapters to read")
 
       filename = self._find_chapter_file(n)
-      p = P.run(["sxiv_zip", "--", os.path.join(self.path, filename)])
+      p = S.run(["sxiv_zip", "--", os.path.join(self.path, filename)])
       p.check_returncode()
       self.set_read(n, True)
 
+def main_status(parsed):
+   man = Manager(".")
+   if parsed.verbose:
+      print("Downloaded, read, chapter, title")
+      for chnum, title, down, read in man.list_all_chapters():
+         print("{}, {}, Ch.{} - {}".format(down, read, chnum, title))
+   else:
+      stats = man.get_stats()
+      print(
+'''\
+Title:          {title}
+Author:         {author}
+Myanimelist:    https://myanimelist.net/manga/{mal}
+Latest chapter: {reported_last_chapter}
+Read next:      {next_chapter}
+Total chapters: {total_available_chapters}
+Downloaded:     {total_downloaded_chapters} ({first_downloaded} - {latest_downloaded})
+'''.format(**stats), end="")
+
+def main_sync(_parsed):
+   man = Manager(".")
+   man.update()
+   man.save_syncfile()
+
 def main():
+   parser = A.ArgumentParser(description="Mangadex downloader and reader")
+   subparsers = parser.add_subparsers(dest="command", required=True)
+
+   statusP = subparsers.add_parser("status", help="Display current status",
+                                   description="Displays general information about the current manga.")
+   statusP.add_argument("-v", "--verbose", action="store_true",
+                        help="list information about every individual chapter")
+
+   _syncP = subparsers.add_parser("sync", help="Update manga metadata",
+                                  description="Redownloads metadata from Mangadex")
+
+   parsed = parser.parse_args()
+
+   print(parsed)
+   if parsed.command == "status":
+      main_status(parsed)
+   elif parsed.command == "sync":
+      main_sync(parsed)
    # m = Manager.new(".", "https://mangadex.org/title/2434/grappler-baki")
-   m = Manager("Grappler Baki")
-   m.read()
-   m.save_syncfile()
+   # m = Manager("Grappler Baki")
+   # m.read()
+   # m.save_syncfile()
    # m.download_chapter("2")
 
 if __name__ == "__main__":
-   main()
+   try:
+      main()
+   except MangadexException as e:
+      print("Oppsies, {}".format(str(e)), file=sys.stderr, flush=True)
+      exit(1)
