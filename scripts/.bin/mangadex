@@ -43,8 +43,11 @@ class StatusBar:
 
    def step(self):
       self.cur += 1
-      if self.cur >= self.maximum and not self.is_term:
-         print("{} ... done".format(self.name))
+      if self.cur >= self.maximum:
+         if not self.is_term:
+            print("{} ... done".format(self.name))
+         else:
+            print()
       elif self.is_term:
          self._output()
 
@@ -194,17 +197,17 @@ class MangadexDownloader:
 class Manager:
    SYNCFILE = ".mangadex"
 
-   def __init__(self, path, downloader=None, syncdata=None, localdata=None):
+   def __init__(self, path, downloader=None, localdata=None):
       self.path = path
       if not os.path.isdir(self.path):
          raise MangadexException("not a valid directory")
 
       self.syncfile = os.path.join(path, Manager.SYNCFILE)
-      if not os.path.isfile(self.syncfile) and (syncdata is None or localdata is None):
+      if not os.path.isfile(self.syncfile) and localdata is None:
          raise MangadexException("can't find sync file")
 
       self.localdata = localdata
-      if syncdata is None or self.localdata is None:
+      if self.localdata is None:
          syncdata, self.localdata = self._load_syncfile()
 
       self.downloader = downloader or MangadexDownloader(syncdata)
@@ -216,7 +219,7 @@ class Manager:
       folder_name = "".join([c for c in folder_name if c.isalnum() or c == ' ']).strip()
       manga_dir = os.path.join(basedir, folder_name)
       os.mkdir(manga_dir)
-      n = cls(manga_dir, downloader=md, syncdata=md.get_manga_json(), localdata={"unread": []})
+      n = cls(manga_dir, downloader=md, localdata={"unread": []})
       n.save_syncfile()
       return n
 
@@ -256,23 +259,30 @@ class Manager:
       total = 0
       first_down = None
       last_down = None
+      first = None
+      last = None
       for chnum, _, down, _ in self.list_all_chapters():
          total += 1
+         first = first if first else chnum
+         last = chnum
          if down:
             downloaded += 1
             first_down = min(first_down, chnum, key=float) if first_down else chnum
             last_down = max(last_down, chnum, key=float) if last_down else chnum
 
+      malid = self.downloader.get_mal_id()
       return {
          "title": self.downloader.get_title(),
-         "mal": self.downloader.get_mal_id(),
+         "mal": "https://myanimelist.net/manga/{}".format(malid) if malid else None,
          "author": self.downloader.get_author(),
          "reported_last_chapter": self.downloader.get_reported_last_chapter(),
          "next_chapter": self.find_first_unread_chapter(),
          "latest_downloaded": last_down,
          "first_downloaded": first_down,
          "total_available_chapters": total,
-         "total_downloaded_chapters": downloaded
+         "total_downloaded_chapters": downloaded,
+         "total_first": first,
+         "total_last": last
       }
 
    def find_first_unread_chapter(self):
@@ -342,6 +352,9 @@ class Manager:
       p.check_returncode()
       self.set_read(n, True)
 
+   def set_preferred_group(self, group):
+      self.downloader.set_preferred_group(group)
+
 def main_status(parsed):
    man = Manager(".")
    if parsed.verbose:
@@ -352,13 +365,13 @@ def main_status(parsed):
       stats = man.get_stats()
       print(
 '''\
-Title:          {title}
-Author:         {author}
-Myanimelist:    https://myanimelist.net/manga/{mal}
-Latest chapter: {reported_last_chapter}
-Read next:      {next_chapter}
-Total chapters: {total_available_chapters}
-Downloaded:     {total_downloaded_chapters} ({first_downloaded} - {latest_downloaded})
+Title:                   {title}
+Author:                  {author}
+Myanimelist:             {mal}
+Read next:               {next_chapter}
+Total chapters:          {total_available_chapters} ({total_first} - {total_last})
+Latest reported chapter: {reported_last_chapter}
+Downloaded:              {total_downloaded_chapters} ({first_downloaded} - {latest_downloaded})
 '''.format(**stats), end="")
 
 def main_sync(_parsed):
@@ -366,30 +379,94 @@ def main_sync(_parsed):
    man.update()
    man.save_syncfile()
 
+def main_init(parsed):
+   Manager.new(parsed.path, parsed.url)
+
+def main_download(parsed):
+   man = Manager(".")
+   spec = parsed.chapterspec
+   if parsed.group:
+      man.set_preferred_group(parsed.group)
+   elif spec.startswith("+"):
+      n = int(spec[1:])
+      man.download_next(n=n)
+   else:
+      chapters = spec.split(",")
+      for c in chapters:
+         if "-" in c:
+            raise MangadexException("ranges are not yet supported")
+         man.download_chapter(c)
+   man.save_syncfile()
+
+def main_read(parsed):
+   man = Manager(".")
+   if parsed.read:
+      man.set_read(parsed.read, True)
+   elif parsed.unread:
+      man.set_read(parsed.unread, False)
+   else:
+      man.read()
+   man.save_syncfile()
+
 def main():
    parser = A.ArgumentParser(description="Mangadex downloader and reader")
-   subparsers = parser.add_subparsers(dest="command", required=True)
+   subparsers = parser.add_subparsers(dest="command",
+                                      required=True)
 
-   statusP = subparsers.add_parser("status", help="Display current status",
+   statusP = subparsers.add_parser("status",
+                                   help="Display current status",
                                    description="Displays general information about the current manga.")
-   statusP.add_argument("-v", "--verbose", action="store_true",
+   statusP.add_argument("-v",
+                        "--verbose",
+                        action="store_true",
                         help="list information about every individual chapter")
 
-   _syncP = subparsers.add_parser("sync", help="Update manga metadata",
+   _syncP = subparsers.add_parser("sync",
+                                  help="Update manga metadata",
                                   description="Redownloads metadata from Mangadex")
+
+   initP = subparsers.add_parser("init",
+                                 help="Create a new manga thingy")
+   initP.add_argument("url",
+                      help="URL of manga from mangadex on the form \"https://mangadex.org/title/[ID][/NAME]\"")
+   initP.add_argument("path",
+                      nargs="?",
+                      default=".",
+                      help="path to put the folder in, defaults to the current directory.")
+
+   downloadP = subparsers.add_parser("download",
+                                     help="Download more chapters",
+                                     description="CHAPTERSPEC is a comma separated list of chapters or ranges to download: '1,2,5-6'. It can also be a plus followed by an integer to download the next N chapters from the latest downloaded one: '+20'")
+   downloadP.add_argument("chapterspec",
+                          nargs="?",
+                          help="chapters to download")
+   downloadP.add_argument("-g",
+                          "--group",
+                          help="set and save preferred translator group")
+
+   readP = subparsers.add_parser("read",
+                                 help="read latest unread chapter")
+   readP.add_argument("-u",
+                      "--unread",
+                      metavar="chapter",
+                      help="mark chapter as unread")
+   readP.add_argument("-r",
+                      "--read",
+                      metavar="chapter",
+                      help="mark chapter as read")
 
    parsed = parser.parse_args()
 
-   print(parsed)
    if parsed.command == "status":
       main_status(parsed)
    elif parsed.command == "sync":
       main_sync(parsed)
-   # m = Manager.new(".", "https://mangadex.org/title/2434/grappler-baki")
-   # m = Manager("Grappler Baki")
-   # m.read()
-   # m.save_syncfile()
-   # m.download_chapter("2")
+   elif parsed.command == "init":
+      main_init(parsed)
+   elif parsed.command == "download":
+      main_download(parsed)
+   elif parsed.command == "read":
+      main_read(parsed)
 
 if __name__ == "__main__":
    try:
