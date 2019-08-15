@@ -1,4 +1,4 @@
-# -*- tab-width: 4; show-trailing-whitespace: t; -*-
+# -*- tab-width: 4; -*-
 
 # package manager commands
 PAC := yay
