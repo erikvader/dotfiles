@@ -9,7 +9,12 @@ from fzf_dmenu import fzf_dmenu
 import subprocess as P
 
 def getTitle(e, w):
-   return e.getWmName(w).decode() or w.get_wm_name()
+   wmname = e.getWmName(w)
+   if wmname:
+      wmname = wmname.decode()
+   else:
+      wmname = w.get_wm_name()
+   return wmname
 
 def getClass(w):
    return "{}({})".format(*w.get_wm_class())
