@@ -44,12 +44,14 @@ import XMonad.Layout.PerWorkspace
 import qualified XMonad.Layout.GridVariants as GV
 import XMonad.Layout.Spacing
 import XMonad.Layout.SimplestFloat
+import XMonad.Layout.Column
 
 import Erik.MyStuff
 import Erik.IndiPP
 import qualified Erik.MyLimitWindows as L
 import Erik.ThreeColP
 import Erik.DoubleMaster
+import Erik.IfVertical
 
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
@@ -68,22 +70,23 @@ scratchWS = "S"
 myWorkspaces = map show [1..9] ++ [scratchWS]
 
 #define COMMA ,
-#define GRID GV.Grid 1
 #define TALL Tall 1 (3/100) (1/2)
+#define COLUMN renamed [CutWordsRight 1] (Column 1)
 #define TEMPLATE(X,Y,F1,F2) F1 X F2 \
                             F1 DoubleMaster (2/3) (1/2) F2 \
                             F1 (simplestFloat :: _ Window) F2 \
                             F1 Y F2 \
                             F1 ThreeColMid 1 (3/100) (1/3) (1/2) F2 \
                             F1 GV.SplitGrid GV.L 1 1 (1/2) (16/9) (3/100) F2 \
+                            F1 GV.Grid 1 F2 \
                             F1 renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
 #define LAYOUTS(X,Y) (TEMPLATE(X,Y,,|||))
 #define NAMES(X,Y) TEMPLATE(X,Y,description $,COMMA)
 
-myBaseLayouts = onWorkspace scratchWS LAYOUTS(GRID,TALL) LAYOUTS(TALL,GRID)
+myBaseLayouts = ifVertical LAYOUTS(COLUMN,TALL) LAYOUTS(TALL,COLUMN)
 
 #ifndef __HLINT__
-myBaseLayoutsNames = [NAMES(TALL,GRID)]
+myBaseLayoutsNames = [NAMES(TALL,COLUMN)]
 #endif
 
 myLayoutHook =
