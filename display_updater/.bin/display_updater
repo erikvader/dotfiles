@@ -228,7 +228,7 @@ class Mode:
             p = pop()
             if p == "--auto":
                out.auto = True
-            elif p == "--rotation":
+            elif p == "--rotate":
                out.rotation = parse_name()
             elif p == "--same-as":
                out.sameas = parse_name()

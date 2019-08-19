@@ -31,7 +31,7 @@ def run_udisks(choices, cmd):
       notify_send("There were no relevant drives")
       return
 
-   formatted_choices = ["{} {} {} {}".format(part["path"], part.get("label", ""), part.get("vendor", ""), part.get("model", "")) for part in choices]
+   formatted_choices = ["{} {} {} {}".format(part["path"], part["label"], part["vendor"], part["model"]) for part in choices]
 
    c = fzf_dmenu(formatted_choices, fzf_options=["--prompt", cmd+": "])
    if not c:
