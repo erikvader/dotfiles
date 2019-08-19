@@ -2,7 +2,8 @@
 
 from deluge_client import DelugeRPCClient, FailedToReconnectException
 from ssl import SSLError
-from time import sleep
+from time import sleep, time
+from notify_send import notify_send
 
 ACTIVE_SLEEP = 5
 INACTIVE_SLEEP = 60
@@ -11,9 +12,20 @@ TURTLE = "🐢"
 SKULL = "☠"
 
 last_stats = {}
+last_time = int(time())
 
 def polybar_color(s, c):
    return "%{{F#{}}}{}%{{F-}}".format(c, s)
+
+def send_notifications(client):
+   global last_time
+   torrents = client.call('core.get_torrents_status', {}, ['completed_time', 'name'])
+
+   for t in torrents.values():
+      if t[b'completed_time'] >= last_time:
+         notify_send("Torrent completed!", t[b'name'].decode())
+
+   last_time = int(time())
 
 # get amount of torrents that are downloading (everything that is not 100%)
 def get_downloading(client):
@@ -77,6 +89,7 @@ def main():
       while True:
          try:
             print_stats(client)
+            send_notifications(client)
             sleep(ACTIVE_SLEEP)
          except FailedToReconnectException:
             print("", flush=True)
