@@ -8,7 +8,7 @@ PIPLIST := pip list --user --format freeze | sed 's/==.*$$//'
 PIPINSTALL := pip install --user
 
 IGNOREDIR := stow_ignore
-STOWFLAGS := --ignore='^$(IGNOREDIR)$$'
+STOWFLAGS := --ignore='^$(IGNOREDIR)$$' --no-folding
 
 # $(call maybe-install,package1 package2 ...)
 maybe-install = $(call install,$(call not-installed,$1,$2),$2)
@@ -69,8 +69,3 @@ $(dirsdry): %\:dry: %\:add
 
 $(dirsdel): STOWFLAGS += --delete
 $(dirsdel): %\:del: %\:add
-
-conky\:add: m4\:add
-conky\:install: m4\:install
-xmonad\:add: STOWFLAGS += --no-folding
-display_updater\:add: STOWFLAGS += --no-folding
