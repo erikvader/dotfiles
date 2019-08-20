@@ -2,7 +2,7 @@
 
 from deluge_client import DelugeRPCClient, FailedToReconnectException
 from ssl import SSLError
-from time import sleep, time
+from time import sleep
 from notify_send import notify_send
 
 ACTIVE_SLEEP = 5
@@ -12,20 +12,20 @@ TURTLE = "🐢"
 SKULL = "☠"
 
 last_stats = {}
-last_time = int(time())
+unfinished_torrents = set()
 
 def polybar_color(s, c):
    return "%{{F#{}}}{}%{{F-}}".format(c, s)
 
 def send_notifications(client):
-   global last_time
-   torrents = client.call('core.get_torrents_status', {}, ['completed_time', 'name'])
+   global unfinished_torrents
+   torrents = client.call('core.get_torrents_status', {}, ['is_finished', 'name'])
 
-   for t in torrents.values():
-      if t[b'completed_time'] >= last_time:
+   for h,t in torrents.items():
+      if t[b'is_finished'] and h in unfinished_torrents:
          notify_send("Torrent completed!", t[b'name'].decode())
 
-   last_time = int(time())
+   unfinished_torrents = {h for h,t in torrents.items() if not t[b'is_finished']}
 
 # get amount of torrents that are downloading (everything that is not 100%)
 def get_downloading(client):
@@ -78,6 +78,7 @@ def print_stats(client):
    print("({}/{})#{} {}".format(down, up, active, status_icon), flush=True)
 
 def main():
+   global unfinished_torrents, last_stats
    client = DelugeRPCClient('127.0.0.1', 58846, 'erik', 'abc123')
    while True:
       try:
@@ -86,6 +87,8 @@ def main():
          sleep(INACTIVE_SLEEP)
          continue
 
+      last_stats = {}
+      unfinished_torrents = set()
       while True:
          try:
             print_stats(client)
