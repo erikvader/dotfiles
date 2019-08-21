@@ -8,11 +8,18 @@ if ! maim "$@" "$tmp"; then
     exit 1
 fi
 
+size=$(stat -c %s "$tmp")
+if [[ $size -gt 500000 ]]; then
+    notify-send 'maim_clipboard' "Screenshot too large, available as '$tmp'"
+    trap - EXIT
+    exit
+fi
+
 type=$(file -b --mime-type "$tmp")
 
 if xclip -selection clipboard -t "$type" -i "$tmp"; then
     notify-send 'maim_clipboard' 'Screenshot now in clipboard'
 else
-    notify-send 'maim_clipboard' 'Screenshot failed!'
+    notify-send 'maim_clipboard' 'xclip failed!'
 fi
 
