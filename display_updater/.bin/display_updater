@@ -181,6 +181,7 @@ class Mode:
       self.default = None
       self.outputs = []
       self.xrandr = []
+      self.xrandr_append = []
       self.no_xrandr = False
       self.programs = []
       self.delay = conf.get("programs_delay", 0)
@@ -190,13 +191,16 @@ class Mode:
       rest = self._parse_mode(conf, mode)
 
       if not self.no_xrandr:
-         self._parse_xrandr(self.xrandr)
+         self.outputs = self._parse_xrandr(self.xrandr)
          if not self.outputs:
             raise DisplayException("xrandr list didn't produce any outputs")
 
+         if self.xrandr_append:
+            self.outputs = self._parse_xrandr(self.xrandr_append, prev_parsed=self.outputs)
+
       self._parse_programs(conf, rest)
 
-   def _parse_xrandr(self, xrandr):
+   def _parse_xrandr(self, xrandr, prev_parsed=[]):
       flag_re = re.compile(r"^--")
       def is_flag(s):
          return flag_re.match(s)
@@ -215,15 +219,21 @@ class Mode:
          outs = []
          while peek():
             outs.append(parse_output())
+
+         for old in prev_parsed:
+            if not next((x for x in outs if x.name == old.name), None):
+               outs.append(old)
+
          return outs
 
       def parse_output():
-         out = MOutput()
          x = pop()
          if not x == "--output":
             raise DisplayException("xrandr parse error: expected --output")
 
+         out = MOutput()
          out.name = parse_name()
+         out = next((x for x in prev_parsed if x.name == out.name), out)
          while peek():
             p = pop()
             if p == "--auto":
@@ -256,7 +266,7 @@ class Mode:
             raise DisplayException("xrandr parse error: didn't expect a flag")
          return x
 
-      self.outputs = parse_outputs()
+      return parse_outputs()
 
    def _parse_programs(self, conf, rest):
       if "run_programs" not in rest:
@@ -280,7 +290,7 @@ class Mode:
          m = deepcopy(conf["modes"][mode])
          if "inherit" in m:
             if mode in visited:
-               raise DisplayException("recursive inheritance found")
+               raise DisplayException("cyclic inheritance found")
             visited.append(mode)
             inh = fix_inherit(m["inherit"], visited)
             inh.update(m)
@@ -289,10 +299,10 @@ class Mode:
          return m
 
       m = fix_inherit(mode, [])
-      self.default               = m.get("default")
-      self.outputs               = m.get("outputs", [])
-      self.xrandr                = m.get("xrandr", [])
-      self.no_xrandr             = not bool(self.xrandr)
+      self.default       = m.get("default")
+      self.xrandr        = m.get("xrandr", [])
+      self.xrandr_append = m.get("xrandr_append", [])
+      self.no_xrandr     = not bool(self.xrandr)
       return m
 
    def get_xrandr(self):

@@ -16,12 +16,12 @@
          "env" : {"MONITOR": "eDP1"}
       }
    },
-   // delay between xrandr finishing and programs in "programs" starting
+   // maximum time to wait for a screen change notify event after running xrandr before continuing
    "programs_delay": 3,
    "modes": {
       // name of mode
       "startup": {
-         // what programs to run. Can be true for all programs, or a list with program names
+         // what programs to run. Can be 'true' (bool) to run all programs, or a list with program names
          "run_programs": ["polybar"],
          // inherit all keys from another mode
          "inherit": "other_mode",
@@ -31,6 +31,8 @@
          // will be parsed for outputs and their relations to each other
          // uses very simple syntax checking
          "xrandr": ["--output", "eDP1", "--auto", "--primary", "--output", "HDMI1", "--auto", "--right-of", "eDP1"],
+         // modify values of the 'xrandr' key. Useful when inheriting
+         "xrandr_append": ["--output", "eDP1", "--rotate", "left"],
          // override keys in "programs"
          "programs": {
             "polybar": {"file": "polybar"}
