@@ -119,6 +119,13 @@ format-padding = 2
 format-margin = 1
 format-prefix-foreground = ${colors.foreground}
 
+[module/speakers]
+type = custom/script
+exec = ~/.config/polybar/polybar_speakers.sh
+tail = true
+format-underline = #ffb52a
+format-padding = 2
+
 [module/mounts]
 type = custom/script
 exec = ~/.config/polybar/mounts.sh
