@@ -12,6 +12,7 @@ from math import log10, ceil
 from bisect import insort
 import sys
 import subprocess as S
+from shutil import copyfileobj
 
 class MangadexException(Exception):
    pass
@@ -47,6 +48,7 @@ class StatusBar:
          if not self.is_term:
             print("{} ... done".format(self.name))
          else:
+            self._output()
             print()
       elif self.is_term:
          self._output()
@@ -304,8 +306,8 @@ class Manager:
          while cd.has_next():
             i, ext = cd.next_page_info()
             pagename = ("{:0"+str(padlen)+"d}.{}").format(i, ext)
-            with cd.next_page() as image:
-               zf.writestr(pagename, image.read())
+            with cd.next_page() as image, zf.open(pagename, mode="w") as pf:
+               copyfileobj(image, pf)
                bar.step()
       insort(self.localdata["unread"], chap_num)
 
@@ -314,7 +316,7 @@ class Manager:
       avail = self.downloader.get_available_chapters()
       latest = self.find_latest_downloaded_chapter()
       if latest:
-         start = avail.index(latest)+1 # TODO: bisect for binary search??
+         start = avail.index(latest)+1
       else:
          start = 0
       if start >= len(avail):
@@ -338,7 +340,6 @@ class Manager:
       for ch, _, filename in self._query_fs():
          if ch == chap_num:
             return filename
-      #pylint: disable=useless-else-on-loop
       else:
          raise MangadexException("Couldn't find file for chapter {}".format(chap_num))
 
