@@ -5,8 +5,10 @@
 
 export QT_QPA_PLATFORMTHEME=gtk2
 
-export PATH="$HOME/.bin:$HOME/.local/bin:$PATH"
-export PYTHONPATH="$HOME/.pythonlibs:$PYTHONPATH"
+# NOTE: can also use typeset -U path PATH and typeset -T PATH path :
+[[ ":$PATH:"       != *":$HOME/.bin:"* ]]        && export PATH="$HOME/.bin:$PATH"
+[[ ":$PATH:"       != *":$HOME/.local/bin:"* ]]  && export PATH="$HOME/.local/bin:$PATH"
+[[ ":$PYTHONPATH:" != *":$HOME/.pythonlibs:"* ]] && export PYTHONPATH="$HOME/.pythonlibs${PYTHONPATH:+:}$PYTHONPATH"
 
 # java doesn't like xmonad
 export _JAVA_AWT_WM_NONREPARENTING=1
