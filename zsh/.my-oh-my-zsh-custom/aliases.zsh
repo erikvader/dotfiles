@@ -1,6 +1,3 @@
-alias open="xdg-open"
-alias q="exit"
-alias r="ranger-cd"
 alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
 
 alias ydm='youtube-dl --merge-output-format mkv --write-thumbnail'
@@ -8,11 +5,7 @@ alias ydm='youtube-dl --merge-output-format mkv --write-thumbnail'
 alias pps='ps -Ho pid,ppid,pgid,comm'
 alias ppss='ps -Ho pid,ppid,pgid,command'
 
-alias lsnet="sudo ss -tulpn"
-
 alias diff="diff --color=auto"
-
-alias mi="mediainfo"
 
 alias pg='pgrep -l'
 
@@ -30,26 +23,12 @@ alias yrr='yay -Rsn'
 alias yrrr='yay -Rsnc'
 alias ylibc="yay -S --aur --mflags '--nocheck' libc++ libc++abi libc++experimental"
 alias yo='yay -Qdt' # list orphans
-alias yor='yay -Rn $(yay -Qqdt)' # remove orphans non-recursively
-function yorr { # remove orphans recursively # TODO: (yay -Yc ??)
-    local orphans=($(yay -Qqdt))
-    if [[ "${#orphans[@]}" -gt 0 ]]; then
-        yay --noconfirm -Rn "${orphans[@]}"
-        yorr
-    fi
-}
 
 alias ..='cd ..'
 alias l='ls -Av'
 alias ll='els -s'
 alias lle='els -se'
 alias lll='ls -lAhv'
-
-alias lg='lll | grep -i'
-
-function f {
-    find . -iname '*'"$1"'*'
-}
 
 # copy of glola
 alias gl='git log --graph --pretty='"'"'%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"'"
@@ -107,19 +86,6 @@ function magit {
     emacsclient -n -c -e '(same-buffer (magit-status))' >/dev/null
 }
 
-function copymake {
-    local f="$HOME/makefiles/$1-makefile"
-    if [[ ! -f "$f" ]]; then
-        echo "\"$f\" doesn't exist" >&2
-        return 1
-    fi
-    cp -L "$f" ./makefile
-}
-
-function mc {
-    mkdir "$1" && cd "$1"
-}
-
 function man {
     LESS_TERMCAP_md=$'\e[01;35m' \
     LESS_TERMCAP_me=$'\e[0m' \
@@ -128,14 +94,6 @@ function man {
     LESS_TERMCAP_ue=$'\e[0m' \
     LESS_TERMCAP_us=$'\e[01;34m' \
     command man "$@"
-}
-
-function men {
-    if [[ $# -lt 1 ]]; then
-        echo "usage $0 args" >&2
-        return 1
-    fi
-    emacsclient -n -c -e '(same-buffer (man "'"$@"'"))' >/dev/null
 }
 
 function copyfile {
