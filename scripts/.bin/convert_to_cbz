@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # convert_to_cbz folder [folder..]
-# converts each folder x of images into x.cbz with those images
+# converts each folder x into x.cbz
 
 set -e
 
@@ -11,7 +11,7 @@ if [[ $# -le 0 ]]; then
 fi
 
 for f in "$@"; do
-    newname="$f.cbz"
+    newname="${f%%/}.cbz"
     if [[ -e $newname ]]; then
         echo "\"$newname\" already exists, skipping..." >&2
         continue
@@ -22,7 +22,7 @@ for f in "$@"; do
     fi
 
     echo "creating \"$newname\"..."
-    if zip -jmr "$newname" "$f" >/dev/null; then
+    if (cd "$f"; zip -mr "../$newname" . >/dev/null); then
         rm -d "$f"
         echo "done!"
     else
