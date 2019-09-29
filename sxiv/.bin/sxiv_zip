@@ -41,10 +41,15 @@ elif [[ -f $targ ]]; then
     case ${ext,,} in
         zip|cbz)
             if command -v fuse-zip &>/dev/null; then
+                trap 'fusermount -u "$temp"; rm -d "$temp"' EXIT
                 if ! fuse-zip -r "$targ" "$temp"; then
                     exit 1
                 fi
-                trap 'fusermount -u "$temp"; rm -d "$temp"' EXIT
+            elif command -v archivemount &>/dev/null; then
+                trap 'umount "$temp"; rm -d "$temp"' EXIT
+                if ! archivemount -o readonly "$targ" "$temp"; then
+                    exit 1
+                fi
             else
                 if ! unzip "$targ" -d "$temp" &>/dev/null; then
                     echo "unzip failed, is this really a zip file?" >&2
