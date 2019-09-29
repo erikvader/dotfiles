@@ -1,0 +1,22 @@
+#+STARTUP: overview
+
+* concat clips
+must have same resolution and bitrate and stuff
+#+BEGIN_SRC sh
+ffmpeg -f concat -safe 0 -i files.txt -c copy output.avi
+#+END_SRC
+=-safe 0= makes sure that ffmpeg doesn't complain on files with spaces in their filenames and stuff.
+
+files.txt is on the form:
+#+BEGIN_VERBATIM
+file '/path/to/file1'
+file '/path/to/file2'
+#+END_VERBATIM
+man page =ffmpeg-formats(1)= for more info on concat.
+* split clips
+#+BEGIN_SRC sh
+ffmpeg -i input.mkv -ss start -map 0 -c copy -to end out.mkv
+#+END_SRC
+- =-ss= is start time
+- =-to= is end time. Can alternatively be =-t= so specify duration instead.
+Times can be expressed as =[HH:]MM:SS= or =S[.m]=.
