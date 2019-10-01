@@ -20,3 +20,11 @@ ffmpeg -i input.mkv -ss start -map 0 -c copy -to end out.mkv
 - =-ss= is start time
 - =-to= is end time. Can alternatively be =-t= so specify duration instead.
 Times can be expressed as =[HH:]MM:SS= or =S[.m]=.
+* convert audio to mp3
+#+BEGIN_SRC sh
+ffmpeg -i inputfile -codec:a libmp3lame -q:a 0 -c:v copy -map_metadata 0 -id3v2_version 3 outputfile.mp3
+#+END_SRC
+- =-q:a 0= sets the highest quality
+- =-c:v copy= transfers album covers
+- =-map_metadata 0= transfers album artist and stuff
+- =-id3v2_version 3= sets version of id3v2 (why do i have this?)

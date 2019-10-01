@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+if [[ $# -lt 2 ]]; then
+    echo "Usage: $0 inputfile [inputfile...] outputfile"
+    exit 1
+fi
+
+output="${*: -1}"
+inputs=("${@:1:$#-1}")
+
+function gen_concat_files {
+    for i in "${inputs[@]}"; do
+        echo file "'$PWD/$i'"
+    done
+}
+
+ffmpeg -f concat -safe 0 -i <(gen_concat_files) -c copy "$output"
