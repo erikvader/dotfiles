@@ -1,0 +1,3 @@
+#!/bin/sh
+
+mp3gain -d 5 -r -e -k "$@"
