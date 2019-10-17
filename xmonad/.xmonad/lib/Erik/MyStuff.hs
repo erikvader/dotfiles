@@ -108,14 +108,15 @@ onLayout xs def = do
     Just (_, x) -> x
     Nothing -> def
 
--- runs f on the lowest index empty hidden workspace, if there is one
+-- runs f on the lowest index empty hidden or current workspace, if there is one
 windowsLowestEmpty :: (WorkspaceId -> WindowSet -> WindowSet) -> [String] -> X ()
 windowsLowestEmpty f order = windows (\w -> maybe id f (findLowestEmpty w) w)
   where
     findLowestEmpty :: WindowSet -> Maybe WorkspaceId
     findLowestEmpty w = find f order
       where
-        f id = maybe False (isNothing . W.stack) $ find ((id ==) . W.tag) (W.hidden w)
+        f id = maybe False (isNothing . W.stack) $ find ((id ==) . W.tag) candidates
+        candidates = (:[]) . W.workspace . W.current <> W.hidden $ w
 
 mapWorkspaces :: (WorkspaceId -> X a) -> X()
 mapWorkspaces f = asks (workspaces . config) >>= mapM_ f
