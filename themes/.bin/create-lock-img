@@ -1,10 +1,8 @@
 #!/bin/bash
 
-# create-lock-img.sh bg-image lock-icon save-location blur
+# create-lock-img.sh bg-image lock-icon save-location
 # http://www.imagemagick.org/Usage/blur/
-# good blur amount: 5x8
 
-# convert "$1" -resize 1920x1080\! "$3"
-convert "$1" -blur "$4" "$3"
+res=$(xrandr | sed -nE 's/^.*primary ([0-9]+x[0-9]+).*$/\1/p')
 # convert "$3" -scale 10% -scale 1000% "$3"
-# convert "$3" "$2" -gravity center -composite -matte "$3"
+convert "$1" -resize "$res!" -blur 0x6 "$2" -gravity center -composite -matte png:"$3"

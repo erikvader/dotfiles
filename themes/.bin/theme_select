@@ -47,13 +47,10 @@ ln -sf "$cur/feh" "$HOME/.start_feh"
 # "$HOME/.start_feh" &!
 
 # change lock
-ln -sf "$cur/lock.png" "$HOME/.lock"
+create-lock-img "$cur/lock" "$theme_dir/lock.png" "$HOME/.lock" &
 
 # change conky
 ln -sf "$cur/conky" "$HOME/.start_conky"
-# pkill conky
-# while pgrep -x conky >/dev/null; do sleep 1; done
-# "$HOME/.start_conky" &>/dev/null &!
 
 display_updater conky
 display_updater feh
