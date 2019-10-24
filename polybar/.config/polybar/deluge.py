@@ -5,33 +5,66 @@ from ssl import SSLError
 from time import sleep
 from notify_send import notify_send
 
+import logging
+L = logging.getLogger(__name__)
+L.setLevel(logging.INFO)
+ch = logging.FileHandler("/tmp/delugepy.log", mode="w")
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s: %(message)s'))
+L.addHandler(ch)
+
 ACTIVE_SLEEP = 5
 INACTIVE_SLEEP = 60
+MAX_INACTIVE = (60 * 15) / ACTIVE_SLEEP
 RABBIT = "🐇"
 TURTLE = "🐢"
 SKULL = "☠"
 
-last_stats = {}
-unfinished_torrents = set()
-
 def polybar_color(s, c):
    return "%{{F#{}}}{}%{{F-}}".format(c, s)
 
-def send_notifications(client):
-   global unfinished_torrents
-   torrents = client.call('core.get_torrents_status', {}, ['is_finished', 'name'])
+def get_all_torrents(client):
+   return client.call('core.get_torrents_status', {}, ['is_finished', 'queue', 'all_time_download', 'paused', 'name', 'state'])
 
+# move torrents that have been dead for MAX_INACTIVE to the bottom of the queue
+def manage(client, torrents, stats):
+   isQueued = lambda t: not t[b'is_finished'] and t[b'state'] == b'Queued'
+   isDownloading = lambda t: not t[b'is_finished'] and not t[b'paused'] and t[b'state'] == b'Downloading'
+   if not any(isQueued(t) for t in torrents.values()):
+      L.debug("skipped `manage' due to no queued torrents")
+      return
+
+   new_dead = {}
    for h,t in torrents.items():
-      if t[b'is_finished'] and h in unfinished_torrents:
-         notify_send("Torrent completed!", t[b'name'].decode())
+      if isDownloading(t):
+         if h in stats['dead_torrents']:
+            if stats['dead_torrents'][h]['count'] >= MAX_INACTIVE:
+               downloaded = t[b'all_time_download'] - stats['dead_torrents'][h]['all_time_download']
+               limit = 10 * 1024 * MAX_INACTIVE * ACTIVE_SLEEP
+               if downloaded <= limit:
+                  client.call('core.queue_bottom', [h])
+                  L.info('moved {} to the bottom'.format(t[b'name'].decode()))
+               else:
+                  new_dead[h] = {'count': 0, 'all_time_download': t[b'all_time_download']}
+                  L.info("{} was not moved to the bottom, it had downloaded {} which is more than {}".format(t[b'name'].decode(), downloaded, limit))
+            else:
+               new_dead[h] = stats['dead_torrents'][h]
+               new_dead[h]['count'] += 1
+               L.debug("increased count for {} to {} out of {} in dead_torrents".format(t[b'name'].decode(), new_dead[h]['count'], MAX_INACTIVE))
+         else:
+            new_dead[h] = {'count': 1, 'all_time_download': t[b'all_time_download']}
+            L.debug("{} is new and was added to dead_torrents".format(t[b'name'].decode()))
+   stats['dead_torrents'] = new_dead
 
-   unfinished_torrents = {h for h,t in torrents.items() if not t[b'is_finished']}
+# send a notification when a torrent finishes
+def send_notifications(torrents, stats):
+   for h,t in torrents.items():
+      if t[b'is_finished'] and h in stats['unfinished_torrents']:
+         notify_send("Torrent completed!", t[b'name'].decode())
+   stats['unfinished_torrents'] = {h for h,t in torrents.items() if not t[b'is_finished']}
 
 # get amount of torrents that are downloading (everything that is not 100%)
-def get_downloading(client):
-   # state kan vara intressant
-   torrents = client.call('core.get_torrents_status', {}, ['is_finished', 'paused'])
-
+def get_downloading(torrents):
    downloading = 0
    for t in torrents.values():
       if not t[b'is_finished']:
@@ -46,8 +79,7 @@ def is_throttled(client):
 
 # get average speeds in B/s
 # first reading of a session returns junk values
-def get_avg_speeds(client):
-   global last_stats
+def get_avg_speeds(client, last_stats):
    stats = client.call('core.get_session_status', ['total_download', 'total_upload'])
 
    down = stats[b'total_download'] - last_stats.get(b'total_download', 0)
@@ -56,13 +88,14 @@ def get_avg_speeds(client):
    up = stats[b'total_upload'] - last_stats.get(b'total_upload', 0)
    up /= ACTIVE_SLEEP
 
-   last_stats = stats
+   last_stats.clear()
+   last_stats.update(stats)
    return down, up
 
-def print_stats(client):
-   down, up = get_avg_speeds(client)
+def print_stats(client, torrents, stats):
+   down, up = get_avg_speeds(client, stats['last_stats'])
    throttled = is_throttled(client)
-   active = get_downloading(client)
+   active = get_downloading(torrents)
 
    if down <= 1024 and up <= 1024:
       status_icon = SKULL
@@ -78,7 +111,6 @@ def print_stats(client):
    print("({}/{})#{} {}".format(down, up, active, status_icon), flush=True)
 
 def main():
-   global unfinished_torrents, last_stats
    client = DelugeRPCClient('127.0.0.1', 58846, 'erik', 'abc123')
    while True:
       try:
@@ -87,12 +119,18 @@ def main():
          sleep(INACTIVE_SLEEP)
          continue
 
-      last_stats = {}
-      unfinished_torrents = set()
+      # session stats
+      stats = {
+         'last_stats': {},
+         'unfinished_torrents': {},
+         'dead_torrents': {}
+      }
       while True:
          try:
-            print_stats(client)
-            send_notifications(client)
+            torrents = get_all_torrents(client)
+            print_stats(client, torrents, stats)
+            send_notifications(torrents, stats)
+            manage(client, torrents, stats)
             sleep(ACTIVE_SLEEP)
          except FailedToReconnectException:
             print("", flush=True)
