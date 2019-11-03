@@ -22,6 +22,7 @@ import XMonad.Actions.Warp
 import XMonad.Actions.CycleWS (nextWS, prevWS)
 import XMonad.Actions.PhysicalScreens
 import XMonad.Actions.WorkspaceNames
+import XMonad.Actions.CopyWindow
 
 import XMonad.Util.SpawnOnce
 import XMonad.Util.WorkspaceCompare
@@ -205,7 +206,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- ((modm, xK_f), sendMessage $ Toggle FULL),
 
     -- close focused window
-    ((modm, xK_q), kill),
+    ((modm, xK_q), kill1),
 
      -- Rotate through the available layout algorithms
     ((modm, xK_space), sendMessage NextLayout),
@@ -309,21 +310,14 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
         | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
         , (f, m) <- [(W.greedyView, 0),
                      (shiftView, controlMask .|. shiftMask),
-                     (W.shift, controlMask)
-                     -- , (W.view, shiftMask)
+                     (W.shift, controlMask),
+                     (copy, shiftMask)
                     ]]
 
     ++
 
     -- jump to layout
     [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
-
-    ++
-
-    -- move to screen with shift+num instead of Fnum
-    [((m .|. modm, key), f sc)
-        | (key, sc) <- zip [xK_1, xK_2, xK_3] [0..]
-        , (f, m) <- [(viewScreen def, shiftMask)]]
 
     ++
 
@@ -403,12 +397,14 @@ multiPrepare output pp = do
   L.updateCurrentState
   showWindows <- ppShowWindows
   wsName <- getWorkspaceNames'
+  copies <- wsContainingCopies
   return $
     decoratePP
-      (\w -> concatMap ($ w) [colorize, showWindows, maybe "" (":"++) . wsName])
+      (\w -> concatMap ($ w) [colorize copies, showWindows, maybe "" (":"++) . wsName])
       (pp {ppOutput = rootOutput d r output . fixXinerama})
   where
-    colorize = wrap "%{F#ffffff T5}" "%{F- T-}"
+    colorize copies w | w `elem` copies = wrap "%{F#ff69b4 T5}" "%{F- T-}" w
+                      | otherwise       = wrap "%{F#ffffff T5}" "%{F- T-}" w
 
     fixXinerama :: String -> String
     fixXinerama s = removeIndices 0 s . tail . init . findIndices (\c -> c == '[' || c == ']') . takeTo (ppSep pp) $ s
