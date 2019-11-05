@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# Wrapper for a fzf that opens in a separate urxvt window.
-# All arguments are sent to fzf.
+# Wrapper for a fzf that opens in a separate urxvt window:
+# fzf_dmenu [fzfargs...]
+# Alternate mode to interactively enter any line:
+# fzf_dmenu -- [prompt]
 # The environment variable URXVTFZF_GEOMETRY can be set to change the
 # size of the terminal window.
 
@@ -15,7 +17,12 @@ fi
 exec {out}>&1 {inn}<&0
 
 if $DOCAT; then
-    cmd="${1:+echo $(printf "%q" "$1");} cat 1>&$out"
+    if [[ -n $1 ]]; then
+        prompt=$1
+    else
+        prompt='input: '
+    fi
+    cmd="read -rep '$prompt' line && [ -n \"\$line\" ] && echo -E \"\$line\" 1>&$out"
 else
     cmd="fzf --reverse ${*:+$(printf "%q " "$@")} 1>&$out 0<&$inn"
 fi
