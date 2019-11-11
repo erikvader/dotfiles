@@ -10,6 +10,7 @@ import System.Exit
 import Control.Monad (when,join)
 import Data.List
 import Data.Maybe (maybe,maybeToList,fromMaybe)
+import Data.Char (toLower)
 
 import Graphics.X11.ExtraTypes.XF86
 
@@ -35,6 +36,7 @@ import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.ManageHelpers
 import XMonad.Hooks.UrgencyHook
 import XMonad.Hooks.WorkspaceHistory
+import XMonad.Hooks.DynamicProperty
 
 import qualified XMonad.Layout.Dwindle as Dwind
 import XMonad.Layout.MultiToggle
@@ -448,10 +450,17 @@ baseConfig = desktopConfig {
   }
 
 myConfig = baseConfig {
-  manageHook = composeAll [ isDialog <||> appName =? "URxvtFZF" --> doCenterFloat ] <+> manageHook baseConfig,
+  manageHook = centerFloatMH <+> toScratchMH <+> manageHook baseConfig,
+  handleEventHook = dynamicPropertyChange "WM_CLASS" toScratchMH <+> handleEventHook baseConfig,
   startupHook = startupHook baseConfig <+> myStartupHook <+> fullscreenStartupHook,
   logHook = logHook baseConfig <+> myUpdatePointer
   }
+  where
+    centerFloatMH = composeAll [ isDialog <||> appName =? "URxvtFZF" --> doCenterFloat ]
+    toScratchMH = composeAll [appName =?? wc --> doShift scratchWS | wc <- scratchWindows]
+    -- lowercase =?
+    q =?? s = (map toLower <$> q) =? map toLower s
+    scratchWindows = ["spotify", "discord", "deluge", "telegram-desktop"]
 
 errorFile :: FilePath
 errorFile = "/tmp/xmonad-error"
