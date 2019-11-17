@@ -22,7 +22,7 @@ if $DOCAT; then
     else
         prompt='input: '
     fi
-    cmd="read -rep '$prompt' line && [ -n \"\$line\" ] && echo -E \"\$line\" 1>&$out"
+    cmd="read -ep '$prompt' line && [ -n \"\$line\" ] && echo -E \"\$line\" 1>&$out"
 else
     cmd="fzf --reverse ${*:+$(printf "%q " "$@")} 1>&$out 0<&$inn"
 fi
