@@ -3,5 +3,5 @@
 choice=$(man -k . | fzf_dmenu --prompt="man: " | sed -E 's/^([^ ]+) \(([^\)]+)\).*$/\2 \1/')
 
 if [[ -n $choice ]]; then
-    emacsclient -n -c -e "(same-buffer (man \"$choice\"))" &>/dev/null
+    emacsclient -n -e "(popup-frame (man \"$choice\"))" &>/dev/null
 fi

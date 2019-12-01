@@ -75,15 +75,15 @@ function mountfat {
 }
 
 function ediff {
-    emacsclient -n -c -e '(same-buffer (ediff "'"$1"'" "'"$2"'"))' >/dev/null
+    emacsclient -n -e '(popup-frame (ediff "'"$1"'" "'"$2"'"))' >/dev/null
 }
 
 function emacsdiff {
-    emacsclient -n -c -e '(same-buffer (diff "'"$1"'" "'"$2"'"))' >/dev/null
+    emacsclient -n -e '(popup-frame (diff "'"$1"'" "'"$2"'"))' >/dev/null
 }
 
 function magit {
-    emacsclient -n -c -e '(same-buffer (magit-status))' >/dev/null
+    emacsclient -n -e '(popup-frame (magit-status))' >/dev/null
 }
 
 function man {

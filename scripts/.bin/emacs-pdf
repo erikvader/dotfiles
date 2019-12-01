@@ -1,0 +1,3 @@
+#!/bin/sh
+
+emacsclient -n -e "(popup-frame (find-file \"$1\"))" >/dev/null
