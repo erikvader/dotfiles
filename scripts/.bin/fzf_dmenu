@@ -3,13 +3,13 @@
 # Wrapper for a fzf that opens in a separate urxvt window:
 # fzf_dmenu [fzfargs...]
 # Alternate mode to interactively enter any line:
-# fzf_dmenu -- [prompt]
+# fzf_dmenu -- [prompt] [readargs...]
 # The environment variable URXVTFZF_GEOMETRY can be set to change the
 # size of the terminal window.
 
 DOCAT=false
 
-if [[ $# -ge 1 && $# -le 2 && $1 = -- ]]; then
+if [[ $1 = -- ]]; then
     shift
     DOCAT=true
 fi
@@ -17,12 +17,12 @@ fi
 exec {out}>&1 {inn}<&0
 
 if $DOCAT; then
-    if [[ -n $1 ]]; then
-        prompt=$1
-    else
-        prompt='input: '
+    if [[ -n $1 && ! $1 = -* ]]; then
+        set -- -p "$1" "${@:2}"
+    elif [[ $# -eq 0 ]]; then
+        set -- -p ">> "
     fi
-    cmd="read -ep '$prompt' line && [ -n \"\$line\" ] && echo -E \"\$line\" 1>&$out"
+    cmd="read -e ${*:+$(printf "%q " "$@")} line && [ -n \"\$line\" ] && echo -E \"\$line\" 1>&$out"
 else
     cmd="fzf --reverse ${*:+$(printf "%q " "$@")} 1>&$out 0<&$inn"
 fi
