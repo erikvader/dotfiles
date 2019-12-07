@@ -54,7 +54,7 @@ function repos_cmd {
 }
 
 alias repos_check='repos_cmd git fetch &>/dev/null; repos_cmd git status'
-alias repos_pull='repos_cmd git pull'
+alias repos_pull='repos_cmd git pull --ff-only'
 alias repos_status='repos_cmd git status'
 alias repos_magit='repos_cmd magit >/dev/null'
 
