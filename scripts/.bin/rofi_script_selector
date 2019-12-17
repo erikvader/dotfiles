@@ -43,6 +43,8 @@ scripts['Emotion selector']='rofi_emoticon'
 scripts['Mount USB drive']='usbmounter mount'
 scripts['Unmount USB drive']='usbmounter unmount'
 scripts['Power off USB drive']='usbmounter poweroff'
+scripts['Watch Movie']='watch_movie'
+scripts['Watch Movie refresh cache']='watch_movie -r'
 
 choice=$(printf '%s\n' "${!scripts[@]}" | sort | fzf_dmenu)
 
