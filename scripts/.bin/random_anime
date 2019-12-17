@@ -5,12 +5,18 @@ import sys
 from random import choice
 import gzip
 
-if len(sys.argv) <= 1:
+if len(sys.argv) <= 1 or len(sys.argv) > 3:
    print("Usage:")
-   print(sys.argv[0] + " gzip_file.gz")
+   print(sys.argv[0] + " [-o] gzip_file.gz")
    exit(1)
+elif len(sys.argv) == 3:
+   mal_file = sys.argv[2]
+   open_in_browser = sys.argv[1] == "-o"
+elif len(sys.argv) == 2:
+   mal_file = sys.argv[1]
+   open_in_browser = False
 
-with gzip.open(sys.argv[1]) as f:
+with gzip.open(mal_file) as f:
    root = ET.fromstring(f.read())
 
 cand=[]
@@ -20,7 +26,12 @@ for a in root.iter("anime"):
       cand.append({"name": a.find("series_title").text, "id": a.find("series_animedb_id").text})
 
 r = choice(cand)
+url = "http://myanimelist.net/anime/" + r["id"]
 
 print(r["name"])
-print("http://myanimelist.net/anime/" + r["id"])
+print(url)
+
+if open_in_browser:
+   import webbrowser
+   webbrowser.open(url)
 
