@@ -178,7 +178,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_grave), spawn "pkill -f -USR1 redshift-manual-daemon"),
     ((modm .|. shiftMask, xK_grave), spawn "pkill -f -USR2 redshift-manual-daemon"),
     ((modm, xK_apostrophe), spawn "xrandr-invert-colors"),
-    ((modm, xK_asciicircum), spawn "pkill compton"),
+    ((modm, xK_asciicircum), spawn "pkill picom"),
 
     ((modm, xK_minus), spawn "theme_select safe"),
     ((modm .|. shiftMask, xK_minus), spawn "theme_select -r"),
