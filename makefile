@@ -1,5 +1,3 @@
-# -*- tab-width: 4; -*-
-
 # package manager commands
 PAC := yay
 PACLIST := $(PAC) -Qq
@@ -16,7 +14,8 @@ STOWFLAGS := --ignore='^$(IGNOREDIR)$$' --no-folding
 maybe-install = $(call install,$(call not-installed,$1,$2),$2)
 install = $(if $1,$($2INSTALL) $1,@echo packages '($2)' already installed for $(patsubst %:install,%,$@))
 not-installed = $(filter-out $(filter $1,$(shell $($2LIST))),$1)
-install-from = $(if $(wildcard $1),$(call maybe-install,$(shell cat "$1"),$2),)
+# hashtag is a comment character for make, so it has to be escaped
+install-from = $(if $(wildcard $1),$(call maybe-install,$(shell grep -v '^\#' "$1"),$2),)
 
 maybe-make = $(if $(wildcard $1/[Mm]akefile),$(MAKE) -C $1 $2,)
 
@@ -84,6 +83,7 @@ $(dirsdel): %\:del: %\:add
 
 define build_packages_file_template
 $1:
+	@echo finding all $2 ...
 	@find $(dirs) -type f -path '*/$$(IGNOREDIR)/$2' -exec cat {} + | sort -u > $$@
 endef
 
