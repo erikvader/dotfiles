@@ -1,0 +1,5 @@
+qutebrowser
+# required if style platform `export QT_QPA_PLATFORMTHEME=gtk2` is used
+# qt5-styleplugins
+# needed by userscripts/torrentdownload
+jq
