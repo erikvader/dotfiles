@@ -3,9 +3,11 @@
 # package manager commands
 PAC := yay
 PACLIST := $(PAC) -Qq
-PACINSTALL := $(PAC) -S
+PACINSTALL := $(PAC) --noconfirm -S
+ALLPAC := /tmp/dotfiles_make_all_pac
 PIPLIST := pip list --user --format freeze | sed 's/==.*$$//'
 PIPINSTALL := pip install --user
+ALLPIP := /tmp/dotfiles_make_all_pip
 
 IGNOREDIR := stow_ignore
 STOWFLAGS := --ignore='^$(IGNOREDIR)$$' --no-folding
@@ -25,23 +27,28 @@ dirsdel := $(addsuffix \:del,$(dirs))
 dirsre := $(addsuffix \:re,$(dirs))
 dirsdry := $(addsuffix \:dry,$(dirs))
 dirsinstall := $(addsuffix \:install,$(dirs))
+dirsmake := $(addsuffix \:make,$(dirs))
+dirsmakeadd := $(addsuffix \:makeadd,$(dirs))
 
-.PHONY: $(dirsinstall) $(dirsadd) $(dirsdry) $(dirs) $(dirsdel) $(dirsre) all help
+.PHONY: $(dirsinstall) $(dirsmake) $(dirsadd) $(dirsmakeadd) $(dirsdry) $(dirs) $(dirsdel) $(dirsre) all help install-everything
 
 help:
 	@echo 'My dotfiles manager'
 	@echo 'Each package is a directory. Everything will be stowed except for package/$(IGNOREDIR)/'
 	@echo 'This directory can contain these special files:'
-	@echo '  packages: packages installed with $(PACINSTALL), one per line'
-	@echo '  makefile: should have the target "install" which should install the package'
+	@echo '  packages:    packages installed with $(PACINSTALL), one per line'
+	@echo '  pippackages: packages installed with $(PIPINSTALL), one per line'
+	@echo '  makefile:    should have the target "install" which should install the package'
 	@echo
 	@echo 'Usage:'
-	@echo 'make package:add     to stow everything'
+	@echo 'make all             to install, make and stow everything'
+	@echo 'make package:add     to stow a package'
 	@echo 'make package:del     to remove stowed package'
 	@echo 'make package:re      to restow package (delete and stow)'
 	@echo 'make package:dry     to stow and see what happens'
-	@echo 'make package:install to install required packages'
-	@echo 'make package         to install and then stow'
+	@echo 'make package:install to install required packages (pip and $(PAC))'
+	@echo 'make package:make    to run "make install" on package'
+	@echo 'make package         to install, make and then stow'
 	@echo
 	@echo 'Available packages:'
 	@echo $(dirs)
@@ -49,14 +56,17 @@ help:
 	@echo 'Notes: Might not work with spaces in filenames at all!'
 	@echo '       GNU stow must be installed'
 
-all: $(dirs)
+all: install-everything $(dirsmakeadd)
 
-$(dirs): %: %\:install %\:add
+$(dirsmakeadd): %\:makeadd: %\:make %\:add
+$(dirs): %: %\:install %\:makeadd
 
 $(dirsinstall):
 	$(call install-from,$(patsubst %:install,%,$@)/$(IGNOREDIR)/packages,PAC)
 	$(call install-from,$(patsubst %:install,%,$@)/$(IGNOREDIR)/pippackages,PIP)
-	$(call maybe-make,$(patsubst %:install,%,$@)/$(IGNOREDIR),install)
+
+$(dirsmake):
+	$(call maybe-make,$(patsubst %:make,%,$@)/$(IGNOREDIR),install)
 
 $(dirsadd):
 	stow $(STOWFLAGS) $(patsubst %:add,%,$@)
@@ -69,3 +79,18 @@ $(dirsdry): %\:dry: %\:add
 
 $(dirsdel): STOWFLAGS += --delete
 $(dirsdel): %\:del: %\:add
+
+.INTERMEDIATE: $(ALLPAC) $(ALLPIP)
+
+define build_packages_file_template
+$1:
+	@find $(dirs) -type f -path '*/$$(IGNOREDIR)/$2' -exec cat {} + | sort -u > $$@
+endef
+
+$(eval $(call build_packages_file_template,$(ALLPAC),packages))
+$(eval $(call build_packages_file_template,$(ALLPIP),pippackages))
+
+install-everything: $(ALLPAC) $(ALLPIP)
+	$(call install-from,$(ALLPAC),PAC)
+	$(call install-from,$(ALLPIP),PIP)
+
