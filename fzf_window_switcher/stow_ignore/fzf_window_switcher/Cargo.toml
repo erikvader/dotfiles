@@ -1,0 +1,12 @@
+[package]
+name = "fzf_window_switcher"
+version = "0.1.0"
+authors = ["Erik Rimskog <erik.rimskog@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+xcb = "^0.8"
+xcb-util = {version = "^0.2.1", features = ["ewmh", "icccm"]}
+tabular = "^0.1.2"

@@ -10,6 +10,8 @@ ALLPIP := /tmp/dotfiles_make_all_pip
 IGNOREDIR := stow_ignore
 STOWFLAGS := --ignore='^$(IGNOREDIR)$$' --no-folding
 
+export INSTALLDIR := $(HOME)/.bin
+
 # $(call maybe-install,package1 package2 ...)
 maybe-install = $(call install,$(call not-installed,$1,$2),$2)
 install = $(if $1,$($2INSTALL) $1,@echo packages '($2)' already installed for $(patsubst %:install,%,$@))
