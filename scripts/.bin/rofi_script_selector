@@ -49,5 +49,10 @@ scripts['Watch Movie refresh cache']='watch_movie -r'
 choice=$(printf '%s\n' "${!scripts[@]}" | sort | fzf_dmenu)
 
 if [[ "$choice" ]]; then
-    eval "${scripts[$choice]}" & # TODO: göra såhär?
+    # NOTE: None of these commands are long running, so they don't
+    # really need to be in a new session (setsid). This script is only
+    # spawned from xmonad anyway, and that runs setsid. So the forked
+    # bash here has a unique session, it is just not equal to it's own
+    # PID.
+    eval "${scripts[$choice]}" &
 fi
