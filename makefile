@@ -86,7 +86,7 @@ $(dirsdel): %\:del: %\:add
 define build_packages_file_template
 $1:
 	@echo finding all $2 ...
-	@find $(dirs) -type f -path '*/$$(IGNOREDIR)/$2' -exec cat {} + | sort -u > $$@
+	@find $(dirs) -type f -path '*/$$(IGNOREDIR)/$2' -exec awk 1 {} + | sort -u > $$@
 endef
 
 $(eval $(call build_packages_file_template,$(ALLPAC),packages))
