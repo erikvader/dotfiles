@@ -16,7 +16,7 @@ def get_drives():
 def get_partitions(drives, mounted=False):
    parts = []
    for d in drives:
-      p = [p for p in d["children"] if mounted == bool(p["mountpoint"])]
+      p = [p for p in d.get("children", []) if mounted == bool(p["mountpoint"])]
       for x in p:
          x["vendor"] = d["vendor"]
          x["model"] = d["model"]
