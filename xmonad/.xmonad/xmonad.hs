@@ -145,6 +145,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     ((modm, xK_o), windowsLowestEmpty W.view $ XMonad.workspaces conf),
     ((modm .|. shiftMask, xK_o), windowsLowestEmpty shiftView $ XMonad.workspaces conf),
+    ((modm .|. controlMask, xK_o), windowsLowestEmpty W.shift $ XMonad.workspaces conf),
 
     -- rofi
     ((modm, xK_x), spawn "fzf_run"),
@@ -295,10 +296,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_0), confirmPrompt myXPConfig "power off?" $ spawn "poweroff"),
 
     -- Restart xmonad
-    ((modm .|. shiftMask, xK_c), spawn "if xmonad --recompile; then xmonad --restart; notify-send 'XMonad restarted'; else notify-send 'XMonad failed to compile'; fi"),
-
-    ((modm, xK_d), scratchVisit),
-    ((modm .|. shiftMask, xK_d), windows $ W.shift scratchWS)
+    ((modm .|. shiftMask, xK_c), spawn "if xmonad --recompile; then xmonad --restart; notify-send 'XMonad restarted'; else notify-send 'XMonad failed to compile'; fi")
     ]
     ++
 
@@ -309,12 +307,17 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- mod-shift-[1..9], Move client to workspace N
     --
     [((m .|. modm, k), windows (f i))
-        | (i, k) <- zip (XMonad.workspaces conf) [xK_1 .. xK_9]
+        | (i, k) <- zip (XMonad.workspaces conf) ([xK_1 .. xK_9] ++ [xK_d])
         , (f, m) <- [(W.greedyView, 0),
                      (shiftView, shiftMask),
                      (copy, controlMask .|. shiftMask),
                      (W.shift, controlMask)
                     ]]
+
+    ++
+
+    -- NOTE: overwrite greedyView from above
+    [((modm, xK_d), scratchVisit)]
 
     ++
 
