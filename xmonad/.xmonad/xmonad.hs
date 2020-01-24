@@ -17,7 +17,6 @@ import Graphics.X11.ExtraTypes.XF86
 import Codec.Binary.UTF8.String as UTF8
 
 import XMonad hiding ( (|||) )
-import XMonad.Config.Desktop
 
 import XMonad.Actions.Warp
 import XMonad.Actions.CycleWS (nextWS, prevWS)
@@ -27,6 +26,7 @@ import XMonad.Actions.CopyWindow
 
 import XMonad.Util.SpawnOnce
 import XMonad.Util.WorkspaceCompare
+import XMonad.Util.Cursor
 
 import XMonad.Prompt.ConfirmPrompt
 
@@ -96,7 +96,7 @@ myLayoutHook =
   mkToggle (single MIRROR)
   myBaseLayouts
 
-myStartupHook = runXmonadStartupOnce
+myStartupHook = runXmonadStartupOnce <+> setDefaultCursor xC_left_ptr
 
 runXmonadStartupOnce :: X ()
 runXmonadStartupOnce = do
@@ -443,20 +443,17 @@ fullscreenStartupHook = withDisplay $ \dpy -> do
         when (fromIntegral f `notElem` sup) $
             changeProperty32 dpy r a c propModeAppend [fromIntegral f]
 
-baseConfig = desktopConfig {
+myConfig = def {
   modMask = myModMask,
   borderWidth = 0,
   focusedBorderColor = "#dddddd",
   normalBorderColor = "#555555",
   keys = myKeys,
-  workspaces = myWorkspaces
-  }
-
-myConfig = baseConfig {
-  manageHook = centerFloatMH <+> toScratchMH <+> manageHook baseConfig,
-  handleEventHook = dynamicPropertyChange "WM_CLASS" toScratchMH <+> handleEventHook baseConfig,
-  startupHook = startupHook baseConfig <+> myStartupHook <+> fullscreenStartupHook,
-  logHook = logHook baseConfig <+> myUpdatePointer
+  workspaces = myWorkspaces,
+  manageHook = centerFloatMH <+> toScratchMH <+> manageHook def,
+  handleEventHook = dynamicPropertyChange "WM_CLASS" toScratchMH <+> handleEventHook def,
+  startupHook = startupHook def <+> myStartupHook <+> fullscreenStartupHook,
+  logHook = logHook def <+> myUpdatePointer
   }
   where
     centerFloatMH = composeAll [ isDialog <||> appName =? "URxvtFZF" --> doCenterFloat ]
