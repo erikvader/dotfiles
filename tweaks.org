@@ -1,0 +1,68 @@
+* swapfiles
+** show available
+To show available swap
+#+BEGIN_SRC bash
+free
+swapon --show
+#+END_SRC
+** create one
+[[https://wiki.archlinux.org/index.php/Swap#Swap_file_creation][archwiki]]
+
+#+BEGIN_SRC bash
+fallocate -l 1G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+#+END_SRC
+Good to have the owner as root?
+
+Add the following to ~/etc/fstab~
+#+BEGIN_SRC
+/swapfile none swap defaults 0 0
+#+END_SRC
+
+** reduce swappiness
+[[https://wiki.archlinux.org/index.php/Swap#Swappiness][archwiki]]
+Add a file ~/etc/sysctl.d/99-swappiness.conf~ and add:
+#+BEGIN_SRC 
+vm.swappiness=0
+#+END_SRC
+Check the current value with =sysctl vm.swappiness=.
+
+This sets the kernel's preference to swap file-backed pages (basically
+the filesystem cache) and anonymous pages. A value of 0 signals a
+strong preference to swap out file-backed instead of anonymous.
+
+Swapping is only performed when RAM is pretty much full (I think).
+[[https://www.howtogeek.com/449691/what-is-swapiness-on-linux-and-how-to-change-it/][source]]
+
+A low value will increase application responsiveness because the
+kernel is not swapping out code ([[https://rudd-o.com/linux-and-free-software/tales-from-responsivenessland-why-linux-feels-slow-and-how-to-fix-that][source]]).
+
+* GTK-theme
+[[https://www.gnome-look.org/p/1247600/][Adwaita-dark]]
+* clipmenud
+clipmenud will poll the X server (?) if ~clipnotify~ is not installed.
+* systemd
+** /etc/systemd/journald.conf
+Limit log size:
+#+BEGIN_SRC
+SystemMaxUse=500M
+#+END_SRC
+** /etc/systemd/logind.conf
+Kill all processes in session when logging out:
+#+BEGIN_SRC
+KillUserProcesses=yes
+#+END_SRC
+
+Lid close:
+#+BEGIN_SRC
+HandleLidSwitch=suspend
+HandleLidSwitchDocked=ignore
+#+END_SRC
+Docked is when an external display is connected.
+
+Don't do anyhting on =power= key
+#+BEGIN_SRC
+HandlePowerKey=ignore
+#+END_SRC
