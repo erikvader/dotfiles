@@ -28,6 +28,6 @@ if $DOCAT; then
 else
     cmd="fzf --reverse ${*:+$(printf "%q " "$@")} 1>&$out 0<&$inn"
 fi
-urxvt -name URxvtFZF -geometry "${URXVTFZF_GEOMETRY:-100x24}" -e sh -c "$cmd"
+st -n URxvtFZF -g "${URXVTFZF_GEOMETRY:-100x24}" -e sh -c "$cmd"
 
 exec {out}>&- {inn}<&-

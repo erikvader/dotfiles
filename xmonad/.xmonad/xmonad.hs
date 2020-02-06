@@ -201,8 +201,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((0, xF86XK_AudioPrev), spawn "playerctl previous"),
 
     -- launch a terminal
-    ((modm, xK_Return), spawn "urxvt"),
-    ((modm .|. controlMask, xK_Return), spawn "urxvt -e zsh -is eval ranger-cd"),
+    ((modm, xK_Return), spawn "st"),
+    ((modm .|. controlMask, xK_Return), spawn "st -e zsh -is eval ranger-cd"),
     ((modm .|. shiftMask, xK_Return), spawn "emacsclient -nc"),
     -- ((modm, xK_BackSpace), spawn "$HOME/.emacs_anywhere/bin/run"),
 
