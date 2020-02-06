@@ -13,12 +13,13 @@ module Erik.MyStuff (
   notifySend,
   ppShowWindows,
   decoratePP,
-  toggleMapStruts
+  toggleMapStruts,
+  switchScreen
 ) where
 
 import XMonad
 import qualified XMonad.StackSet as W
-import Data.List (find)
+import Data.List (find, elemIndex)
 import Data.Maybe (maybe,isNothing,isJust,fromMaybe,mapMaybe,listToMaybe)
 import Control.Monad (when,unless,filterM)
 import XMonad.Actions.WorkspaceNames (getWorkspaceNames',setWorkspaceName)
@@ -32,6 +33,7 @@ import Control.Exception (catch,SomeException)
 import Data.Char (toLower)
 import XMonad.Hooks.ManageDocks (checkDock)
 import Text.Regex
+import XMonad.Actions.PhysicalScreens
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
@@ -267,3 +269,14 @@ isMapped :: Window -> X Bool
 isMapped w = withDisplay $ \d -> do
   attr <- io $ getWindowAttributes d w
   return $ wa_map_state attr == waIsViewable
+
+-------------------------------- visit screens --------------------------------
+
+switchScreen :: ScreenComparator -> (Int -> Int -> Int) -> X ()
+switchScreen sc nextScreen = do
+  numScreens <- length . W.screens <$> gets windowset
+  mapped <- mapM (getScreen sc . P) [0..(numScreens - 1)]
+  curScreen <- gets (W.screen . W.current . windowset)
+  whenJust (elemIndex (Just curScreen) mapped) $ \focusedPhysScreen -> do
+    let next = nextScreen numScreens focusedPhysScreen
+    viewScreen sc (P next)

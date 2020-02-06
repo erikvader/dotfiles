@@ -154,12 +154,13 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_r), spawn "open_downloaded_pdf"),
 
     -- screens
-    ((modm, xK_Tab), onNextNeighbour def W.view),
-    ((modm .|. shiftMask, xK_Tab), onPrevNeighbour def W.view),
+    ((modm, xK_Tab), switchScreen def tabForward),
+    ((modm .|. shiftMask, xK_Tab), switchScreen def tabBackward),
     ((modm .|. controlMask, xK_j), onNextNeighbour def W.view),
     ((modm .|. controlMask, xK_k), onPrevNeighbour def W.view),
     ((modm .|. controlMask .|. shiftMask, xK_j), onNextNeighbour def swapWith),
     ((modm .|. controlMask .|. shiftMask, xK_k), onPrevNeighbour def swapWith),
+    ((modm .|. controlMask, xK_b), screenWorkspace 0 >>= flip whenJust (windows . W.view)),
 
     -- printscreen
     ((0, xK_Print), spawn "maim_clipboard -su"),
@@ -337,6 +338,12 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
                      (\i -> getScreen def i >>= maybe (return Nothing) screenWorkspace >>= flip whenJust (windows . W.greedyView), shiftMask),
                      (sendToScreen def, controlMask)
                     ]]
+  where
+    tabForward 3 2 = 1
+    tabForward n x = (x+1) `mod` n
+
+    tabBackward 3 _ = 0
+    tabBackward n x = (x-1) `mod` n
 
 logLimitWindows :: [X (Maybe String)]
 logLimitWindows =
