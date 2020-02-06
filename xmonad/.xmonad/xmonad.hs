@@ -71,7 +71,7 @@ scratchWS = "S"
 myWorkspaces = map show [1..9] ++ [scratchWS]
 
 #define COMMA ,
-#define GRID GV.Grid (16/9)
+#define GRID GV.Grid (16/10)
 #define TALL Tall 1 (3/100) (1/2)
 #define TEMPLATE(X,Y,F1,F2) F1 X F2 \
                             F1 DoubleMaster (2/3) (1/2) F2 \
