@@ -1,5 +1,8 @@
 alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
 
+alias sd='sudo docker'
+alias sdc='sudo docker-compose'
+
 alias ydm='youtube-dl --merge-output-format mkv --write-thumbnail'
 
 alias pps='ps -Ho pid,ppid,pgid,comm'
