@@ -1,16 +1,21 @@
 #!/bin/bash
 
-cache=$HOME/.cache/watch_movie
+index=$HOME/.cache/watch_movie
 dirs=(/media/3TB/Anime/Anime /media/3TB/filmer)
 
 export URXVTFZF_GEOMETRY=150x38
 
-if [[ -n $1 && $1 = -r ]]; then
-    notify-send 'Watch Movie' 'building cache'
-    find "${dirs[@]}" -regextype egrep -type f -iregex '^.*\.(mkv|mp4)$' > "$cache"
-    notify-send 'Watch Movie' 'cache built!'
+if [[ $1 = -r ]]; then
+    notify-send 'Watch Movie' 'building index'
+
+    find "${dirs[@]}" -regextype egrep -type f -iregex '^.*\.(mkv|mp4)$' \
+        | tee --output-error=exit-nopipe "$index" \
+        | fzf_dmenu -d / --with-nth=-1 \
+        | xargs -rI '{}' mpv --no-terminal --fullscreen '{}'
+
+    notify-send 'Watch Movie' 'index built!'
 else
-    fzf_dmenu -d / --with-nth=-1 < "$cache" \
-        | xargs -rI '{}' mpv --no-terminal --fullscreen '{}' &!
+    fzf_dmenu -d / --with-nth=-1 < "$index" \
+        | xargs -rI '{}' mpv --no-terminal --fullscreen '{}'
 
 fi
