@@ -272,6 +272,9 @@ isMapped w = withDisplay $ \d -> do
 
 -------------------------------- visit screens --------------------------------
 
+-- takes a function f that determines the next screen to change focus to.
+-- f :: numberOfScreens -> currentScreen -> nextScreenToFocus
+-- All screens are physical screen numbers
 switchScreen :: ScreenComparator -> (Int -> Int -> Int) -> X ()
 switchScreen sc nextScreen = do
   numScreens <- length . W.screens <$> gets windowset

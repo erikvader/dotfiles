@@ -467,7 +467,7 @@ myConfig = def {
     toScratchMH = composeAll [appName =?? wc --> doShift scratchWS | wc <- scratchWindows]
     -- lowercase =?
     q =?? s = (map toLower <$> q) =? map toLower s
-    scratchWindows = ["spotify", "discord", "deluge", "telegram-desktop"]
+    scratchWindows = ["spotify", "discord", "deluge", "telegram-desktop-bin"]
 
 errorFile :: FilePath
 errorFile = "/tmp/xmonad-error"
