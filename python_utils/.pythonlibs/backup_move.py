@@ -1,4 +1,5 @@
 import os
+import re
 from shutil import move
 
 class MoveFileException(Exception):
@@ -36,8 +37,26 @@ def move_file(src, dst, src_folder=None):
    if not os.path.exists(src_path):
       raise MoveFileException("source file doesn't exist")
 
+   if not os.path.isdir(dst):
+      raise MoveFileException("dst is not a directory")
+
    for d_name in _file_gen(src):
       d_path = os.path.join(dst, d_name)
+      # NOTE: possible race condition
       if not os.path.exists(d_path):
          move(src_path, d_path)
          return d_name
+
+def find_duplicates(path):
+   assert(os.path.exists(path))
+   file_name = os.path.basename(path)
+   dir_name = os.path.dirname(path)
+
+   m = re.fullmatch(r"[0-9]+_(.+)", file_name)
+   if m:
+      without_numbers = m[1]
+   else:
+      without_numbers = file_name
+
+   m = re.compile(r'([0-9]+_)?' + without_numbers)
+   return [f for f in os.listdir(dir_name) if f != file_name and m.fullmatch(f)]
