@@ -2,6 +2,8 @@ import os
 import re
 from shutil import move
 
+_leading_number_regex = re.compile(r"[0-9]+_(.+)")
+
 class MoveFileException(Exception):
    pass
 
@@ -47,16 +49,22 @@ def move_file(src, dst, src_folder=None):
          move(src_path, d_path)
          return d_name
 
+# find all possible duplicates of the file `path` in it's current directory
 def find_duplicates(path):
    assert(os.path.exists(path))
    file_name = os.path.basename(path)
    dir_name = os.path.dirname(path)
 
-   m = re.fullmatch(r"[0-9]+_(.+)", file_name)
-   if m:
-      without_numbers = m[1]
-   else:
-      without_numbers = file_name
+   return [f for f in os.listdir(dir_name) if f != file_name and are_duplicates(f, file_name)]
 
-   m = re.compile(r'([0-9]+_)?' + without_numbers)
-   return [f for f in os.listdir(dir_name) if f != file_name and m.fullmatch(f)]
+# are the filenames file_a and file_b possible duplicate copies from
+# being moved with move_file?
+def are_duplicates(file_a, file_b):
+   return _remove_leading_number(file_a) == _remove_leading_number(file_b)
+
+def _remove_leading_number(s):
+   m = _leading_number_regex.fullmatch(s)
+   if m:
+      return m[1]
+   else:
+      return s
