@@ -1,0 +1,15 @@
+{
+  "extractor": {
+    "base-directory": "./",
+    "filename": "{page:>06}.{extension}",
+    "directory": ["{manga}", "v{volume:>03} c{chapter:>04}{chapter_minor}: {title}"],
+    "archive": "downloaded.db",
+    "chapter-filter": "lang == 'en'",
+    "postprocessors": [
+      {
+        "name": "zip",
+        "extension": "cbz"
+      }
+    ]
+  }
+}
