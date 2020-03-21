@@ -1,0 +1,124 @@
+#!/bin/bash
+
+set -e
+
+READER=/dev/disk/by-id/usb-Linux_File-Stor_Gadget_N8739C1076999-0:0
+
+function print_help {
+    echo "Usage:"
+    echo "  manga init manga_url"
+    echo "  manga download chapter_range"
+    echo "  manga sync"
+    echo "  manga gather volume"
+    echo
+    echo "Where chapter_range can be: 1,2,5-7 or +5"
+}
+
+function filter_filename {
+    tr -cd 'A-Za-z0-9 ._-'
+}
+
+function find_latest {
+    find . -maxdepth 1 -mindepth 1 -type f -name '*.cbz' | gawk '
+BEGIN { chap=0 }
+match($0, /c([0-9]{4})/, ary) { ary[1] > chap ? chap=ary[1]+0 : 0 }
+END { print chap }'
+}
+
+function download_manga {
+    local chap_range
+    case $1 in
+        +*)
+            local latest
+            latest=$(find_latest)
+            local num=${1:1}
+            chap_range=$((latest+1))-$((latest+num))
+        ;;
+        *) chap_range=$1 ;;
+    esac
+
+    gallery-dl --download-archive .manga/downloaded.db\
+               --input-file .manga/url\
+               --chapter-range "$chap_range"\
+               --dest ./\
+               --chapter-filter 'lang == "en"'\
+               --option 'filename=v{volume:>03} c{chapter:>04}{chapter_minor} p{page:>06}.{extension}'\
+               --option 'directory=[]'
+}
+
+function init_manga {
+    local manga_name
+    manga_name=$(gallery-dl --dump-json "$1" | jq -r '[..|.manga?|strings]|unique[0]' | filter_filename)
+    if [[ -d $manga_name ]]; then
+        echo "Directory '$manga_name' already exists!"
+        exit 1
+    fi
+    mkdir "$manga_name"
+    mkdir "$manga_name/.manga"
+    echo "$1" > "$manga_name/.manga/url"
+    touch "$manga_name/.manga/downloaded.db"
+}
+
+function sync {
+    if [[ ! -b $READER ]]; then
+        echo "eReader is not connected!"
+        exit 1
+    fi
+
+    # udisksctl mount -b "$READER"
+    local mounted_dir
+    if ! mounted_dir=$(findmnt -fno TARGET --source "$READER"); then
+        echo "eReader is not mounted"
+        exit 1
+    fi
+
+    rsync -rvhu --exclude .manga "$PWD" "$mounted_dir"
+
+    # udisksctl unmount -b "$READER"
+}
+
+case $1 in
+    init)
+        if [[ $2 ]]; then
+            init_manga "$2"
+        else
+            echo "missing required argument manga_url"
+            exit 1
+        fi
+        ;;
+    download)
+        if [[ $2 && -d .manga ]]; then
+            download_manga "$2"
+        else
+            echo "missing required argument chapter_range or not inside a manga directory"
+            exit 1
+        fi
+        ;;
+    sync)
+        if [[ -d .manga ]]; then
+            sync
+        else
+            echo "not inside a manga directory"
+            exit 1
+        fi
+        ;;
+    gather)
+        if [[ $2 && -d .manga ]]; then
+            manga_name=$(basename "$PWD" | filter_filename)
+            find . -mindepth 1 -maxdepth 1 -type f -regex '\./v0*'"$2"' .*' -print0 |\
+                xargs -0 zip -0 --move "$manga_name v$2.cbz"
+        else
+            echo "missing required argument volume or not inside a manga directory"
+            exit 1
+        fi
+        ;;
+    -h)
+        print_help
+        exit 1
+        ;;
+    *)
+        echo "expected download, sync, init or gather"
+        exit 1
+        ;;
+esac
+
