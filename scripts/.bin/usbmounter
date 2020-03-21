@@ -7,8 +7,7 @@ from fzf_dmenu import fzf_dmenu
 from notify_send import notify_send
 
 def get_drives():
-   res = S.run(["lsblk", "-JO"], stdout=S.PIPE)
-   res.check_returncode()
+   res = S.run(["lsblk", "-JO"], stdout=S.PIPE, check=True)
    lsblk = json.loads(res.stdout)
    usb_drives = [x for x in lsblk["blockdevices"] if x["tran"] == "usb"]
    return usb_drives
@@ -16,7 +15,7 @@ def get_drives():
 def get_partitions(drives, mounted=False):
    parts = []
    for d in drives:
-      p = [p for p in d.get("children", []) if mounted == bool(p["mountpoint"])]
+      p = [p for p in [d] + d.get("children", []) if p["fstype"] is not None and mounted == bool(p["mountpoint"])]
       for x in p:
          x["vendor"] = d["vendor"]
          x["model"] = d["model"]
@@ -38,7 +37,7 @@ def run_udisks(choices, cmd):
       return
 
    cpath = c.split(" ")[0]
-   res = S.run(["udisksctl", cmd, "-b", cpath], text=True, stdout=S.PIPE, stderr=S.PIPE)
+   res = S.run(["udisksctl", cmd, "-b", cpath], text=True, stdout=S.PIPE, stderr=S.PIPE, check=False)
    noti = res.stdout + res.stderr
    if noti:
       notify_send(noti)
