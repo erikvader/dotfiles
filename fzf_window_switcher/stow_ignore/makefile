@@ -12,6 +12,6 @@ ifdef force
 endif
 
 $(TARGET):
-	cargo build --release --manifest-path $(DIR)/Cargo.toml
+	cd $(DIR); cargo build --release
 	cp -t $(@D) $(DIR)/target/release/$(@F)
-	cargo clean --manifest-path $(DIR)/Cargo.toml
+	cd $(DIR); cargo clean
