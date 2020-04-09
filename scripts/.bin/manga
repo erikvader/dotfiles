@@ -2,14 +2,12 @@
 
 set -e
 
-READER=/dev/disk/by-id/usb-Linux_File-Stor_Gadget_N8739C1076999-0:0
-
 function print_help {
     echo "Usage:"
     echo "  manga init manga_url"
     echo "  manga download chapter_range"
-    echo "  manga sync"
     echo "  manga gather volume"
+    echo "  manga flatten folder"
     echo
     echo "Where chapter_range can be: 1,2,5-7 or +5"
 }
@@ -59,22 +57,18 @@ function init_manga {
     touch "$manga_name/.manga/downloaded.db"
 }
 
-function sync {
-    if [[ ! -b $READER ]]; then
-        echo "eReader is not connected!"
-        exit 1
-    fi
+function flatten {
+    i=0
+    find "$1" -type f | sort |\
+        while read -r line; do
+            : $((i++))
+            fname=$(printf '%06d' $i).${line##*.}
+            mv "$line" "$1/$fname"
+            echo "$line" '->' "$fname" >> "$1/log.txt"
+        done
 
-    # udisksctl mount -b "$READER"
-    local mounted_dir
-    if ! mounted_dir=$(findmnt -fno TARGET --source "$READER"); then
-        echo "eReader is not mounted"
-        exit 1
-    fi
-
-    rsync -rvhu --exclude .manga "$PWD" "$mounted_dir"
-
-    # udisksctl unmount -b "$READER"
+    zip -rm0j "$1.cbz" "$1"
+    rm -r "$1"
 }
 
 case $1 in
@@ -94,21 +88,21 @@ case $1 in
             exit 1
         fi
         ;;
-    sync)
-        if [[ -d .manga ]]; then
-            sync
-        else
-            echo "not inside a manga directory"
-            exit 1
-        fi
-        ;;
     gather)
         if [[ $2 && -d .manga ]]; then
             manga_name=$(basename "$PWD" | filter_filename)
-            find . -mindepth 1 -maxdepth 1 -type f -regex '\./v0*'"$2"' .*' -print0 |\
-                xargs -0 zip -0 --move "$manga_name v$2.cbz"
+            find . -mindepth 1 -maxdepth 1 -type f -regex '\./v0*'"$2"' .*' |\
+                zip --names-stdin -0 --move "$manga_name v$2.cbz"
         else
             echo "missing required argument volume or not inside a manga directory"
+            exit 1
+        fi
+        ;;
+    flatten)
+        if [[ $2 ]]; then
+            flatten "$2"
+        else
+            echo "expected required argument folder"
             exit 1
         fi
         ;;
@@ -117,7 +111,7 @@ case $1 in
         exit 1
         ;;
     *)
-        echo "expected download, sync, init or gather"
+        echo "expected flatten, download, init or gather"
         exit 1
         ;;
 esac
