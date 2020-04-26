@@ -18,10 +18,8 @@ module Erik.MyLimitWindows (
 
 import XMonad.Layout.LayoutModifier
 import XMonad
-import XMonad.Operations(sendMessage)
 import qualified XMonad.StackSet as W
 import Control.Monad(guard,when)
-import Control.Applicative((<$>))
 import qualified XMonad.Util.ExtensibleState as XS
 import Erik.MyStuff
 

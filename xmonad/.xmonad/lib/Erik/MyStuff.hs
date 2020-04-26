@@ -20,7 +20,7 @@ module Erik.MyStuff (
 import XMonad
 import qualified XMonad.StackSet as W
 import Data.List (find, elemIndex)
-import Data.Maybe (maybe,isNothing,isJust,fromMaybe,mapMaybe,listToMaybe)
+import Data.Maybe (isNothing,isJust,fromMaybe,mapMaybe,listToMaybe)
 import Control.Monad (when,unless,filterM)
 import XMonad.Actions.WorkspaceNames (getWorkspaceNames',setWorkspaceName)
 import XMonad.Actions.UpdatePointer

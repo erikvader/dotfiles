@@ -13,7 +13,7 @@ import qualified XMonad.StackSet as W
 import Data.List (find)
 import Data.Monoid
 import Data.Maybe (catMaybes,fromMaybe,mapMaybe)
-import Control.Monad(forM,mapM,when)
+import Control.Monad(forM,when)
 import Control.Monad.Trans (lift)
 import Control.Monad.Writer (WriterT, execWriterT, tell)
 import Graphics.X11.Xrandr
@@ -69,25 +69,23 @@ getXrandr dis root = do
         crtcToRect :: RRCrtc -> IO (Maybe Rectangle)
         crtcToRect c = xrrGetCrtcInfo dis res c >>= \ci -> return ((\XRRCrtcInfo {xrr_ci_x=x, xrr_ci_y=y, xrr_ci_width=w, xrr_ci_height=h} -> Rectangle (fromIntegral x) (fromIntegral y) (fromIntegral w) (fromIntegral h)) <$> ci)
 
-multiPP :: PP -- ^ The PP to use if the screen is focused
-        -> PP -- ^ The PP to use otherwise
-        -> (String -> PP -> X PP) -- ^ A function that prepares a PP to be used on a certain screen
+multiPP :: (String -> Bool -> X PP) -- ^ A function that prepares a PP to be used on a certain screen
         -> X ()
 multiPP = multiPPFormat dynamicLogWithPP
 
-multiPPFormat :: (PP -> X ()) -> PP -> PP -> (String -> PP -> X PP) -> X ()
-multiPPFormat dynlStr focusPP unfocusPP ppmod = do
+multiPPFormat :: (PP -> X ()) -> (String -> Bool -> X PP) -> X ()
+multiPPFormat dynlStr ppmod = do
   (IndiPPState l) <- XS.get
-  multiPP' l dynlStr focusPP unfocusPP ppmod
+  multiPP' l dynlStr ppmod
 
-multiPP' :: [(ScreenId, String)] -> (PP -> X ()) -> PP -> PP -> (String -> PP -> X PP) -> X ()
-multiPP' screens dynlStr focusPP unfocusPP ppmod = do
+multiPP' :: [(ScreenId, String)] -> (PP -> X ()) -> (String -> Bool -> X PP) -> X ()
+multiPP' screens dynlStr ppmod = do
   st <- get
   let pickPP :: (WorkspaceId, String) -> WriterT (Last XState) X ()
       pickPP (ws,output) = do
         let isFoc = (ws ==) . W.tag . W.workspace . W.current $ windowset st
         put st{ windowset = W.view ws $ windowset st }
-        out <- lift $ dynlStr =<< ppmod output (if isFoc then focusPP else unfocusPP)
+        out <- lift $ dynlStr =<< ppmod output isFoc
         when isFoc $ get >>= tell . Last . Just
         return out
   traverse_ put . getLast

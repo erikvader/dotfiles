@@ -3,18 +3,16 @@
 
 import System.Posix.Types (CMode(..))
 import System.Posix.IO (dupTo,closeFd,createFile,stdError)
-import Control.Exception (catch,SomeException)
+import Control.Exception (catch,SomeException,IOException)
 import System.Directory (doesFileExist,removeFile,executable,getPermissions,getHomeDirectory)
 import System.FilePath ((</>))
 import System.Exit
 import Control.Monad (when,join)
 import Data.List
-import Data.Maybe (maybe,maybeToList,fromMaybe)
+import Data.Maybe (maybeToList,fromMaybe)
 import Data.Char (toLower)
 
 import Graphics.X11.ExtraTypes.XF86
-
-import Codec.Binary.UTF8.String as UTF8
 
 import XMonad hiding ( (|||) )
 
@@ -22,7 +20,6 @@ import XMonad.Actions.Warp
 import XMonad.Actions.CycleWS (nextWS, prevWS)
 import XMonad.Actions.PhysicalScreens
 import XMonad.Actions.WorkspaceNames
-import XMonad.Actions.CopyWindow
 
 import XMonad.Util.SpawnOnce
 import XMonad.Util.WorkspaceCompare
@@ -66,10 +63,13 @@ myXPConfig = def {
 
 myModMask = mod4Mask
 
+statusbarFifo = "/tmp/statusbar_fifo"
+
 scratchWS = "S"
 
-myWorkspaces = map show [1..9] ++ [scratchWS]
+myWorkspaces = map show [1..(9 :: Int)] ++ [scratchWS]
 
+  --TODO: simplestfloat type
 #define COMMA ,
 #define GRID GV.Grid (16/10)
 #define TALL Tall 1 (3/100) (1/2)
@@ -210,7 +210,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- ((modm, xK_f), sendMessage $ Toggle FULL),
 
     -- close focused window
-    ((modm, xK_q), kill1),
+    ((modm, xK_q), kill),
 
      -- Rotate through the available layout algorithms
     ((modm, xK_space), sendMessage NextLayout),
@@ -311,7 +311,6 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
         | (i, k) <- zip (XMonad.workspaces conf) ([xK_1 .. xK_9] ++ [xK_d])
         , (f, m) <- [(W.greedyView, 0),
                      (shiftView, shiftMask),
-                     (copy, controlMask .|. shiftMask),
                      (W.shift, controlMask)
                     ]]
 
@@ -349,27 +348,27 @@ logLimitWindows :: [X (Maybe String)]
 logLimitWindows =
   map (<$> L.getCurrentState) [windowCount, status, detach]
   where
-    status L.LimitState{L.sfull=True}             = Just "%{F#eeee00}Full %{F-}"
-    status L.LimitState{L.slimit=l, L.soff=False} = Just $ "%{F#eeee00}Limit " ++ show l ++ "%{F-} "
+    status L.LimitState{L.sfull=True}             = Just "^fg(yellow2)Full ^fg()"
+    status L.LimitState{L.slimit=l, L.soff=False} = Just $ "^fg(yellow2)Limit " ++ show l ++ "^fg() "
     status _                                      = Just ""
 
     windowCount L.LimitState{L.sfull=full, L.soff=off, L.shidden=hidden}
-      | (full || not off) && hidden > 0 = Just $ wrap "%{F#ff8c00}" "%{F-}" $ show hidden
+      | (full || not off) && hidden > 0 = Just $ wrap "^fg(darkorange)" "^fg()" $ show hidden
       | otherwise = Just ""
 
     detach L.LimitState{L.sdetachedOffset=det, L.sfull=full, L.soff=off}
-      | (full || not off) && det > 0 = Just $ wrap "%{F#ff00ff}" "%{F-}" "d"
+      | (full || not off) && det > 0 = Just $ wrap "^fg(magenta)" "^fg()" "d"
       | otherwise = Just ""
 
 myFocusPPXin :: PP
 myFocusPPXin = def
     {
-      ppCurrent = wrap "%{B#505050 u#ffb52a +u}[  " "  ]%{B- -u}",
-      ppVisible = wrap "%{B#505050}[  " "  ]%{B-}",
-      ppUrgent = wrap " %{B#bd2c40} " "! %{B-} ",
-      ppHidden = wrap " " " ",
+      ppCurrent = wrap "^bg(lightbg)[  ^fg(orange)" "  ]^bg()",
+      ppVisible = wrap "^bg(lightbg)[  ^fg(white)" "  ]^bg()",
+      ppUrgent = wrap " ^bg(urgent) ^fg(white)" "! ^bg() ",
+      ppHidden = wrap " ^fg(white)" " ",
       ppWsSep = "",
-      ppSep = " %{F#ffb52a}:%{F-} ",
+      ppSep = " ^fg(orange):^fg() ",
       ppTitle = shorten 60,
       ppLayout = colorLayout ["Mirror"],
       ppSort = getSortByXineramaPhysicalRule def,
@@ -380,46 +379,29 @@ myFocusPPXin = def
     colorLayout keywords s = fromMaybe s $ do
       pre <- find (`isPrefixOf` s) keywords
       strip <- stripPrefix pre s
-      return $ "%{F#eeee00}" ++ pre ++ "%{F-}" ++ strip
+      return $ "^fg(yellow2)" ++ pre ++ "^fg()" ++ strip
 
 myNonfocusPPXin :: PP
 myNonfocusPPXin = myFocusPPXin {
-  ppCurrent = wrap "%{B#505050 u#00ace6 +u}[  " "  ]%{B- -u}",
-  ppSep = " %{F#00ace6}:%{F-} "
+  ppCurrent = wrap "^bg(lightbg)[  ^fg(blue2)" "  ]^bg()",
+  ppSep = " ^fg(blue2):^fg() "
   }
 
--- myFocusPP :: PP
--- myFocusPP = myFocusPPXin
---     {
---       ppCurrent = wrap "%{B#505050 u#ffb52a +u}  " "  %{B- -u}",
---       ppVisible = wrap "%{B#505050 u#00bfff +u}  " "  %{B- -u}",
---       ppSort = ppSort def
---     }
-
--- myNonfocusPP :: PP
--- myNonfocusPP = myFocusPP {
---   ppCurrent = wrap "%{u#e69500 +u}  " "  %{-u}",
---   ppVisible = wrap "%{u#0086b3 +u}  " "  %{-u}"
---   }
-
-multiPrepare :: String -> PP -> X PP
-multiPrepare output pp = do
-  d <- asks display
-  r <- asks theRoot
+multiPrepare :: String -> Bool -> X PP
+multiPrepare output focused = do
   L.updateCurrentState
   showWindows <- ppShowWindows
   wsName <- getWorkspaceNames'
-  copies <- wsContainingCopies
+  let pp = if focused then myFocusPPXin else myNonfocusPPXin
   return $
     decoratePP
-      (\w -> concatMap ($ w) [colorize copies, showWindows, maybe "" (":"++) . wsName])
-      (pp {ppOutput = rootOutput d r output . fixXinerama})
+      (\w -> concatMap ($ w) [colorize, showWindows, maybe "" (":"++) . wsName])
+      (pp {ppOutput = statusbarOutput output . fixXinerama pp})
   where
-    colorize copies w | w `elem` copies = wrap "%{F#ff69b4 T5}" "%{F- T-}" w
-                      | otherwise       = wrap "%{F#ffffff T5}" "%{F- T-}" w
+    colorize = wrap "" "^fg()"
 
-    fixXinerama :: String -> String
-    fixXinerama s = removeIndices 0 s . tail . init . findIndices (\c -> c == '[' || c == ']') . takeTo (ppSep pp) $ s
+    fixXinerama :: PP -> String -> String
+    fixXinerama pp s = removeIndices 0 s . tail . init . findIndices (\c -> c == '[' || c == ']') . takeTo (ppSep pp) $ s
 
     takeTo :: Eq a => [a] -> [a] -> [a]
     takeTo [] src = src
@@ -433,8 +415,12 @@ multiPrepare output pp = do
     removeIndices c (s:ss) (i:is) | c == i    = removeIndices (c+1) ss is
                                   | otherwise = s:removeIndices (c+1) ss (i:is)
 
-    rootOutput :: Display -> Window -> String -> String -> IO ()
-    rootOutput d r output str = internAtom d ("_XMONAD_STATUS_" ++ output) False >>= setTextProperty d r (UTF8.decodeString str)
+    statusbarOutput :: String -> String -> IO ()
+    statusbarOutput output str =
+      catch (do exi <- doesFileExist statusbarFifo
+                when exi $ writeFile statusbarFifo ("xmonad_" ++ output ++ " " ++ str ++ "\n"))
+            (\e ->
+                trace ("Couldn't write to statusbar: " ++ show (e :: IOException)))
 
 -- advertise fullscreen support (which isn't done by the
 -- ewmh/fullscreen package for some reason)
@@ -490,4 +476,4 @@ main = do
     logHook = logHook myConfig <+> workspaceHistoryHook <+> workspaceNamesClearerLogHook
     }
   where
-    format = multiPP myFocusPPXin myNonfocusPPXin multiPrepare
+    format = multiPP multiPrepare
