@@ -1,0 +1,10 @@
+#!/bin/sh
+
+contents=$(prog_mode_toggle status)
+if [ "$contents" = on ]; then
+    echo "P"
+elif [ "$contents" = swe ]; then
+    echo "ÅÄÖ"
+else
+    echo ""
+fi

@@ -118,7 +118,8 @@ case "$1" in
 esac
 
 
-# update polybar module
-pkill --signal SIGUSR1 progmode
+# update statusbar module
+STATUSBAR_FIFO="/tmp/statusbar_fifo"
+[ -p $STATUSBAR_FIFO ] && echo progmode > "$STATUSBAR_FIFO"
 
 exit 0

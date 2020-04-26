@@ -1,5 +1,7 @@
 #!/bin/python
 
+# TODO: remake into a daemon
+
 from deluge_client import DelugeRPCClient, FailedToReconnectException
 from ssl import SSLError
 from time import sleep
@@ -16,9 +18,6 @@ L.addHandler(ch)
 ACTIVE_SLEEP = 5
 INACTIVE_SLEEP = 60
 MAX_INACTIVE = (60 * 15) / ACTIVE_SLEEP
-RABBIT = "🐇"
-TURTLE = "🐢"
-SKULL = "☠"
 
 def polybar_color(s, c):
    return "%{{F#{}}}{}%{{F-}}".format(c, s)
