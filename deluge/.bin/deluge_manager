@@ -1,7 +1,5 @@
 #!/bin/python
 
-# TODO: remake into a daemon
-
 from deluge_client import DelugeRPCClient, FailedToReconnectException
 from ssl import SSLError
 from time import sleep
@@ -18,9 +16,6 @@ L.addHandler(ch)
 ACTIVE_SLEEP = 5
 INACTIVE_SLEEP = 60
 MAX_INACTIVE = (60 * 15) / ACTIVE_SLEEP
-
-def polybar_color(s, c):
-   return "%{{F#{}}}{}%{{F-}}".format(c, s)
 
 def get_all_torrents(client):
    return client.call('core.get_torrents_status', {}, ['is_finished', 'queue', 'all_time_download', 'paused', 'name', 'state'])
@@ -91,24 +86,6 @@ def get_avg_speeds(client, last_stats):
    last_stats.update(stats)
    return down, up
 
-def print_stats(client, torrents, stats):
-   down, up = get_avg_speeds(client, stats['last_stats'])
-   throttled = is_throttled(client)
-   active = get_downloading(torrents)
-
-   if down <= 1024 and up <= 1024:
-      status_icon = SKULL
-   elif throttled:
-      status_icon = TURTLE
-   else:
-      status_icon = RABBIT
-
-   down = polybar_color(str(round(down/1024, 1)), "7cfc00")
-   up = polybar_color(str(round(up/1024, 1)), "ff4500")
-   active = polybar_color(str(active), "ffd700")
-
-   print("({}/{})#{} {}".format(down, up, active, status_icon), flush=True)
-
 def main():
    client = DelugeRPCClient('127.0.0.1', 58846, 'erik', 'abc123')
    while True:
@@ -127,7 +104,6 @@ def main():
       while True:
          try:
             torrents = get_all_torrents(client)
-            print_stats(client, torrents, stats)
             send_notifications(torrents, stats)
             manage(client, torrents, stats)
             sleep(ACTIVE_SLEEP)
