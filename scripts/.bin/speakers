@@ -41,13 +41,13 @@ END { exit found }'
 
 if [[ $1 = status ]]; then
     if is_profile_active $HEADPHONES && is_status Headphone on && is_status Front off; then
-        echo 
+        echo H
     elif is_profile_active $SPEAKERS && is_status Headphone off && is_status Front on; then
-        echo 
+        echo S
     elif is_profile_active $SPEAKERS && is_status Headphone on && is_status Front on; then
-        echo 
+        echo HS
     else
-        echo ❌
+        echo X
     fi
     exit
 fi
@@ -68,4 +68,6 @@ elif [[ $1 = both ]]; then
     activate Front
 fi
 
-pkill --signal SIGUSR1 -f polybar_speakers.sh
+# update statusbar module
+STATUSBAR_FIFO="/tmp/statusbar_fifo"
+[ -p $STATUSBAR_FIFO ] && echo speakers > "$STATUSBAR_FIFO"
