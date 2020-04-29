@@ -396,7 +396,7 @@ multiPrepare output focused = do
   return $
     decoratePP
       (\w -> concatMap ($ w) [colorize, showWindows, maybe "" (":"++) . wsName])
-      (pp {ppOutput = statusbarOutput output . fixXinerama pp})
+      (pp {ppOutput = statusbarOutput . fixXinerama pp})
   where
     colorize = wrap "" "^fg()"
 
@@ -415,8 +415,8 @@ multiPrepare output focused = do
     removeIndices c (s:ss) (i:is) | c == i    = removeIndices (c+1) ss is
                                   | otherwise = s:removeIndices (c+1) ss (i:is)
 
-    statusbarOutput :: String -> String -> IO ()
-    statusbarOutput output str =
+    statusbarOutput :: String -> IO ()
+    statusbarOutput str =
       catch (do exi <- doesFileExist statusbarFifo
                 when exi $ writeFile statusbarFifo ("xmonad_" ++ output ++ " " ++ str ++ "\n"))
             (\e ->
