@@ -16,6 +16,8 @@ import Graphics.X11.ExtraTypes.XF86
 
 import XMonad hiding ( (|||) )
 
+import Codec.Binary.UTF8.String as UTF8
+
 import XMonad.Actions.Warp
 import XMonad.Actions.CycleWS (nextWS, prevWS)
 import XMonad.Actions.PhysicalScreens
@@ -418,7 +420,7 @@ multiPrepare output focused = do
     statusbarOutput :: String -> IO ()
     statusbarOutput str =
       catch (do exi <- doesFileExist statusbarFifo
-                when exi $ writeFile statusbarFifo ("xmonad_" ++ output ++ " " ++ str ++ "\n"))
+                when exi $ writeFile statusbarFifo $ UTF8.decodeString $ "xmonad_" ++ output ++ " " ++ str ++ "\n")
             (\e ->
                 trace ("Couldn't write to statusbar: " ++ show (e :: IOException)))
 
