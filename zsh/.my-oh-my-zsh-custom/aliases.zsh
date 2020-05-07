@@ -7,6 +7,8 @@ alias ydm='youtube-dl --merge-output-format mkv --write-thumbnail'
 
 alias pps='ps -Ho pid,ppid,pgid,comm'
 alias ppss='ps -Ho pid,ppid,pgid,command'
+alias psc='ps -Ao pid,%cpu,%mem,comm --sort -%cpu | head -n 20'
+alias psm='ps -Ao pid,%cpu,%mem,comm --sort -%mem | head -n 20'
 
 alias diff="diff --color=auto"
 
