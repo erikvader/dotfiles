@@ -15,7 +15,7 @@ L.addHandler(ch)
 
 ACTIVE_SLEEP = 5
 INACTIVE_SLEEP = 60
-MAX_INACTIVE = (60 * 15) / ACTIVE_SLEEP
+MAX_INACTIVE = (60 * 5) / ACTIVE_SLEEP
 
 def get_all_torrents(client):
    return client.call('core.get_torrents_status', {}, ['is_finished', 'queue', 'all_time_download', 'paused', 'name', 'state'])
