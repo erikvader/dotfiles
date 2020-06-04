@@ -52,6 +52,6 @@ create-lock-img "$cur/lock" "$theme_dir/lock.png" "$HOME/.lock" &
 # change conky
 ln -sf "$cur/conky" "$HOME/.start_conky"
 
-display_updater conky
+# display_updater conky
 display_updater feh
 
