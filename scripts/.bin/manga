@@ -8,6 +8,7 @@ function print_help {
     echo "  manga download chapter_range"
     echo "  manga gather volume"
     echo "  manga flatten folder"
+    echo "  manga verify"
     echo
     echo "Where chapter_range can be: 1,2,5-7 or +5"
 }
@@ -35,11 +36,19 @@ function download_manga {
         *) chap_range=$1 ;;
     esac
 
+    local group=''
+    case $2 in
+        '') ;;
+        *)
+            group="and group == \"$2\""
+            ;;
+    esac
+
     gallery-dl --download-archive .manga/downloaded.db\
                --input-file .manga/url\
                --chapter-range "$chap_range"\
                --dest ./\
-               --chapter-filter 'lang == "en"'\
+               --chapter-filter 'lang == "en"'" $group"\
                --option 'filename=v{volume:>03} c{chapter:>04}{chapter_minor} p{page:>06}.{extension}'\
                --option 'directory=[]'
 }
@@ -58,17 +67,30 @@ function init_manga {
 }
 
 function flatten {
-    i=0
+    local i=0
     find "$1" -type f | sort |\
         while read -r line; do
             : $((i++))
-            fname=$(printf '%06d' $i).${line##*.}
+            fname=$(printf '%06d' "$i").${line##*.}
             mv "$line" "$1/$fname"
             echo "$line" '->' "$fname" >> "$1/log.txt"
         done
 
     zip -rm0j "$1.cbz" "$1"
     rm -r "$1"
+}
+
+function verify {
+    # TODO: check for half chapters somehow
+    local i=1
+    local asd
+    while asd=$(find . -mindepth 1 -maxdepth 1 -type f -regex '\./v.*c0*'"$i"' .*'); do
+        if [[ -z $asd ]]; then
+            echo couldnt find chapter "$i"
+            break
+        fi
+        : $((i++))
+    done
 }
 
 case $1 in
@@ -82,7 +104,7 @@ case $1 in
         ;;
     download)
         if [[ $2 && -d .manga ]]; then
-            download_manga "$2"
+            download_manga "${@:2}"
         else
             echo "missing required argument chapter_range or not inside a manga directory"
             exit 1
@@ -106,12 +128,19 @@ case $1 in
             exit 1
         fi
         ;;
+    verify)
+        if [[ -d .manga ]]; then
+            verify
+        else
+            echo "not in manga folder"
+        fi
+        ;;
     -h)
         print_help
         exit 1
         ;;
     *)
-        echo "expected flatten, download, init or gather"
+        echo "expected flatten, download, init, verify or gather"
         exit 1
         ;;
 esac
