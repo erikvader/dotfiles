@@ -1,0 +1,7 @@
+[user]
+	name = Erik Rimskog
+	email = erik.rimskog@gmail.com
+[pull]
+	ff = only
+[merge]
+	conflictstyle = diff3
