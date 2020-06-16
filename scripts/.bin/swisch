@@ -1,0 +1,171 @@
+#!/bin/python
+
+import sys
+import networkx as nx
+import matplotlib.pyplot as plt
+
+def inc_mony(G, send, recv, mony):
+    """
+    Increment the edge between send and recv by mony, possibly
+    creating it.
+    """
+    assert(send != recv)
+    if G.has_edge(send, recv):
+        G.edges[send, recv]["money"] += mony
+    else:
+        G.add_edge(send, recv, money=mony)
+
+def dec_mony(G, send, recv, mony):
+    """
+    Decrement the edge between send and recv by mony, possibly
+    removing it. Return True if the edge got removed.
+    """
+    assert(G.edges[send, recv]["money"] - mony >= 0)
+    assert(send != recv)
+    G.edges[send, recv]["money"] -= mony
+    if G.edges[send, recv]["money"] == 0:
+        G.remove_edge(send, recv)
+        return True
+    return False
+
+def read_input():
+    """
+    Read lines from stdin and build a graph.
+    Each line is of the form: from amount receiver
+    """
+    G = nx.DiGraph()
+    for line in sys.stdin:
+        words = line.split()
+        if len(words) != 3:
+            raise Exception("invalid format on line typ")
+
+        if not words[1].isdigit():
+            raise Exception("middle value must be an integer")
+
+        if words[0] == words[2]:
+            raise Exception("self loops are not allowed")
+
+        send = words[0]
+        recv = words[2]
+        mony = int(words[1])
+        inc_mony(G, send, recv, mony)
+
+    return G
+
+def draw_net(G):
+    """
+    Draw it
+    """
+    pos = nx.spring_layout(G)
+    nx.draw(G, pos, with_labels=True)
+    edge_labels = nx.get_edge_attributes(G, "money")
+    nx.draw_networkx_edge_labels(G, pos, edge_labels = edge_labels)
+    plt.show()
+
+def sinks_n_sources(G):
+    """
+    Separate all nodes in to two groups: one of nodes that exclusively
+    pays others and one of nodes that exclusively receive money.
+
+    Each return value is a list of tuples of the form (n, v) where n
+    is a node and v is how much it will pay or receive in total.
+    """
+    # NOTE: it's probably possible to optimize this by not trying
+    # nodes we know are done and stuff.
+    did_something = True
+    while did_something:
+        did_something = False
+        for n in G.nodes:
+            # NOTE: lists are for making sure that G.neighbours
+            # doesn't do anything weird while the network is being
+            # modified.
+            for m in list(G.neighbors(n)):
+                for e in list(G.neighbors(m)):
+                    did_something = True
+                    to_send = min(G.edges[n, m]["money"], G.edges[m, e]["money"])
+                    dec_mony(G, m, e, to_send)
+                    if n != e:
+                        inc_mony(G, n, e, to_send)
+                    if dec_mony(G, n, m, to_send):
+                        break
+
+    sources = [(n, d) for n, d in G.out_degree(weight="money") if d > 0]
+    sinks   = [(n, d) for n, d in G.in_degree(weight="money") if d > 0]
+    # settled = [n for n, d in G.degree if d == 0]
+    return (sinks, sources)
+
+def build_bipartite(sinks, sources):
+    """
+    Take sinks and sources and build a bipartite flow network.
+    All sources are connected to a common source, all sinks are
+    connected to a common sink and all sources are connected to all
+    other sinks.
+    """
+    G = nx.DiGraph()
+    G.add_node("_source")
+    G.add_node("_sink")
+    for s, v in sources:
+        G.add_edge("_source", s, capacity=v)
+    for s, v in sinks:
+        G.add_edge(s, "_sink", capacity=v)
+
+    for s, v in sources:
+        for ss, _ in sinks:
+            G.add_edge(s, ss, capacity=v)
+
+    return G
+
+
+def find_payments(sinks, sources):
+    """
+    Takes sinks and sources and figures out the minimum amount of
+    transactions needed to make everyone happy.
+    """
+    # TODO: Hela den här approachen garanterar nog inte att det blir
+    # minsta möjliga antal transaktioner :(
+    # Det är kanske nödvändigt att brute-force:a allt? Eller finns det
+    # ett bättre sätt? Eller är det tillräckligt bra att bara köra
+    # max-flow en gång?
+    bip = build_bipartite(sinks, sources)
+    target = sum(v for _, v in sources)
+    visited = set()
+    removed = set()
+
+    def get_flowing_edges(sources, fd):
+        return [(src, sin, amo) for src, _ in sources for sin, amo in fd[src].items() if amo > 0]
+
+    def search():
+        fv, fd = nx.algorithms.flow.maximum_flow(bip, "_source", "_sink")
+        if fv < target:
+            return None
+
+        flowing = get_flowing_edges(sources, fd)
+        best = flowing
+        for flo in flowing:
+            edge = (flo[0], flo[1])
+            removed.add(edge)
+            r = frozenset(removed)
+            if r not in visited:
+                visited.add(r)
+                old_c = bip.edges[edge[0], edge[1]]["capacity"]
+                bip.edges[edge[0], edge[1]]["capacity"] = 0
+                res = search()
+                if res is not None and len(res) < len(best):
+                    best = res
+                bip.edges[edge[0], edge[1]]["capacity"] = old_c
+            removed.remove(edge)
+
+        return best
+
+    return search()
+
+def main():
+    raw_net = read_input()
+    sinks, sources = sinks_n_sources(raw_net)
+    pays = find_payments(sinks, sources)
+
+    for src, dst, amo in pays:
+        print("{} -{}-> {}".format(src, amo, dst))
+
+if __name__ == "__main__":
+    main()
