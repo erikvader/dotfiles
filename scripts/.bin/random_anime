@@ -28,7 +28,7 @@ for a in root.iter("anime"):
 r = choice(cand)
 url = "http://myanimelist.net/anime/" + r["id"]
 
-print(r["name"])
+# print(r["name"])
 print(url)
 
 if open_in_browser:
