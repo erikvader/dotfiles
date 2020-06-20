@@ -124,8 +124,8 @@ zle -N zle-keymap-select
 
 export KEYTIMEOUT=1
 
-bindkey '^b' vi-backward-blank-word
-bindkey '^f' vi-forward-blank-word
+# bindkey '^b' vi-backward-blank-word
+# bindkey '^f' vi-forward-blank-word
 
 # # allow v to edit the command line (standard behaviour)
 # autoload -Uz edit-command-line
