@@ -331,7 +331,8 @@ def pgrep(names):
    opens = [S.Popen(["pgrep", "-x", name], stdin=S.DEVNULL, stderr=S.DEVNULL, stdout=S.DEVNULL) for name in names]
    return [o.wait() == 0 for o in opens]
 
-def start_external(file, args=None, env=None, dry=False, output=False):
+def start_external(file, args=None, env=None, dry=False, ignore_tty=False):
+
    if dry:
       print("{} {} {}".format(file, args, env))
       return
@@ -339,9 +340,9 @@ def start_external(file, args=None, env=None, dry=False, output=False):
    args = args if args else []
    env = {**os.environ, **env} if env else os.environ
    S.Popen([eu] + args,
-           stdin=None if output else S.DEVNULL,
-           stdout=None if output else S.DEVNULL,
-           stderr=None if output else S.DEVNULL,
+           stdin=S.DEVNULL,
+           stdout=None if ignore_tty or not sys.stdout.isatty() else S.DEVNULL,
+           stderr=None if ignore_tty or not sys.stderr.isatty() else S.DEVNULL,
            env=env,
            start_new_session=True,
            close_fds=True)
@@ -436,7 +437,7 @@ def run_xrandr(xrandr_args, disp, timeout, dry=False):
       if win:
          win.destroy()
 
-def restart_all_programs(programs, dry=False, enable_output=False):
+def restart_all_programs(programs, dry=False, ignore_tty=False):
    if not dry:
       pkill([p["name"] for p in programs], wait=False)
 
@@ -456,7 +457,7 @@ def restart_all_programs(programs, dry=False, enable_output=False):
             if "file" not in q:
                print(q["name"] + " is missing required field \"file\"", flush=True, file=sys.stderr)
                continue
-            start_external(q["file"], q.get("args"), q.get("env"), dry, enable_output)
+            start_external(q["file"], q.get("args"), q.get("env"), dry, ignore_tty)
 
       qu[:] = [q for a,q in zip(pgreps, qu) if a]
       if qu:
@@ -517,7 +518,7 @@ def main():
    parser.add_argument("-f", "--force", action="store_true", help="always apply mode regardless of state. BE CAREFUL!")
    parser.add_argument("-d", "--dry-run", action="store_true", help="do everything except actually spawning programs and running xrandr")
    parser.add_argument("-k", "--keep-dead", action="store_true", help="don't disable dead outputs if mode can't be applied or is already applied (default is to kill)")
-   parser.add_argument("-q", "--quiet", action="store_true", help="close stdout and stderr for forked programs")
+   parser.add_argument("-t", "--ignore-tty", action="store_true", help="don't change stdout and stderr for forked processes, they are inherited as normal")
    parser.add_argument("-n", "--no-programs", action="store_true", help="don't start any programs")
    parser.add_argument("-a", "--always-run-programs", action="store_true", help="start mode's programs even if already applied")
    args = parser.parse_args()
@@ -559,7 +560,7 @@ def main():
 
    if ((status == APPLY_SUCCESS and not args.no_programs) or
        (status == ALREADY_APPLIED and args.always_run_programs)):
-      restart_all_programs(mode.get_programs(), dry=args.dry_run, enable_output=not args.quiet)
+      restart_all_programs(mode.get_programs(), dry=args.dry_run, ignore_tty=args.ignore_tty)
 
 if __name__ == "__main__":
    #pylint: disable=broad-except
