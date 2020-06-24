@@ -200,7 +200,10 @@ class Mode:
 
       self._parse_programs(conf, rest)
 
-   def _parse_xrandr(self, xrandr, prev_parsed=[]):
+   def _parse_xrandr(self, xrandr, prev_parsed=None):
+      if prev_parsed is None:
+         prev_parsed = []
+
       flag_re = re.compile(r"^--")
       def is_flag(s):
          return flag_re.match(s)
@@ -352,7 +355,7 @@ def start_internal(file, args=None, dry=False, hate_non_zero=False):
       print("{} {}".format(file, args))
       return
    args = args if args else []
-   res = S.run([file] + args)
+   res = S.run([file] + args, check=False)
    if hate_non_zero and res.returncode != 0:
       raise DisplayException("{} exited with exit status {}".format(file, res.returncode))
    return res.returncode
