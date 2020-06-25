@@ -43,17 +43,17 @@ alias gsts='git submodule foreach "git status"'
 
 alias SS='sudo systemctl'
 
-REPOS=( "$HOME/.emacs.d" "$HOME/dotfiles" "$HOME/.config/qutebrowser" )
+REPOS=( "$HOME/.emacs.d" "$HOME/dotfiles" "$HOME/.config/qutebrowser" "$HOME/Documents/statusbar" "$HOME/.pythonlibs/emdb" )
 function repos_cmd {
     for re in "${REPOS[@]}"; do
-        if [[ ! -d "$re/.git" ]]; then
-            echo "\"$re\" is not a git repo" >&2
-            continue
-        fi
         tput setaf 6
         echo "-----$(basename "$re")-----"
         tput sgr0
-        (cd "$re" && "$@")
+        if [[ ! -d "$re/.git" ]]; then
+            echo "doesn't exist..." >&2
+        else
+            (cd "$re" && "$@")
+        fi
         echo
     done
 }
