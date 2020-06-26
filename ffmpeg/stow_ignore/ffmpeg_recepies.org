@@ -15,16 +15,33 @@ file '/path/to/file2'
 man page =ffmpeg-formats(1)= for more info on concat.
 * split clips
 #+BEGIN_SRC sh
-ffmpeg -i input.mkv -ss start -map 0 -c copy -to end out.mkv
+ffmpeg -ss start -to end -i input.mkv -map 0 -c copy out.mkv
 #+END_SRC
 - =-ss= is start time
 - =-to= is end time. Can alternatively be =-t= so specify duration instead.
 Times can be expressed as =[HH:]MM:SS= or =S[.m]=.
+As input option means when to stop and start reading from the input
+and as output option means when to stop or start writing to the output
+file.
+
+If you cut with stream copy (-c copy) you need to use the
+=-avoid_negative_ts make_zero= option if you want to use that segment
+with the ​concat demuxer ([[https://stackoverflow.com/a/41032346][explanation)]]. Searches won't be precise
+either, it will use the closest keyframe.
 * convert audio to mp3
 #+BEGIN_SRC sh
 ffmpeg -i inputfile -codec:a libmp3lame -q:a 0 -c:v copy -map_metadata 0 -id3v2_version 3 outputfile.mp3
 #+END_SRC
 - =-q:a 0= sets the highest quality
-- =-c:v copy= transfers album covers
-- =-map_metadata 0= transfers album artist and stuff
+- =-c:v copy= transfers album covers by copying (it re-encodes it otherwise i think, which is probably not necessary)
+- =-map_metadata 0= transfers album artist and stuff (flag not necessary, it copies everything by default)
 - =-id3v2_version 3= sets version of id3v2 (why do i have this?)
+* mux clips
+#+BEGIN_SRC sh
+ffmpeg -i hej1.mkv -i hej2.mkv -map 0 -map -0:a:1 -map 1:a:0 -c copy out.mkv
+#+END_SRC
+This will copy all streams from the first file except for one of it's
+audio streams which will be replaced with one audio stream from the
+second file. All streams' metadata is copied by default and the global
+metadata from the first input file is copied as global metadata for
+the output file (i think).

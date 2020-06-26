@@ -9,5 +9,5 @@ fi
 
 for f in "$@"; do
     asd=${f%.*}
-    ffmpeg -i "$f" -codec:a libmp3lame -q:a 0 -c:v copy -map_metadata 0 "${asd}.mp3"
+    ffmpeg -i "$f" -codec:a libmp3lame -q:a 0 -c:v copy "${asd}.mp3"
 done
