@@ -1,7 +1,8 @@
 local msg = require "mp.msg"
 local utils = require "mp.utils"
 
-local cut_pos = nil
+local start_time = -1
+local end_time = -1
 
 function timestamp(duration)
     local hours = duration / 3600
@@ -55,39 +56,51 @@ function get_destination_filename(srcdir)
 end
 
 
-function cut(shift, endpos)
+function cut(recode)
+    if start_time == -1 or end_time == -1 or start_time >= end_time then
+        osd("invalid start and/or end times")
+        return
+    end
+
+    local extra_flags = ""
+    if not recode then
+        extra_flags = "-c copy -avoid_negative_ts make_zero"
+    end
+
     -- local cmd = trim(o.command_template:gsub("%s+", " "))
     local inpath = utils.join_path(utils.getcwd(), mp.get_property("path"))
     local srcdir, _ = utils.split_path(inpath)
     local outpath = get_destination_filename(srcdir)
-    local template = "ffmpeg -n -i '%s' -ss %f -map 0 -c copy -to %f '%s'"
-    local cmd = string.format(template, inpath, shift, endpos, outpath)
+    local template = "ffmpeg -n -ss %f -to %f -i '%s' -map 0 %s '%s'"
+    local cmd = string.format(template, start_time, end_time, inpath, extra_flags, outpath)
 
-    msg.info(cmd)
     os.execute(cmd)
-    msg.info("done")
+    -- msg.info("done")
 end
 
-function toggle_mark()
-    local pos = mp.get_property_number("time-pos")
-    if cut_pos then
-        local shift, endpos = cut_pos, pos
-        if shift > endpos then
-            shift, endpos = endpos, shift
-        end
-        if shift == endpos then
-            osd("Cut fragment is empty")
-        else
-            cut_pos = nil
-            osd(string.format("Cut fragment: %s - %s",
-                timestamp(shift),
-                timestamp(endpos)))
-            cut(shift, endpos)
-        end
-    else
-        cut_pos = pos
-        osd(string.format("Marked %s as start position", timestamp(pos)))
-    end
+function cut_recode()
+    osd("Re-encode slicing...")
+    cut(true)
+    osd("done")
 end
 
-mp.add_key_binding("w", "slicing_mark", toggle_mark)
+function cut_copy()
+    osd("Copy slicing...")
+    cut(false)
+    osd("done")
+end
+
+function set_slice_start()
+    start_time = mp.get_property_number("time-pos", -1)
+    osd("Slice Start: " .. timestamp(start_time))
+end
+
+function set_slice_end()
+    end_time = mp.get_property_number("time-pos", -1)
+    osd("Slice End: " .. timestamp(end_time))
+end
+
+mp.add_key_binding("w", "set_slice_start", set_slice_start)
+mp.add_key_binding("W", "set_slice_end", set_slice_end)
+mp.add_key_binding("Ctrl+w", "cut_copy", cut_copy)
+mp.add_key_binding("Alt+w", "cut_recode", cut_recode)
