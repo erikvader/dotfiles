@@ -18,7 +18,7 @@ import XMonad hiding ( (|||) )
 
 import Codec.Binary.UTF8.String as UTF8
 
-import XMonad.Actions.Warp
+import XMonad.Actions.Warp hiding (banish)
 import XMonad.Actions.CycleWS (nextWS, prevWS)
 import XMonad.Actions.PhysicalScreens
 import XMonad.Actions.WorkspaceNames
@@ -223,7 +223,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- Resize viewed windows to the correct size
     ((modm, xK_n), refresh),
 
-    ((modm, xK_a), warpToWindow 1 1),
+    ((modm, xK_a), banish),
     ((modm .|. shiftMask, xK_a), warpToWindow 0.5 0.5),
     ((modm .|. controlMask, xK_a), myUpdatePointerToggle),
 

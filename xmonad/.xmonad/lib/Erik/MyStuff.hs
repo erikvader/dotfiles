@@ -14,7 +14,8 @@ module Erik.MyStuff (
   ppShowWindows,
   decoratePP,
   toggleMapStruts,
-  switchScreen
+  switchScreen,
+  banish
 ) where
 
 import XMonad
@@ -34,6 +35,8 @@ import Data.Char (toLower)
 import XMonad.Hooks.ManageDocks (checkDock)
 import Text.Regex
 import XMonad.Actions.PhysicalScreens
+import Data.Ratio
+import XMonad.Actions.Warp (warpToWindow)
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
@@ -283,3 +286,28 @@ switchScreen sc nextScreen = do
   whenJust (elemIndex (Just curScreen) mapped) $ \focusedPhysScreen -> do
     let next = nextScreen numScreens focusedPhysScreen
     viewScreen sc (P next)
+
+
+-------------------------------- banish pointer -------------------------------
+
+-- withFocused with a default value in case no window is focused
+withFocusedDef :: a -> (Window -> X a) -> X a
+withFocusedDef def f = withWindowSet $ \w -> maybe (return def) f (W.peek w)
+
+cursorPosition :: X (Maybe (Rational, Rational))
+cursorPosition =
+  withDisplay $ \d ->
+    withFocusedDef Nothing $ \w -> do
+      wa <- io $ getWindowAttributes d w
+      (insideWindow, _, _, _, _, x, y, _) <- io $ queryPointer d w
+      return $ if insideWindow
+               then Just ((fromIntegral x) % (fromIntegral $ wa_width wa),
+                          (fromIntegral y) % (fromIntegral $ wa_height wa))
+               else Nothing
+
+banish :: X ()
+banish = cursorPosition >>= flip whenJust (uncurry f)
+  where f 0 0 = warpToWindow 0 1
+        f 1 1 = warpToWindow 1 0
+        f 1 0 = warpToWindow 0 0
+        f _ _ = warpToWindow 1 1
