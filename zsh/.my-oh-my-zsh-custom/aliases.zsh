@@ -35,6 +35,8 @@ alias ll='els -s'
 alias lle='els -se'
 alias lll='ls -lAhv'
 
+alias naspoweroff='umount /media/NAS && ssh -t nas "sudo poweroff"'
+
 # copy of glola
 alias gl='git log --graph --pretty='"'"'%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"'"
 alias gla='gl --all'
