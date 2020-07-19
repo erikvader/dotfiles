@@ -130,6 +130,8 @@ function ec {
     fi
 }
 
+alias dired='emacsclient -n -c -e "(dired \".\")" > /dev/null'
+
 function wp {
     export WINEPREFIX="$PWD/$1"
 }

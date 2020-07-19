@@ -2,6 +2,8 @@ import os
 import re
 from shutil import move
 
+# TODO: put duplicate number before file extension instead?
+
 _leading_number_regex = re.compile(r"[0-9]+_(.+)")
 
 class MoveFileException(Exception):
