@@ -7,8 +7,10 @@ function print_help {
     echo "  manga init manga_url"
     echo "  manga download chapter_range"
     echo "  manga gather volume"
+    echo "  manga gather-all"
     echo "  manga flatten folder"
     echo "  manga verify"
+    echo "  manga list"
     echo
     echo "Where chapter_range can be: 1,2,5-7 or +5"
 }
@@ -80,6 +82,25 @@ function flatten {
     rm -r "$1"
 }
 
+function gather {
+    local manga_name
+    manga_name=$(basename "$PWD" | filter_filename)
+    find . -mindepth 1 -maxdepth 1 -type f -regex '\./v0*'"$1"' .*' |\
+        zip --names-stdin -0 --move "$manga_name v$1.cbz"
+}
+
+function gather-all {
+    local volumes
+    readarray -t volumes < \
+              <(find . -mindepth 1 -maxdepth 1 -type f -printf '%P\n' | \
+                    sed -nE 's/^v0*([0-9]+) .*$/\1/p' | \
+                    sort -nu)
+
+    for i in "${volumes[@]}"; do
+        gather "$i"
+    done
+}
+
 function verify {
     # TODO: check for half chapters somehow
     local i=1
@@ -91,6 +112,18 @@ function verify {
         fi
         : $((i++))
     done
+}
+
+function list_chapters {
+    gallery-dl --dump-json "$(cat .manga/url)" | jq -r \
+        'map(
+           .[2]
+           | select(.lang == "en")
+           | {chapter: ((.chapter | tostring) + .chapter_minor | tonumber), group: .group}
+         )
+         | group_by(.chapter)
+         | map((.[0].chapter | tostring) + ": " + (map(.group) | join(", ")))
+         | .[]'
 }
 
 case $1 in
@@ -112,11 +145,17 @@ case $1 in
         ;;
     gather)
         if [[ $2 && -d .manga ]]; then
-            manga_name=$(basename "$PWD" | filter_filename)
-            find . -mindepth 1 -maxdepth 1 -type f -regex '\./v0*'"$2"' .*' |\
-                zip --names-stdin -0 --move "$manga_name v$2.cbz"
+            gather "$2"
         else
             echo "missing required argument volume or not inside a manga directory"
+            exit 1
+        fi
+        ;;
+    gather-all)
+        if [[ -d .manga ]]; then
+            gather-all
+        else
+            echo "not inside a manga directory"
             exit 1
         fi
         ;;
@@ -133,6 +172,15 @@ case $1 in
             verify
         else
             echo "not in manga folder"
+            exit 1
+        fi
+        ;;
+    list)
+        if [[ -d .manga ]]; then
+            list_chapters
+        else
+            echo "not in manga folder"
+            exit 1
         fi
         ;;
     -h)
