@@ -183,12 +183,12 @@ case $1 in
             exit 1
         fi
         ;;
-    -h)
+    -h|--help)
         print_help
         exit 1
         ;;
     *)
-        echo "expected flatten, download, init, verify or gather"
+        echo "invalid usage, see the --help flag"
         exit 1
         ;;
 esac
