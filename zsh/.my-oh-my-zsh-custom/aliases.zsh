@@ -1,9 +1,5 @@
-alias lsmnt="findmnt -t ext4,cifs,vfat,ntfs,fuseblk,fuse -l"
-
 alias sd='sudo docker'
 alias sdc='sudo docker-compose'
-
-alias ydm='youtube-dl --merge-output-format mkv --write-thumbnail'
 
 alias pps='ps -Ho pid,ppid,pgid,comm'
 alias ppss='ps -Ho pid,ppid,pgid,command'
@@ -65,14 +61,6 @@ alias repos_pull='repos_cmd git pull --ff-only'
 alias repos_status='repos_cmd git status'
 alias repos_magit='repos_cmd magit >/dev/null'
 
-function mountsmb {
-    if [[ $# -ne 4 ]]; then
-        echo "Usage: $0 share-location share-name share-username mountpoint" >&2
-        return 1
-    fi
-    sudo mount -t cifs "//$1/$2" "$4" -o user="$3",file_mode=0644,dir_mode=0755,uid="$(id -u)",gid="$(id -g)" && cd "$4"
-}
-
 function mountfat {
     if [[ $# -ne 2 ]]; then
         echo "Usage: $0 device mountpoint" >&2
@@ -131,7 +119,3 @@ function ec {
 }
 
 alias dired='emacsclient -n -c -e "(dired \".\")" > /dev/null'
-
-function wp {
-    export WINEPREFIX="$PWD/$1"
-}
