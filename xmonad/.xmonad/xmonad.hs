@@ -19,7 +19,6 @@ import XMonad hiding ( (|||) )
 import Codec.Binary.UTF8.String as UTF8
 
 import XMonad.Actions.Warp hiding (banish)
-import XMonad.Actions.CycleWS (nextWS, prevWS)
 import XMonad.Actions.PhysicalScreens
 import XMonad.Actions.WorkspaceNames
 
@@ -134,16 +133,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_w), sendMessage $ Toggle MIRROR),
 
     --cycle
-    -- ((modm, xK_i), onLayout [("TwoPane", rotFocusedUp)] rotAllUp), --rotate current window in two pane pretty much
-    -- ((modm, xK_u), onLayout [("TwoPane", rotFocusedDown)] rotAllDown),
-    ((modm, xK_i), L.rotateVisibleUp), --rotate current window in two pane pretty much
+    ((modm, xK_i), L.rotateVisibleUp),
     ((modm, xK_u), L.rotateVisibleDown),
-    -- ((modm .|. shiftMask, xK_i), rotUnfocusedUp), --rotate all except the one with focus
-    -- ((modm .|. shiftMask, xK_u), rotUnfocusedDown),
     ((modm .|. shiftMask, xK_i), L.rotateFocHiddenUp),
     ((modm .|. shiftMask, xK_u), L.rotateFocHiddenDown),
-    -- ((modm, xK_z), rotLastUp), -- rotate all windows after, including focused
-    -- ((modm, xK_w), L.bury),
 
     ((modm, xK_o), windowsLowestEmpty W.view $ XMonad.workspaces conf),
     ((modm .|. shiftMask, xK_o), windowsLowestEmpty shiftView $ XMonad.workspaces conf),
@@ -156,8 +149,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. shiftMask, xK_r), spawn "open_downloaded_pdf"),
 
     -- screens
-    ((modm, xK_Tab), switchScreen def tabForward),
-    ((modm .|. shiftMask, xK_Tab), switchScreen def tabBackward),
+    ((modm, xK_Tab), switchScreen def tabNothing),
+    ((modm .|. shiftMask, xK_Tab), switchScreen def tabShift),
+    ((modm .|. controlMask, xK_Tab), switchScreen def tabControl),
     ((modm .|. controlMask, xK_j), onNextNeighbour def W.view),
     ((modm .|. controlMask, xK_k), onPrevNeighbour def W.view),
     ((modm .|. controlMask .|. shiftMask, xK_j), onNextNeighbour def swapWith),
@@ -206,10 +200,6 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_Return), spawn "st"),
     ((modm .|. controlMask, xK_Return), spawn "st -e zsh -is eval ranger-cd"),
     ((modm .|. shiftMask, xK_Return), spawn "emacsclient -nc"),
-    -- ((modm, xK_BackSpace), spawn "$HOME/.emacs_anywhere/bin/run"),
-
-    -- toggle zoom
-    -- ((modm, xK_f), sendMessage $ Toggle FULL),
 
     -- close focused window
     ((modm, xK_q), kill),
@@ -244,13 +234,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- Swap the focused window with the previous window
     ((modm .|. shiftMask, xK_k), windows W.swapUp),
 
-    -- focus next or previous workspace
-    ((modm, xK_period), nextWS),
-    ((modm, xK_comma), prevWS),
-
     -- moves workspaces up or down
-    ((modm .|. shiftMask, xK_period), swapTo Next),
-    ((modm .|. shiftMask, xK_comma), swapTo Prev),
+    ((modm, xK_period), swapTo Next),
+    ((modm, xK_comma), swapTo Prev),
+    ((modm .|. shiftMask, xK_comma), swapWithCurrent $ head myWorkspaces),
 
     -- rename workspaces
     ((modm, xK_v), renameWorkspace myXPConfig),
@@ -262,9 +249,6 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- Expand the master area
     ((modm, xK_l), sendMessage Expand),
-
-    -- mosaic
-    -- ((modm, xK_s), sendMessage Reset),
 
     -- Increment the number of windows in the master area
     ((modm .|. shiftMask, xK_h), onLayout [
@@ -340,11 +324,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
                      (sendToScreen def, controlMask)
                     ]]
   where
-    tabForward 3 2 = 1
-    tabForward n x = (x+1) `mod` n
-
-    tabBackward 3 _ = 0
-    tabBackward n x = (x-1) `mod` n
+    tabNothing n _ = min 1 (n - 1)
+    tabShift n _ = 0
+    tabControl n _ = min 2 (n - 1)
 
 logLimitWindows :: [X (Maybe String)]
 logLimitWindows =
