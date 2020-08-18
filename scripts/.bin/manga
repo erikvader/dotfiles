@@ -5,12 +5,13 @@ set -e
 function print_help {
     echo "Usage:"
     echo "  manga init manga_url"
-    echo "  manga download chapter_range"
+    echo "  manga download [--force] chapter_range [group]"
     echo "  manga gather volume"
     echo "  manga gather-all"
     echo "  manga flatten folder"
-    echo "  manga verify"
+    echo "  manga progress"
     echo "  manga list"
+    echo "  manga verify"
     echo
     echo "Where chapter_range can be: 1,2,5-7 or +5"
 }
@@ -27,6 +28,14 @@ END { print chap }'
 }
 
 function download_manga {
+    local usearchive=t
+    case $1 in
+        --force|-f)
+            usearchive=
+            shift
+            ;;
+    esac
+
     local chap_range
     case $1 in
         +*)
@@ -46,7 +55,7 @@ function download_manga {
             ;;
     esac
 
-    gallery-dl --download-archive .manga/downloaded.db\
+    gallery-dl ${usearchive:+ --download-archive .manga/downloaded.db}\
                --input-file .manga/url\
                --chapter-range "$chap_range"\
                --dest ./\
@@ -101,7 +110,7 @@ function gather-all {
     done
 }
 
-function verify {
+function progress {
     # TODO: check for half chapters somehow
     local i=1
     local asd
@@ -112,6 +121,23 @@ function verify {
         fi
         : $((i++))
     done
+}
+
+function verify {
+    local total
+    local i=1
+    total=$(find . -maxdepth 1 -mindepth 1 -type f \! -iname '*.cbz' | wc -l)
+    while IFS='' read -r line || [[ -n "$line" ]]; do
+        echo -en "\\r\\x1b[K[$i/$total]"
+        if ! convert "$line" null: &>/dev/null ; then
+            echo -en "\\r\\x1b[K$line"
+            if ! identify -verbose "$line" &>/dev/null; then
+                echo -n ', identify also triggered'
+            fi
+            echo
+        fi
+        : $((i++))
+    done < <(find . -maxdepth 1 -mindepth 1 -type f \! -iname '*.cbz')
 }
 
 function list_chapters {
@@ -167,9 +193,9 @@ case $1 in
             exit 1
         fi
         ;;
-    verify)
+    progress)
         if [[ -d .manga ]]; then
-            verify
+            progress
         else
             echo "not in manga folder"
             exit 1
@@ -178,6 +204,14 @@ case $1 in
     list)
         if [[ -d .manga ]]; then
             list_chapters
+        else
+            echo "not in manga folder"
+            exit 1
+        fi
+        ;;
+    verify)
+        if [[ -d .manga ]]; then
+            verify
         else
             echo "not in manga folder"
             exit 1
