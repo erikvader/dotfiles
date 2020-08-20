@@ -3,17 +3,30 @@
 set -e
 
 function print_help {
+    local w='\x1b[1;37m'
+    local r='\x1b[0m'
     echo "Usage:"
-    echo "  manga init manga_url"
-    echo "  manga download [--force] chapter_range [group]"
-    echo "  manga gather volume"
-    echo "  manga gather-all"
-    echo "  manga flatten folder"
-    echo "  manga progress"
-    echo "  manga list"
-    echo "  manga verify"
-    echo
-    echo "Where chapter_range can be: 1,2,5-7 or +5"
+    echo -e "$w  manga init manga_url"
+    echo -e "$r    Creates a new directory ready to download from manga_url"
+    echo -e "$w  manga download [--force] chapter_range [group]"
+    echo -e "$r    Downloads chapters from chapter_range from an optionally specified translator group."
+    echo -e "$r    The flag --force disregards the download cache and redownloads every specified"
+    echo -e "$r    file that doesn't exist. chapter_range can be: 1,2,5-7 or +5"
+    echo -e "$w  manga gather volume"
+    echo -e "$r    Collects every file of a volume into a cbz-file"
+    echo -e "$w  manga gather-all"
+    echo -e "$r    Same as gather but for all volumes that are found in the current directory"
+    echo -e "$w  manga flatten folder"
+    echo -e "$r    Recursively finds all files in a directory, renames them to numbers according to"
+    echo -e "$r    their sort order and puts them in a cbz"
+    echo -e "$w  manga progress"
+    echo -e "$r    Prints the first missing chapter"
+    echo -e "$w  manga list"
+    echo -e "$r    Lists all available chapters and all their groups"
+    echo -e "$w  manga verify"
+    echo -e "$r    Checks for corrupted image files using ImageMagick"
+    echo -e "$w  manga verify-cbz file [file..]"
+    echo -e "$r    Verifies an already existing cbz-file for corrupted files"
 }
 
 function filter_filename {
@@ -80,7 +93,7 @@ function init_manga {
 function flatten {
     local i=0
     find "$1" -type f | sort |\
-        while read -r line; do
+        while IFS='' read -r line; do
             : $((i++))
             fname=$(printf '%06d' "$i").${line##*.}
             mv "$line" "$1/$fname"
@@ -138,6 +151,18 @@ function verify {
         fi
         : $((i++))
     done < <(find . -maxdepth 1 -mindepth 1 -type f \! -iname '*.cbz')
+    echo -e "\\r\\x1b[K[$total/$total]"
+}
+
+function verify_cbz {
+    temp=$(mktemp -d --tmpdir 'manga-verifier.XXXXXXXXXX')
+    trap '(umount "$temp" 2>/dev/null || true); rm -d "$temp"' EXIT
+    for cbz in "$@"; do
+        echo "$cbz"
+        archivemount -o readonly "$cbz" "$temp"
+        (cd "$temp" && verify)
+        umount "$temp"
+    done
 }
 
 function list_chapters {
@@ -214,6 +239,14 @@ case $1 in
             verify
         else
             echo "not in manga folder"
+            exit 1
+        fi
+        ;;
+    verify-cbz)
+        if [[ $# -ge 2 ]]; then
+            verify_cbz "${@:2}"
+        else
+            echo "no cbz-files given"
             exit 1
         fi
         ;;
