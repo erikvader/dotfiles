@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# TODO: flag to use something else than h265 eg for wmv
+# TODO: flag to also re-encode audio stream
+
+set -e
+
+nodata=
+if [[ $1 = --no-data ]]; then
+    nodata=t
+    shift
+fi
+
+basename=$(basename -- "$1")
+dirname=$(dirname -- "$1")
+ext=${basename##*.}
+name=${basename%.*}
+outputname=${dirname}/${name}_resized.${ext}
+
+ffmpeg -i "$1" \
+       -c copy \
+       -map 0 \
+       ${nodata:+ -map -0:d} \
+       -c:v libx265 \
+       -x265-params crf=23 \
+       -preset ultrafast \
+       -filter:v scale=-2:${2:-720} \
+       "$outputname"
+
+mv "$outputname" "$1"
