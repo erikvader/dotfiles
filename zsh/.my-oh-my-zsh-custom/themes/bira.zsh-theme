@@ -23,23 +23,23 @@ current_dir='%{$terminfo[bold]$fg[blue]%}$(shrink_path -l -t)%{$reset_color%}'
 
 function ranger_prompt {
   if [[ "$RANGER_LEVEL" ]]; then
-    echo -n "──[%{$fg[magenta]%}RANGER%{$reset_color%}]"
-  else
-    echo -n ""
+    echo -n "──[%{$fg[cyan]%}RANGER%{$reset_color%}]"
   fi
-  echo "%{$reset_color%}"
 }
 
 function wine_prompt {
     if export -p | grep -q 'export WINEPREFIX='; then
         echo -n "──[%{$fg[red]%}$WINEPREFIX%{$reset_color%}]"
-    else
-        echo -n ""
     fi
-    echo "%{$reset_color%}"
 }
 
-PROMPT="┌─[${user_host}]──[${current_dir}]"'$(git_prompt_info)$(ranger_prompt)$(wine_prompt)'"
+function virtualenv_prompt {
+    if [[ -n $VIRTUAL_ENV ]]; then
+        echo -n "──[%{$fg[magenta]%}${VIRTUAL_ENV:t}%{$reset_color%}]"
+    fi
+}
+
+PROMPT="┌─[${user_host}]──[${current_dir}]"'$(git_prompt_info)$(ranger_prompt)$(wine_prompt)$(virtualenv_prompt)'"
 └─%B${user_symbol}%b "
 #RPS1="%B${return_code}%b"
 
@@ -58,4 +58,3 @@ ZSH_THEME_GIT_PROMPT_STASHED="S"
 ZSH_THEME_GIT_PROMPT_AHEAD="↑"
 ZSH_THEME_GIT_PROMPT_BEHIND="↓"
 ZSH_THEME_GIT_PROMPT_DIVERGED="↯"
-

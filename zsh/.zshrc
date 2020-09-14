@@ -186,6 +186,9 @@ export BAT_STYLE=changes
 # ranger wont load default conf, only user
 export RANGER_LOAD_DEFAULT_RC=FALSE
 
+# disables prompt mangling in virtual_env/bin/activate
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+
 # which cowfortune &>/dev/null && cowfortune
 
 # use custom dircolors if there are any
