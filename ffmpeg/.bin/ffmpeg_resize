@@ -6,6 +6,7 @@
 set -e
 
 nodata=
+# mp4 (I think) has some special data streams sometimes, that can't be copied.
 if [[ $1 = --no-data ]]; then
     nodata=t
     shift

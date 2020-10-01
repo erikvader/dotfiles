@@ -45,3 +45,10 @@ audio streams which will be replaced with one audio stream from the
 second file. All streams' metadata is copied by default and the global
 metadata from the first input file is copied as global metadata for
 the output file (i think).
+* mp4
+TODO: verify
+mp4 sometimes has some special data streams (I think) that needs to be
+ignored with =-map -0:d=
+
+mp4 doesn't support all kinds of subtitle formats, so they need to be
+converted with =-c:s mov_text=.

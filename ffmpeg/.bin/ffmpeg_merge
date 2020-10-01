@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e
+
+movtext=
+# mp4 doesn't support all kinds of subtitles, so it needs to be converted.
+if [ "$1" = --mov_text ]; then
+    movtext=true
+    shift
+fi
+
+if [ $# -ne 3 ]; then
+    echo I need exactly two arguments of files to merge and one output file >&2
+    echo If the output file is a "'-', then" i will overwrite the first specified file >&2
+    echo optionally a --mov_text as very first argument to re-encode all subtitle streams with mov_text >&2
+    exit 1
+fi
+
+output=$3
+[ "$3" = - ] && output="work_${1}"
+
+ffmpeg -i "$1" -i "$2" -map 0 -map 1 -c copy ${movtext:+ -c:s mov_text} "$output"
+
+[ "$3" = - ] && mv -f "$output" "$1"
