@@ -66,3 +66,7 @@ Don't do anyhting on =power= key
 #+BEGIN_SRC
 HandlePowerKey=ignore
 #+END_SRC
+* faillock
+To control how many login attempts is needed for locking an account
+and the timeout, edit: ~/etc/security/faillock.conf~. Can reset
+manually with the ~faillock~ command.
