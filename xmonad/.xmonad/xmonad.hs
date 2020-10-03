@@ -324,7 +324,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
                      (sendToScreen def, controlMask)
                     ]]
   where
+    tabNothing 2 _ = 0
     tabNothing n _ = min 1 (n - 1)
+    tabShift 2 _ = 1
     tabShift n _ = 0
     tabControl n _ = min 2 (n - 1)
 
