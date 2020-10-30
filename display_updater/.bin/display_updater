@@ -371,7 +371,7 @@ def read_config():
          lines = [l for l in lines if not comm.match(l)]
          return json.loads("".join(lines))
    except json.JSONDecodeError as e:
-      raise DisplayException("config parse error: " + str(e))
+      raise DisplayException("config parse error") from e
 
 def seg_intersect(a, b):
    return not (a[1] < b[0] or a[0] > b[1])

@@ -27,7 +27,7 @@ file.
 If you cut with stream copy (-c copy) you need to use the
 =-avoid_negative_ts make_zero= option if you want to use that segment
 with the ​concat demuxer ([[https://stackoverflow.com/a/41032346][explanation)]]. Searches won't be precise
-either, it will use the closest keyframe.
+either, it will use the closest keyframe (when copying??).
 * convert audio to mp3
 #+BEGIN_SRC sh
 ffmpeg -i inputfile -codec:a libmp3lame -q:a 0 -c:v copy -map_metadata 0 -id3v2_version 3 outputfile.mp3

@@ -8,6 +8,9 @@ alias psm='ps -Ao pid,%cpu,%mem,comm --sort -%mem | head -n 20'
 
 alias diff="diff --color=auto"
 
+alias sss='ss -an'
+alias sssp='sss -p'
+
 alias pg='pgrep -l'
 
 alias cclip="xclip -selection clipboard"
