@@ -310,6 +310,9 @@ handle_mime() {
                 -- "${FILE_PATH}" && exit 5
             exit 2;;
 
+        ## CSV
+        application/csv) exit 2;;
+
         ## DjVu
         image/vnd.djvu)
             ## Preview as text conversion (requires djvulibre)
