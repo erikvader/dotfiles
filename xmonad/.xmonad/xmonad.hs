@@ -435,7 +435,7 @@ myConfig = def {
   logHook = logHook def <+> myUpdatePointer
   }
   where
-    centerFloatMH = composeAll [ isDialog <||> appName =? "URxvtFZF" --> doCenterFloat ]
+    centerFloatMH = composeAll [ appName =? "URxvtFZF" --> doCenterFloat, isDialog --> doFloat ]
     toScratchMH = composeAll [appName =?? wc --> doShift scratchWS | wc <- scratchWindows]
     -- lowercase =?
     q =?? s = (map toLower <$> q) =? map toLower s
