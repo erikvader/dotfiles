@@ -2,10 +2,9 @@
 
 set -e
 
-CARD=alsa_output.pci-0000_00_1f.3.analog-stereo
-ACARD=0
-HEADPHONES=analog-output-headphones
-SPEAKERS=analog-output-lineout
+CARD=alsa_output.pci-0000_00_1f.3.analog-stereo #sink
+HEADPHONES=analog-output-headphones #port
+SPEAKERS=analog-output-lineout #port
 
 if [[ $# -eq 0 ]]; then
     echo fel
@@ -13,16 +12,16 @@ if [[ $# -eq 0 ]]; then
 fi
 
 function activate {
-    amixer -q -c $ACARD set "$1" unmute
-    amixer -q -c $ACARD set "$1" 100%
+    amixer -q -c "$ACARD" set "$1" unmute
+    amixer -q -c "$ACARD" set "$1" 100%
 }
 
 function deactivate {
-    amixer -q -c $ACARD set "$1" 0%
+    amixer -q -c "$ACARD" set "$1" 0%
 }
 
 function is_status {
-    output=$(amixer -c $ACARD get "$1")
+    output=$(amixer -c "$ACARD" get "$1")
     if grep -qF '[100%]' <<< "$output" && [[ $2 = on ]]; then
         return 0
     elif grep -qF '[0%]' <<< "$output" && [[ $2 = off ]]; then
@@ -39,6 +38,14 @@ rightsink && /Active Port: '"$1"'/ { found=0 ; exit }
 END { exit found }'
 }
 
+function get_card_number {
+    pactl list sinks | awk 'BEGIN { rightsink=0 }
+/^[[:blank:]]+Name: / { rightsink=($2 == "'"$CARD"'") }
+rightsink && /alsa.card = / { print(substr($3, 2, length($3)-2)) }'
+}
+
+ACARD=$(get_card_number)
+
 if [[ $1 = status ]]; then
     if is_profile_active $HEADPHONES && is_status Headphone on && is_status Front off; then
         echo H
@@ -52,7 +59,7 @@ if [[ $1 = status ]]; then
     exit
 fi
 
-amixer -q -c $ACARD set 'Auto-Mute Mode' Disabled
+amixer -q -c "$ACARD" set 'Auto-Mute Mode' Disabled
 
 if [[ $1 = headphones ]]; then
     pactl set-sink-port $CARD $HEADPHONES
