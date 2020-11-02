@@ -60,19 +60,33 @@ function download_manga {
         *) chap_range=$1 ;;
     esac
 
-    local group=''
+    local filter='lang == "en"'
     case $2 in
         '') ;;
         *)
-            group="and group == \"$2\""
+            filter="$filter and group == \"$2\""
+            ;;
+    esac
+
+    case "$chap_range" in
+        -*)
+            filter="$filter and chapter <= ${chap_range:1}"
+            ;;
+        *-)
+            filter="$filter and chapter >= ${chap_range:0:-1}"
+            ;;
+        *-*)
+            filter="$filter and $(cut -d- -f 1 <<< "$chap_range") <= chapter <= $(cut -d- -f 2 <<< "$chap_range")"
+            ;;
+        *)
+            filter="$filter and chapter == $chap_range"
             ;;
     esac
 
     gallery-dl ${usearchive:+ --download-archive .manga/downloaded.db}\
                --input-file .manga/url\
-               --chapter-range "$chap_range"\
                --dest ./\
-               --chapter-filter 'lang == "en"'" $group"\
+               --chapter-filter "$filter"\
                --option 'filename=v{volume:>03} c{chapter:>04}{chapter_minor} p{page:>06}.{extension}'\
                --option 'directory=[]'
 }
