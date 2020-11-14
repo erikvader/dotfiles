@@ -6,17 +6,19 @@ function print_help {
     local w='\x1b[1;37m'
     local r='\x1b[0m'
     echo "Usage:"
-    echo -e "$w  manga init manga_url"
-    echo -e "$r    Creates a new directory ready to download from manga_url"
-    echo -e "$w  manga download [--force] chapter_range [group]"
-    echo -e "$r    Downloads chapters from chapter_range from an optionally specified translator group."
+    echo -e "$w  manga init MANGA_URL"
+    echo -e "$r    Creates a new directory ready to download from MANGA_URL"
+    echo -e "$w  manga download [--force] CHAPTER_RANGE [GROUP]"
+    echo -e "$r    Downloads chapters from CHAPTER_RANGE from an optionally specified translator group."
     echo -e "$r    The flag --force disregards the download cache and redownloads every specified"
-    echo -e "$r    file that doesn't exist. chapter_range can be: 1,2,5-7 or +5"
-    echo -e "$w  manga gather volume"
-    echo -e "$r    Collects every file of a volume into a cbz-file"
+    echo -e "$r    file that doesn't exist. CHAPTER_RANGE can be: 1,2,5-7 or +5"
+    echo -e "$w  manga download-link URL"
+    echo -e "$r    Download a chapter from URL"
+    echo -e "$w  manga gather VOLUME"
+    echo -e "$r    Collects every file of a VOLUME into a cbz-file"
     echo -e "$w  manga gather-all"
     echo -e "$r    Same as gather but for all volumes that are found in the current directory"
-    echo -e "$w  manga flatten folder"
+    echo -e "$w  manga flatten FOLDER"
     echo -e "$r    Recursively finds all files in a directory, renames them to numbers according to"
     echo -e "$r    their sort order and puts them in a cbz"
     echo -e "$w  manga progress"
@@ -25,7 +27,7 @@ function print_help {
     echo -e "$r    Lists all available chapters and all their groups"
     echo -e "$w  manga verify"
     echo -e "$r    Checks for corrupted image files using ImageMagick"
-    echo -e "$w  manga verify-cbz file [file..]"
+    echo -e "$w  manga verify-cbz FILE [FILE..]"
     echo -e "$r    Verifies an already existing cbz-file for corrupted files"
 }
 
@@ -38,6 +40,13 @@ function find_latest {
 BEGIN { chap=0 }
 match($0, /c([0-9]{4})/, ary) { ary[1] > chap ? chap=ary[1]+0 : 0 }
 END { print chap }'
+}
+
+function gallery-dl-do {
+    gallery-dl --dest ./\
+               --option 'filename=v{volume:>03} c{chapter:>04}{chapter_minor} p{page:>06}.{extension}'\
+               --option 'directory=[]'\
+               "$@"
 }
 
 function download_manga {
@@ -83,12 +92,9 @@ function download_manga {
             ;;
     esac
 
-    gallery-dl ${usearchive:+ --download-archive .manga/downloaded.db}\
-               --input-file .manga/url\
-               --dest ./\
-               --chapter-filter "$filter"\
-               --option 'filename=v{volume:>03} c{chapter:>04}{chapter_minor} p{page:>06}.{extension}'\
-               --option 'directory=[]'
+    gallery-dl-do ${usearchive:+ --download-archive .manga/downloaded.db}\
+                  --input-file .manga/url\
+                  --chapter-filter "$filter"
 }
 
 function init_manga {
@@ -196,7 +202,7 @@ case $1 in
         if [[ $2 ]]; then
             init_manga "$2"
         else
-            echo "missing required argument manga_url"
+            echo "missing required argument MANGA_URL"
             exit 1
         fi
         ;;
@@ -204,7 +210,7 @@ case $1 in
         if [[ $2 && -d .manga ]]; then
             download_manga "${@:2}"
         else
-            echo "missing required argument chapter_range or not inside a manga directory"
+            echo "missing required argument CHAPTER_RANGE or not inside a manga directory"
             exit 1
         fi
         ;;
@@ -212,7 +218,7 @@ case $1 in
         if [[ $2 && -d .manga ]]; then
             gather "$2"
         else
-            echo "missing required argument volume or not inside a manga directory"
+            echo "missing required argument VOLUME or not inside a manga directory"
             exit 1
         fi
         ;;
@@ -228,7 +234,7 @@ case $1 in
         if [[ $2 ]]; then
             flatten "$2"
         else
-            echo "expected required argument folder"
+            echo "expected required argument FOLDER"
             exit 1
         fi
         ;;
@@ -261,6 +267,14 @@ case $1 in
             verify_cbz "${@:2}"
         else
             echo "no cbz-files given"
+            exit 1
+        fi
+        ;;
+    download-link)
+        if [[ $# -eq 1 ]]; then
+            gallery-dl-do "$1"
+        else
+            echo "no link was given"
             exit 1
         fi
         ;;
