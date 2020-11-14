@@ -5,3 +5,5 @@
 	ff = only
 [merge]
 	conflictstyle = diff3
+[rerere]
+	enabled = 1
