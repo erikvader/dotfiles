@@ -70,3 +70,15 @@ HandlePowerKey=ignore
 To control how many login attempts is needed for locking an account
 and the timeout, edit: ~/etc/security/faillock.conf~. Can reset
 manually with the ~faillock~ command.
+* mouse
+Set mouse to flat profile and max speed.
+#+BEGIN_SRC
+Section "InputClass"
+	Identifier "My Mouse"
+	Driver "libinput"
+	MatchIsPointer "yes"
+	MatchProduct "Logitech M720 Triathlon"
+	Option "AccelProfile" "flat"
+	Option "AccelSpeed" "1"
+EndSection
+#+END_SRC
