@@ -11,7 +11,7 @@ function print_help {
     echo -e "$w  manga download [--force] CHAPTER_RANGE [GROUP]"
     echo -e "$r    Downloads chapters from CHAPTER_RANGE from an optionally specified translator group."
     echo -e "$r    The flag --force disregards the download cache and redownloads every specified"
-    echo -e "$r    file that doesn't exist. CHAPTER_RANGE can be: 1,2,5-7 or +5"
+    echo -e "$r    file that doesn't exist. CHAPTER_RANGE can be: 27 or +5 or 1- or -5 or all (or -)"
     echo -e "$w  manga download-link URL"
     echo -e "$r    Download a chapter from URL"
     echo -e "$w  manga gather VOLUME"
@@ -78,6 +78,7 @@ function download_manga {
     esac
 
     case "$chap_range" in
+        -|all) ;;
         -*)
             filter="$filter and chapter <= ${chap_range:1}"
             ;;
