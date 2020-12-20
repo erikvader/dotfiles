@@ -19,6 +19,8 @@ export PYTHONDONTWRITEBYTECODE=1
 
 export EDITOR='/usr/bin/vim'
 
+export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/ssh-agent.socket
+
 [[ -f $HOME/.zprofile.local ]] && . "$HOME/.zprofile.local"
 
 # Auto startx depending on the tty
