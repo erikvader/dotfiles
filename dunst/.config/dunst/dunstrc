@@ -155,7 +155,7 @@
     max_icon_size=128
 
     frame_width = 1
-    frame_color = "#16A085"
+    frame_color = "#ff69b4"
 
 [shortcuts]
 
