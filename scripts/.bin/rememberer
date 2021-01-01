@@ -1,0 +1,445 @@
+#!/bin/python
+import sys
+from bs4 import BeautifulSoup  # type: ignore
+from typing import (
+    Any,
+    List,
+    Tuple,
+    Callable,
+    Optional,
+    TextIO,
+    Iterator,
+    TypeVar,
+)
+from urllib.parse import urlparse, ParseResult, parse_qs
+from argparse import ArgumentParser, Namespace
+from fcntl import flock, LOCK_EX
+from pathlib import Path
+from dataclasses import dataclass
+from io import SEEK_END
+
+
+class ParseException(Exception):
+    pass
+
+
+class UserError(Exception):
+    pass
+
+
+@dataclass(frozen=True)
+class Thing:
+    name: str
+    key: str
+
+
+Soup = Any
+SiteName = str
+Scraper = Callable[[Soup, ParseResult], List[Thing]]
+T = TypeVar("T")
+
+
+class Storage:
+    def __init__(self, site: SiteName, datadir: Path) -> None:
+        self.site = site
+        self.datadir = datadir
+        self.openFile: Optional[TextIO] = None
+
+    def read(self) -> Iterator[Thing]:
+        if self.openFile is None:
+            return
+
+        self.openFile.seek(0)
+        for l in self.openFile:
+            fields = l.rstrip().split("\t")
+            if len(fields) != 2:
+                raise Exception("wrong number of fields")
+            yield Thing(name=fields[0], key=fields[1])
+
+    def append(self, things: Iterator[Thing]) -> None:
+        if self.openFile is None:
+            raise Exception("Storage is not open")
+
+        self.openFile.seek(0, SEEK_END)
+        for t in things:
+            self.openFile.write(t.name.replace("\t", r"\t"))
+            self.openFile.write("\t")
+            self.openFile.write(t.key.replace("\t", r"\t"))
+            self.openFile.write("\n")
+
+    def overwrite(self, things: Iterator[Thing]) -> None:
+        raise NotImplementedError()
+
+    def _open(self) -> None:
+        if self.openFile is not None:
+            raise Exception("can't open twice")
+        if not self.datadir.is_dir():
+            raise Exception(f"'{self.datadir}' doesn't exist or isn't a directory")
+
+        fullpath = self.datadir / self.site
+        fullpath.touch()
+        self.openFile = open(fullpath, "r+")
+        flock(self.openFile, LOCK_EX)
+
+    def _close(self) -> None:
+        if self.openFile is not None:
+            self.openFile.close()
+
+    def __enter__(self):
+        self._open()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._close()
+        return False
+
+
+def scrape_text(tag, allow_empty=False) -> str:
+    s = " ".join(c.strip() for c in tag.children if isinstance(c, str))
+    if not allow_empty and not s:
+        raise ParseException("tag doesn't have text")
+    return s
+
+
+def rarbgScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+    def path_to_key(path: str) -> str:
+        parts = path.strip("/").split("/")
+        if len(parts) != 2:
+            raise ParseException("unexpected path in url")
+        return parts[1]
+
+    def torrentPage():
+        title = soup.select_one("td.block h1.black")
+        if title is None:
+            raise ParseException("couldn't find the name")
+        title = scrape_text(title)
+        key = path_to_key(url.path)
+
+        return [Thing(name=title, key=key)]
+
+    def searchPage():
+        if soup.select_one("table.lista2t") is None:
+            raise ParseException("the HTML is not as expected")
+
+        results = []
+        for tr in soup.find_all("tr", class_="lista2"):
+            tds = list(tr.find_all("td", class_="lista", recursive=False))
+            if len(tds) != 8:
+                raise ParseException("unexpected amount of td-tags")
+
+            main_a = tds[1].a
+            if main_a is None:
+                raise ParseException("an a-tag was not found")
+
+            name = scrape_text(main_a)
+
+            if "href" not in main_a.attrs:
+                raise ParseException("the a-tag is missing href")
+            torrent_url = main_a["href"]
+            key = path_to_key(torrent_url)
+
+            results.append(Thing(name=name, key=key))
+
+        return results
+
+    if url.path.startswith("/torrent/"):
+        return torrentPage()
+    elif url.path.startswith("/torrents.php"):
+        return searchPage()
+    else:
+        raise UserError("wrong page")
+
+
+def PHScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+    if not url.path.startswith("/view_video.php"):
+        raise UserError("wrong page")
+
+    try:
+        queries = parse_qs(url.query, strict_parsing=True)
+    except ValueError as e:
+        raise ParseException("invalid query") from e
+
+    if "viewkey" not in queries:
+        raise ParseException("viewkey doesn't exist")
+
+    keys = queries["viewkey"]
+    if len(keys) != 1:
+        raise ParseException("expected only one viewkey")
+    key = keys[0]
+
+    title = soup.select_one("div.title-container > h1.title > span")
+    if not title:
+        raise ParseException("couldn't find video title")
+    name = scrape_text(title)
+
+    return [Thing(name=name, key=key)]
+
+
+def XVideosScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+    if not url.path.startswith("/video"):
+        raise UserError("wrong page")
+
+    parts = url.path.strip("/").split("/")
+    if len(parts) != 2:
+        raise ParseException("unexpected path in url")
+    key = parts[0]
+
+    title = soup.select_one("h2.page-title")
+    if not title:
+        raise ParseException("couldn't find video title")
+    name = scrape_text(title)
+
+    return [Thing(name=name, key=key)]
+
+
+def trettontrettiosjuScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+    def path_to_key(path: str) -> str:
+        parts = path.strip("/").split("/")
+        if len(parts) != 3:
+            raise ParseException("unexpected path in url")
+        return parts[1]
+
+    def torrentPage():
+        title = soup.select_one("div.box-info-heading > h1")
+        if title is None:
+            raise ParseException("couldn't find the name")
+        title = scrape_text(title)
+        key = path_to_key(url.path)
+
+        return [Thing(name=title, key=key)]
+
+    def searchPage():
+        if soup.select_one("table.table-list") is None:
+            raise ParseException("the HTML is not as expected")
+
+        results = []
+        for td in soup.select("table.table-list > tbody > tr > td.name"):
+            ajs = list(td.children)
+            if len(ajs) != 2:
+                raise ParseException("unexpected amount of a-tags")
+            main_a = ajs[1]
+
+            name = scrape_text(main_a)
+
+            if "href" not in main_a.attrs:
+                raise ParseException("the a-tag is missing href")
+            key = path_to_key(main_a["href"])
+
+            results.append(Thing(name=name, key=key))
+
+        return results
+
+    if url.path.startswith("/torrent/"):
+        return torrentPage()
+    elif url.path.startswith("/search/"):
+        return searchPage()
+    else:
+        raise UserError("wrong page")
+
+
+def get_scraper(hostname: SiteName) -> Optional[Scraper]:
+    return {
+        "rarbg": rarbgScraper,
+        "pornhub": PHScraper,
+        "xvideos": XVideosScraper,
+        "1337x": trettontrettiosjuScraper,
+    }.get(hostname)
+
+
+def url_to_site_name(url: ParseResult) -> Optional[SiteName]:
+    if not url.hostname:
+        return None
+
+    parts: List[str] = url.hostname.lower().split(".")
+    if not parts:
+        return None
+    elif len(parts) <= 2:
+        # http://sitename
+        # http://sitename.tld
+        return parts[0]
+    else:
+        # http://asd.basd.qwe.sitename.tld
+        return parts[-2]
+
+
+def parse_arguments() -> Namespace:
+    parser = ArgumentParser(
+        prog="rememberer",
+        description="""
+        Give the url of a webstite as an argument and it's HTML to stdin and I will
+        remember that you have been there.
+        """,
+    )
+    g = parser.add_mutually_exclusive_group(required=True)
+    g.add_argument(
+        "url", type=urlparse, nargs="?", help="The full URL the page is from"
+    )
+    g.add_argument(
+        "--replay", action="store_true", help="Show the previous output again"
+    )
+
+    return parser.parse_args()
+
+
+def create_data_dir() -> Path:
+    datadir = Path.home() / ".local" / "share" / "rememberer"
+    datadir.mkdir(parents=True, exist_ok=True)
+    return datadir
+
+
+def group(lista: Iterator[T], key: Callable[[T], Any] = lambda x: x) -> List[List[T]]:
+    res = []
+    cur: List[T] = []
+    for i in lista:
+        if not cur or key(cur[0]) == key(i):
+            cur.append(i)
+        else:
+            res.append(cur)
+            cur = [i]
+
+    if cur:
+        res.append(cur)
+    return res
+
+
+def print_new_things(
+    things: List[Tuple[Thing, bool]],
+    printer: Callable[[str], None] = print,
+) -> None:
+    num = len(things)
+
+    if num == 0:
+        printer("found nothing")
+        return
+    elif num == 1:
+        if things[0][1]:
+            printer("this is new")
+        else:
+            printer("this is old")
+        return
+
+    printer("found a total of {} things".format(num))
+    groups = group(iter(things), lambda x: x[1])
+
+    if len(groups) == 1:
+        if groups[0][0][1]:
+            printer("everything here is new")
+        else:
+            printer("everything here is old")
+        return
+
+    if len(groups) <= 3 and sum(1 for g in groups if len(g) == 1) == 1:
+        for g in groups:
+            if len(g) != 1:
+                continue
+            only_elem = g[0]
+            printer(
+                "only {} is {}".format(
+                    only_elem[0].name,
+                    "new" if only_elem[1] else "old",
+                )
+            )
+            return
+
+    if len(groups) == 2:
+        upper = groups[0]
+        lower = groups[1]
+
+        if len(upper) <= len(lower):
+            critical = upper[-1]
+            where = "above"
+        else:
+            critical = lower[0]
+            where = "below"
+
+        printer(
+            "everything {} the following is {}:".format(
+                where, "new" if critical[1] else "old"
+            )
+        )
+        printer(critical[0].name)
+        return
+
+    # TODO: if len(groups) == 3 say something like "everything between ... and ... is ..."
+
+    new = [elem for elem, isnew in things if isnew]
+    old = [elem for elem, isnew in things if not isnew]
+    if len(new) <= len(old):
+        what = "new"
+        dalist = new
+    else:
+        what = "old"
+        dalist = old
+
+    printer(f"all of the following is {what}")
+    for i in dalist:
+        printer(i.name)
+
+
+def replay(lastoutputfile: Path) -> None:
+    import shutil
+
+    try:
+        with open(lastoutputfile, "r") as f:
+            shutil.copyfileobj(f, sys.stdout)
+    except FileNotFoundError:
+        pass
+
+
+def remember(url: ParseResult, datadir: Path, lastoutputfile: Path) -> None:
+    if not url.hostname or not url.scheme:
+        raise UserError("url is not fully qualified or is invalid")
+    if url.scheme not in ["http", "https"]:
+        raise UserError("url must be http or https")
+
+    webpage = BeautifulSoup(sys.stdin, "html5lib")
+
+    siteName = url_to_site_name(url)
+    if not siteName:
+        raise UserError(f"couldn't extract a site name from {url.hostname}")
+
+    scraper = get_scraper(siteName)
+    if scraper is None:
+        raise UserError("'{}' is not supported".format(url.hostname))
+
+    things = scraper(webpage, url)
+
+    if things:
+        with Storage(siteName, datadir) as s:
+            keys = set(t.key for t in s.read())
+            new_things = [t.key not in keys for t in things]
+            s.append(t for t, is_new in zip(things, new_things) if is_new)
+    else:
+        new_things = []
+
+    with open(lastoutputfile, "a+") as f:
+        flock(f, LOCK_EX)
+        f.seek(0)
+        f.truncate(0)
+
+        def tee(line: str) -> None:
+            print(line)
+            print(line, file=f)
+
+        print_new_things(list(zip(things, new_things)), printer=tee)
+
+
+def main():
+    args = parse_arguments()
+    datadir = create_data_dir()
+    lastoutputfile = datadir / ".last_output"
+
+    try:
+        if args.replay:
+            replay(lastoutputfile)
+        elif args.url:
+            remember(args.url, datadir, lastoutputfile)
+        else:
+            raise Exception("unreachable")
+    except UserError as ue:
+        print(ue, end="", file=sys.stderr)
+        exit(1)
+
+
+if __name__ == "__main__":
+    main()
