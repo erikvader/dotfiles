@@ -11,7 +11,7 @@ from typing import (
     Iterator,
     TypeVar,
 )
-from urllib.parse import urlparse, ParseResult, parse_qs
+from urllib.parse import urlparse, urlunparse, ParseResult, parse_qs
 from argparse import ArgumentParser, Namespace
 from fcntl import flock, LOCK_EX
 from pathlib import Path
@@ -101,12 +101,19 @@ def scrape_text(tag, allow_empty=False) -> str:
     return s
 
 
+def extract_path(path: str, expectedLen: int, want: int) -> str:
+    assert want >= 0 and want < expectedLen
+    parts = path.strip("/").split("/")
+    if len(parts) != expectedLen:
+        raise ParseException(
+            f"unexpected path in url, expected {expectedLen} parts but got {len(parts)}"
+        )
+    return parts[want]
+
+
 def rarbgScraper(soup: Soup, url: ParseResult) -> List[Thing]:
     def path_to_key(path: str) -> str:
-        parts = path.strip("/").split("/")
-        if len(parts) != 2:
-            raise ParseException("unexpected path in url")
-        return parts[1]
+        return extract_path(path, 2, 1)
 
     def torrentPage():
         title = soup.select_one("td.block h1.black")
@@ -179,10 +186,7 @@ def XVideosScraper(soup: Soup, url: ParseResult) -> List[Thing]:
     if not url.path.startswith("/video"):
         raise UserError("wrong page")
 
-    parts = url.path.strip("/").split("/")
-    if len(parts) != 2:
-        raise ParseException("unexpected path in url")
-    key = parts[0]
+    key = extract_path(url.path, 2, 0)
 
     title = soup.select_one("h2.page-title")
     if not title:
@@ -194,10 +198,7 @@ def XVideosScraper(soup: Soup, url: ParseResult) -> List[Thing]:
 
 def trettontrettiosjuScraper(soup: Soup, url: ParseResult) -> List[Thing]:
     def path_to_key(path: str) -> str:
-        parts = path.strip("/").split("/")
-        if len(parts) != 3:
-            raise ParseException("unexpected path in url")
-        return parts[1]
+        return extract_path(path, 3, 1)
 
     def torrentPage():
         title = soup.select_one("div.box-info-heading > h1")
@@ -237,12 +238,26 @@ def trettontrettiosjuScraper(soup: Soup, url: ParseResult) -> List[Thing]:
         raise UserError("wrong page")
 
 
+def TnaFlixScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+    key = extract_path(url.path, 3, 2)
+    if not key.startswith("video"):
+        raise UserError("wrong page")
+
+    title = soup.select_one("div.sectHeader > h1")
+    if not title:
+        raise ParseException("couldn't find video title")
+    name = scrape_text(title)
+
+    return [Thing(name=name, key=key)]
+
+
 def get_scraper(hostname: SiteName) -> Optional[Scraper]:
     return {
         "rarbg": rarbgScraper,
         "pornhub": PHScraper,
         "xvideos": XVideosScraper,
         "1337x": trettontrettiosjuScraper,
+        "tnaflix": TnaFlixScraper,
     }.get(hostname)
 
 
@@ -392,7 +407,8 @@ def remember(url: ParseResult, datadir: Path, lastoutputfile: Path) -> None:
     if url.scheme not in ["http", "https"]:
         raise UserError("url must be http or https")
 
-    webpage = BeautifulSoup(sys.stdin, "html5lib")
+    # TODO: fallback to html5lib somehow if lxml fails? Good if the website is pretty broken
+    webpage = BeautifulSoup(sys.stdin, "lxml")
 
     siteName = url_to_site_name(url)
     if not siteName:
@@ -421,6 +437,7 @@ def remember(url: ParseResult, datadir: Path, lastoutputfile: Path) -> None:
             print(line)
             print(line, file=f)
 
+        print(urlunparse(url), file=f)
         print_new_things(list(zip(things, new_things)), printer=tee)
 
 
