@@ -77,8 +77,7 @@ class Storage:
             raise Exception(f"'{self.datadir}' doesn't exist or isn't a directory")
 
         fullpath = self.datadir / self.site
-        fullpath.touch()
-        self.openFile = open(fullpath, "r+")
+        self.openFile = open(fullpath, "a+")
         flock(self.openFile, LOCK_EX)
 
     def _close(self) -> None:
