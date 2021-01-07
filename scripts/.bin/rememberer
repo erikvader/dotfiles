@@ -299,6 +299,21 @@ def XnxxScraper(soup: Soup, url: ParseResult) -> List[Thing]:
     return [Thing(name=name, key=key)]
 
 
+def theyAreHugeScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+    if not url.path.startswith("/v/"):
+        raise UserError("wrong page")
+
+    key = extract_path(url.path, 2, 1)
+    title = soup.select_one("h1.cs_headline")
+    if not title:
+        raise ParseException("couldn't find video title")
+    name = scrape_text(title)
+    if not name:
+        raise ParseException("title name empty")
+
+    return [Thing(name=name, key=key)]
+
+
 def get_scraper(hostname: SiteName) -> Optional[Scraper]:
     return {
         "rarbg": rarbgScraper,
@@ -308,6 +323,7 @@ def get_scraper(hostname: SiteName) -> Optional[Scraper]:
         "tnaflix": TnaFlixScraper,
         "spankbang": SpankbangScraper,
         "xnxx": XnxxScraper,
+        "theyarehuge": theyAreHugeScraper,
     }.get(hostname)
 
 
