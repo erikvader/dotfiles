@@ -4,7 +4,6 @@ declare -A scripts
 
 scripts["Switch to speakers"]='speakers speakers'
 scripts["Switch to headphones"]='speakers headphones'
-scripts["Switch to headphones and speakers"]='speakers both'
 scripts["Clipboard history"]='CM_LAUNCHER=rofi-script clipmenu "$(CM_LAUNCHER=rofi-script clipmenu | fzf_dmenu)"'
 scripts["Invert colors"]="xrandr-invert-colors"
 scripts["Toggle redshift"]="pkill -USR1 '^redshift$'"
