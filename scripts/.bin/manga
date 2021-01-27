@@ -6,29 +6,32 @@ function print_help {
     local w='\x1b[1;37m'
     local r='\x1b[0m'
     echo "Usage:"
-    echo -e "$w  manga init MANGA_URL"
+    echo -e "$w  manga [FLAGS..] init MANGA_URL"
     echo -e "$r    Creates a new directory ready to download from MANGA_URL"
-    echo -e "$w  manga download [--force] CHAPTER_RANGE [GROUP]"
+    echo -e "$w  manga [FLAGS..] download [--force] CHAPTER_RANGE [GROUP]"
     echo -e "$r    Downloads chapters from CHAPTER_RANGE from an optionally specified translator group."
     echo -e "$r    The flag --force disregards the download cache and redownloads every specified"
     echo -e "$r    file that doesn't exist. CHAPTER_RANGE can be: 27 or +5 or 1- or -5 or all (or -)"
-    echo -e "$w  manga download-link URL"
+    echo -e "$w  manga [FLAGS..] download-link URL"
     echo -e "$r    Download a chapter from URL"
-    echo -e "$w  manga gather VOLUME"
+    echo -e "$w  manga [FLAGS..] gather VOLUME"
     echo -e "$r    Collects every file of a VOLUME into a cbz-file"
-    echo -e "$w  manga gather-all"
+    echo -e "$w  manga [FLAGS..] gather-all"
     echo -e "$r    Same as gather but for all volumes that are found in the current directory"
-    echo -e "$w  manga flatten FOLDER"
+    echo -e "$w  manga [FLAGS..] flatten FOLDER"
     echo -e "$r    Recursively finds all files in a directory, renames them to numbers according to"
     echo -e "$r    their sort order and puts them in a cbz"
-    echo -e "$w  manga progress"
+    echo -e "$w  manga [FLAGS..] progress"
     echo -e "$r    Prints the first missing chapter"
-    echo -e "$w  manga list"
+    echo -e "$w  manga [FLAGS..] list"
     echo -e "$r    Lists all available chapters and all their groups"
-    echo -e "$w  manga verify"
-    echo -e "$r    Checks for corrupted image files using ImageMagick"
-    echo -e "$w  manga verify-cbz FILE [FILE..]"
+    echo -e "$w  manga [FLAGS..] verify [-r]"
+    echo -e "$r    Checks for corrupted image files using ImageMagick. Do it recursively with -r"
+    echo -e "$w  manga [FLAGS..] verify-cbz FILE [FILE..]"
     echo -e "$r    Verifies an already existing cbz-file for corrupted files"
+    echo
+    echo -e "Flags:"
+    echo -e "$w  -f$r: don't require the presence of the .manga folder"
 }
 
 function filter_filename {
@@ -158,9 +161,15 @@ function progress {
 }
 
 function verify {
+    local max=
     local total
     local i=1
-    total=$(find . -maxdepth 1 -mindepth 1 -type f \! -iname '*.cbz' | wc -l)
+
+    if [[ -z $1 ]]; then
+        max='-maxdepth 1'
+    fi
+
+    total=$(find . $max -mindepth 1 -type f \! -iname '*.cbz' | wc -l)
     while IFS='' read -r line || [[ -n "$line" ]]; do
         echo -en "\\r\\x1b[K[$i/$total]"
         if ! convert "$line" null: &>/dev/null ; then
@@ -171,7 +180,7 @@ function verify {
             echo
         fi
         : $((i++))
-    done < <(find . -maxdepth 1 -mindepth 1 -type f \! -iname '*.cbz')
+    done < <(find . $max -mindepth 1 -type f \! -iname '*.cbz')
     echo -e "\\r\\x1b[K[$total/$total]"
 }
 
@@ -198,6 +207,12 @@ function list_chapters {
          | .[]'
 }
 
+foldercheck=t
+if [[ $1 = -f ]]; then
+    foldercheck=
+    shift
+fi
+
 case $1 in
     init)
         if [[ $2 ]]; then
@@ -208,7 +223,7 @@ case $1 in
         fi
         ;;
     download)
-        if [[ $2 && -d .manga ]]; then
+        if [[ $2 && ( -z $foldercheck || -d .manga ) ]]; then
             download_manga "${@:2}"
         else
             echo "missing required argument CHAPTER_RANGE or not inside a manga directory"
@@ -216,7 +231,7 @@ case $1 in
         fi
         ;;
     gather)
-        if [[ $2 && -d .manga ]]; then
+        if [[ $2 && ( -z $foldercheck || -d .manga ) ]]; then
             gather "$2"
         else
             echo "missing required argument VOLUME or not inside a manga directory"
@@ -224,7 +239,7 @@ case $1 in
         fi
         ;;
     gather-all)
-        if [[ -d .manga ]]; then
+        if [[ -z $foldercheck || -d .manga ]]; then
             gather-all
         else
             echo "not inside a manga directory"
@@ -240,7 +255,7 @@ case $1 in
         fi
         ;;
     progress)
-        if [[ -d .manga ]]; then
+        if [[ -z $foldercheck || -d .manga ]]; then
             progress
         else
             echo "not in manga folder"
@@ -248,7 +263,7 @@ case $1 in
         fi
         ;;
     list)
-        if [[ -d .manga ]]; then
+        if [[ -z $foldercheck || -d .manga ]]; then
             list_chapters
         else
             echo "not in manga folder"
@@ -256,8 +271,8 @@ case $1 in
         fi
         ;;
     verify)
-        if [[ -d .manga ]]; then
-            verify
+        if [[ -z $foldercheck || -d .manga ]]; then
+            verify "$2"
         else
             echo "not in manga folder"
             exit 1
