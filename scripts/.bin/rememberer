@@ -221,7 +221,7 @@ def trettontrettiosjuScraper(soup: Soup, url: ParseResult) -> List[Thing]:
 
         results = []
         for td in soup.select("table.table-list > tbody > tr > td.name"):
-            ajs = list(td.children)
+            ajs = list(td.select("a"))
             if len(ajs) != 2:
                 raise ParseException("unexpected amount of a-tags")
             main_a = ajs[1]
@@ -468,17 +468,10 @@ def print_new_things(
 
     # TODO: if len(groups) == 3 say something like "everything between ... and ... is ..."
 
+    # fallback
     new = [elem for elem, isnew in things if isnew]
-    old = [elem for elem, isnew in things if not isnew]
-    if len(new) <= len(old):
-        what = "new"
-        dalist = new
-    else:
-        what = "old"
-        dalist = old
-
-    printer(f"all of the following is {what}")
-    for i in dalist:
+    printer("all of the following are new")
+    for i in new:
         printer(i.name)
 
 
