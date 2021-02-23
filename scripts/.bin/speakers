@@ -18,6 +18,12 @@ function get_default_sink {
     pactl info | grep -F 'Default Sink: ' | cut -b15-
 }
 
+function get_card_number {
+    pactl list sinks | awk 'BEGIN { rightsink=0 }
+/^[[:blank:]]+Name: / { rightsink=($2 == "'"$1"'") }
+rightsink && /alsa.card = / { print(substr($3, 2, length($3)-2)) }'
+}
+
 if [[ $1 = status ]]; then
     curr=$(get_default_sink)
     if [[ $curr = "$SPEAKERS" ]]; then
@@ -30,6 +36,7 @@ if [[ $1 = status ]]; then
     exit
 elif [[ $1 = headphones ]]; then
     pactl set-default-sink "$(get_sink_number "$HEADPHONES")"
+    amixer -q -c "$(get_card_number "$HEADPHONES")" set PCM,1 100%
 elif [[ $1 = speakers ]]; then
     pactl set-default-sink "$(get_sink_number "$SPEAKERS")"
 fi
