@@ -11,7 +11,6 @@ install: $(QUTEDIR) xdg
 
 $(QUTEDIR):
 	git clone $(MYCONFIG) $(QUTEDIR)
-	ln -s ../../../.config/qutebrowser/userscripts $(QUTELOCALSHARE)/userscripts
 
 .PHONY: xdg
 xdg:

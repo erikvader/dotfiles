@@ -3,3 +3,4 @@ qutebrowser
 # qt5-styleplugins
 # needed by userscripts/torrentdownload
 jq
+python-adblock
