@@ -8,10 +8,11 @@ function print_help {
     echo "Usage:"
     echo -e "$w  manga [FLAGS..] init MANGA_URL"
     echo -e "$r    Creates a new directory ready to download from MANGA_URL"
-    echo -e "$w  manga [FLAGS..] download [--force] CHAPTER_RANGE [GROUP]"
+    echo -e "$w  manga [FLAGS..] download [--force] CHAPTER_RANGE [!] [GROUP...]"
     echo -e "$r    Downloads chapters from CHAPTER_RANGE from an optionally specified translator group."
     echo -e "$r    The flag --force disregards the download cache and redownloads every specified"
-    echo -e "$r    file that doesn't exist. CHAPTER_RANGE can be: 27 or +5 or 1- or -5 or all (or -)"
+    echo -e "$r    file that doesn't exist. CHAPTER_RANGE can be: 27 or +5 or 1- or -5 or all (or -)."
+    echo -e "$r    GROUP are zero or more groups to download from, or to not download from if a single '!' is present."
     echo -e "$w  manga [FLAGS..] download-link URL"
     echo -e "$r    Download a chapter from URL"
     echo -e "$w  manga [FLAGS..] gather VOLUME"
@@ -32,6 +33,12 @@ function print_help {
     echo
     echo -e "Flags:"
     echo -e "$w  -f$r: don't require the presence of the .manga folder"
+}
+
+function join_by {
+    local d=$1; shift;
+    local f=$1; shift;
+    printf %s "$f" "${@/#/$d}";
 }
 
 function filter_filename {
@@ -71,12 +78,17 @@ function download_manga {
         ;;
         *) chap_range=$1 ;;
     esac
+    shift
 
     local filter='lang == "en"'
-    case $2 in
+    case $1 in
         '') ;;
+        '!')
+            shift
+            filter="$filter and not ({\"$(join_by '", "' "$@")\"} & set(group))"
+            ;;
         *)
-            filter="$filter and group == \"$2\""
+            filter="$filter and ({\"$(join_by '", "' "$@")\"} & set(group))"
             ;;
     esac
 
@@ -200,7 +212,7 @@ function list_chapters {
         'map(
            .[2]
            | select(.lang == "en")
-           | {chapter: ((.chapter | tostring) + .chapter_minor | tonumber), group: .group}
+           | {chapter: ((.chapter | tostring) + .chapter_minor | tonumber), group: (.group | join("; "))}
          )
          | group_by(.chapter)
          | map((.[0].chapter | tostring) + ": " + (map(.group) | join(", ")))
