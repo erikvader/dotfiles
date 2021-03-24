@@ -20,7 +20,7 @@ import Codec.Binary.UTF8.String as UTF8
 
 import XMonad.Actions.Warp hiding (banish)
 import XMonad.Actions.PhysicalScreens
-import XMonad.Actions.WorkspaceNames
+import XMonad.Actions.SwapWorkspaces
 
 import XMonad.Util.SpawnOnce
 import XMonad.Util.WorkspaceCompare
@@ -237,12 +237,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- moves workspaces up or down
     ((modm, xK_period), swapTo Next),
     ((modm, xK_comma), swapTo Prev),
-    ((modm .|. shiftMask, xK_comma), swapWithCurrent $ head myWorkspaces),
-
-    -- rename workspaces
-    ((modm, xK_v), renameWorkspace myXPConfig),
-    ((modm .|. shiftMask, xK_v), setCurrentWorkspaceName ""),
-    ((modm .|. mod1Mask, xK_v), mapWorkspaces $ flip setWorkspaceName ""),
+    ((modm .|. shiftMask, xK_comma), windows $ swapWithCurrent $ head myWorkspaces),
 
     -- Shrink the master area
     ((modm, xK_h), sendMessage Shrink),
@@ -377,11 +372,10 @@ multiPrepare :: String -> Bool -> X PP
 multiPrepare output focused = do
   L.updateCurrentState
   showWindows <- ppShowWindows
-  wsName <- getWorkspaceNames'
   let pp = if focused then myFocusPPXin else myNonfocusPPXin
   return $
     decoratePP
-      (\w -> concatMap ($ w) [colorize, showWindows, maybe "" (":"++) . wsName])
+      (\w -> concatMap ($ w) [colorize, showWindows])
       (pp {ppOutput = statusbarOutput . fixXinerama pp})
   where
     colorize = wrap "" "^fg()"
