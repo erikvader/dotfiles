@@ -37,6 +37,7 @@ Soup = Any
 SiteName = str
 Scraper = Callable[[Soup, ParseResult], List[Thing]]
 T = TypeVar("T")
+TaggedThing = Tuple[Thing, bool]
 
 
 class Storage:
@@ -374,6 +375,11 @@ def parse_arguments() -> Namespace:
     g.add_argument(
         "--replay", action="store_true", help="Show the previous output again"
     )
+    g.add_argument(
+        "--replay-other",
+        action="store_true",
+        help="Show the previous output again, but list the other entries that weren't listed before",
+    )
 
     parser.add_argument(
         "--test",
@@ -409,49 +415,68 @@ def group(lista: Iterator[T], key: Callable[[T], Any] = lambda x: x) -> List[Lis
 
 
 def print_new_things(
-    things: List[Tuple[Thing, bool]],
+    things: List[TaggedThing],
     printer: Callable[[str], None] = print,
+    inverse: bool = False,
 ) -> None:
+    def age_word(say_new: bool) -> str:
+        return "new" if say_new else "old"
+
+    def print_all(print_new: bool) -> None:
+        new = [elem for elem, isnew in things if isnew == print_new]
+        printer("all of the following are " + age_word(print_new))
+        for i in new:
+            printer(i.name)
+
     num = len(things)
 
     if num == 0:
         printer("found nothing")
         return
     elif num == 1:
-        if things[0][1]:
-            printer("this is new")
+        if not inverse:
+            printer(f"this is {age_word(things[0][1])}")
         else:
-            printer("this is old")
+            printer("no inverse")
         return
 
     printer("found a total of {} things".format(num))
-    groups = group(iter(things), lambda x: x[1])
 
-    if len(groups) == 1:
-        if groups[0][0][1]:
-            printer("everything here is new")
-        else:
-            printer("everything here is old")
-        return
+    num_new = sum(1 for t, b in things if b)
+    only_one_new = num_new == 1
+    only_one_old = num - num_new == 1
+    if only_one_new or only_one_old:
+        target = True if only_one_new else False
 
-    if len(groups) <= 3 and sum(1 for g in groups if len(g) == 1) == 1:
-        for g in groups:
-            if len(g) != 1:
+        if inverse:
+            print_all(not target)
+            return
+
+        for t, b in things:
+            if b != target:
                 continue
-            only_elem = g[0]
             printer(
                 "only {} is {}".format(
-                    only_elem[0].name,
-                    "new" if only_elem[1] else "old",
+                    t.name,
+                    age_word(target),
                 )
             )
             return
+
+    groups = group(iter(things), lambda x: x[1])
+
+    if len(groups) == 1:
+        if not inverse:
+            printer(f"everything here is {age_word(groups[0][0][1])}")
+        else:
+            printer("no inverse")
+        return
 
     if len(groups) == 2:
         upper = groups[0]
         lower = groups[1]
 
-        if len(upper) <= len(lower):
+        if (len(upper) <= len(lower)) ^ inverse:
             critical = upper[-1]
             where = "above"
         else:
@@ -459,34 +484,58 @@ def print_new_things(
             where = "below"
 
         printer(
-            "everything {} the following is {}:".format(
-                where, "new" if critical[1] else "old"
-            )
+            "everything {} the following is {}:".format(where, age_word(critical[1]))
         )
         printer(critical[0].name)
         return
 
-    # TODO: if len(groups) == 3 say something like "everything between ... and ... is ..."
+    if len(groups) == 3 and len(middle := groups[1]) >= 2:
+        if not inverse:
+            printer(
+                "everything between\n{}\nand\n{}\nis {}".format(
+                    middle[0][0].name, middle[-1][0].name, age_word(middle[0][1])
+                )
+            )
+        else:
+            print_all(not middle[0][1])
+        return
 
-    # fallback
-    new = [elem for elem, isnew in things if isnew]
-    printer("all of the following are new")
-    for i in new:
-        printer(i.name)
+    print_all(True ^ inverse)
 
 
-def replay(lastoutputfile: Path) -> None:
+def replay(lastoutputfile: Path, prefix: str = "Replay of: ") -> None:
     import shutil
 
-    print("Replay of: ", end="")
     try:
         with open(lastoutputfile, "r") as f:
+            print(prefix, end="")
             shutil.copyfileobj(f, sys.stdout)
     except FileNotFoundError:
-        pass
+        print("Nothing to replay")
 
 
-def remember(url: ParseResult, datadir: Path, lastoutputfile: Path) -> bool:
+def remember(
+    url: ParseResult,
+    datadir: Path,
+    lastoutputfile: Path,
+    inverse_lastoutputfile: Path,
+) -> bool:
+    def save_results(
+        things: List[TaggedThing], save_file: Path, to_stdout=True, inverse=False
+    ) -> None:
+        with open(save_file, "a+") as f:
+            flock(f, LOCK_EX)
+            f.seek(0)
+            f.truncate(0)
+
+            def tee(line: str) -> None:
+                if to_stdout:
+                    print(line)
+                print(line, file=f)
+
+            print(urlunparse(url), file=f)
+            print_new_things(things, printer=tee, inverse=inverse)
+
     if not url.hostname or not url.scheme:
         raise UserError("url is not fully qualified or is invalid")
     if url.scheme not in ["http", "https"]:
@@ -513,17 +562,14 @@ def remember(url: ParseResult, datadir: Path, lastoutputfile: Path) -> bool:
         new_things = [t.key not in keys for t in things]
         s.append(t for t, is_new in zip(things, new_things) if is_new)
 
-    with open(lastoutputfile, "a+") as f:
-        flock(f, LOCK_EX)
-        f.seek(0)
-        f.truncate(0)
-
-        def tee(line: str) -> None:
-            print(line)
-            print(line, file=f)
-
-        print(urlunparse(url), file=f)
-        print_new_things(list(zip(things, new_things)), printer=tee)
+    tagged = list(zip(things, new_things))
+    save_results(tagged, lastoutputfile)
+    save_results(
+        tagged,
+        inverse_lastoutputfile,
+        to_stdout=False,
+        inverse=True,
+    )
 
     return any(new_things)
 
@@ -531,14 +577,18 @@ def remember(url: ParseResult, datadir: Path, lastoutputfile: Path) -> bool:
 def run(args: Namespace) -> bool:
     datadir = create_data_dir()
     lastoutputfile = datadir / ".last_output"
+    inverse_lastoutputfile = datadir / ".last_output_inverse"
 
     if args.replay:
         replay(lastoutputfile)
         return True
+    elif args.replay_other:
+        replay(inverse_lastoutputfile, "Inverse replay of: ")
+        return True
     elif args.url:
-        return remember(args.url, datadir, lastoutputfile)
+        return remember(args.url, datadir, lastoutputfile, inverse_lastoutputfile)
     else:
-        raise Exception("unreachable")
+        raise Exception("one of these options should have been given")
 
     return False
 
