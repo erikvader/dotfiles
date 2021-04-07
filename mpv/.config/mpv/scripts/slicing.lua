@@ -56,29 +56,32 @@ function get_destination_filename(srcdir)
 end
 
 
-function cut(recode)
+function cut(giphy)
     if start_time == -1 or end_time == -1 or start_time >= end_time then
         osd("invalid start and/or end times")
         return
     end
 
     local extra_flags = ""
-    if not recode then
-        extra_flags = "-c copy -avoid_negative_ts make_zero"
+    if giphy then
+        extra_flags = "-map v:0"
+    else
+        extra_flags = "-map 0 -c copy -avoid_negative_ts make_zero"
     end
 
     -- local cmd = trim(o.command_template:gsub("%s+", " "))
     local inpath = utils.join_path(utils.getcwd(), mp.get_property("path"))
     local srcdir, _ = utils.split_path(inpath)
     local outpath = get_destination_filename(srcdir)
-    local template = "ffmpeg -n -ss %f -to %f -i '%s' -map 0 %s '%s'"
+    local template = "ffmpeg -n -ss %f -to %f -i '%s' %s '%s'"
     local cmd = string.format(template, start_time, end_time, inpath, extra_flags, outpath)
 
+    msg.info(cmd)
     os.execute(cmd)
     -- msg.info("done")
 end
 
-function cut_recode()
+function cut_giphy()
     osd("Re-encode slicing...")
     cut(true)
     osd("done")
@@ -103,4 +106,4 @@ end
 mp.add_key_binding("w", "set_slice_start", set_slice_start)
 mp.add_key_binding("W", "set_slice_end", set_slice_end)
 mp.add_key_binding("Ctrl+w", "cut_copy", cut_copy)
-mp.add_key_binding("Alt+w", "cut_recode", cut_recode)
+mp.add_key_binding("Alt+w", "cut_giphy", cut_giphy)
