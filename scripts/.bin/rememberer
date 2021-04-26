@@ -17,6 +17,7 @@ from fcntl import flock, LOCK_EX
 from pathlib import Path
 from dataclasses import dataclass
 from io import SEEK_END
+from beautifulsoupUtils import unique_selector  # type: ignore
 
 
 class ParseException(Exception):
@@ -27,13 +28,16 @@ class UserError(Exception):
     pass
 
 
+Soup = Any
+
+
 @dataclass(frozen=True)
 class Thing:
     name: str
     key: str
+    jsmark: Optional[str] = None
 
 
-Soup = Any
 SiteName = str
 Scraper = Callable[[Soup, ParseResult], List[Thing]]
 T = TypeVar("T")
@@ -116,6 +120,15 @@ def extract_path(path: str, expectedLen: int, want: int) -> str:
     return parts[want]
 
 
+def change_color_on(tag, color: str) -> str:
+    sel = unique_selector(tag)
+    if sel is None:
+        print("couldn't get selector for {}".format(tag), file=sys.stderr)
+        return ""
+
+    return 'document.querySelector("{}").style.color = "{}";\n'.format(sel, color)
+
+
 def rarbgScraper(soup: Soup, url: ParseResult) -> List[Thing]:
     def path_to_key(path: str) -> str:
         return extract_path(path, 2, 1)
@@ -150,7 +163,9 @@ def rarbgScraper(soup: Soup, url: ParseResult) -> List[Thing]:
             torrent_url = main_a["href"]
             key = path_to_key(torrent_url)
 
-            results.append(Thing(name=name, key=key))
+            results.append(
+                Thing(name=name, key=key, jsmark=change_color_on(main_a, "black"))
+            )
 
         return results
 
@@ -390,6 +405,16 @@ def parse_arguments() -> Namespace:
         """,
     )
 
+    parser.add_argument(
+        "--mark",
+        help="Write javascript to that will mark remembered entries to FILE",
+        metavar="FILE",
+    )
+
+    parser.add_argument(
+        "--quiet", action="store_true", help="Don't print what is new and old"
+    )
+
     return parser.parse_args()
 
 
@@ -514,11 +539,20 @@ def replay(lastoutputfile: Path, prefix: str = "Replay of: ") -> None:
         print("Nothing to replay")
 
 
+def write_mark_js(jsfile: Path, things: Iterator[TaggedThing]):
+    with open(jsfile, "w") as f:
+        for t in (t for t, is_new in things if not is_new):
+            if t.jsmark is not None:
+                f.write(t.jsmark)
+
+
 def remember(
     url: ParseResult,
     datadir: Path,
     lastoutputfile: Path,
     inverse_lastoutputfile: Path,
+    js_mark_file: Optional[Path] = None,
+    quiet: bool = False,
 ) -> bool:
     def save_results(
         things: List[TaggedThing], save_file: Path, to_stdout=True, inverse=False
@@ -563,13 +597,16 @@ def remember(
         s.append(t for t, is_new in zip(things, new_things) if is_new)
 
     tagged = list(zip(things, new_things))
-    save_results(tagged, lastoutputfile)
+    save_results(tagged, lastoutputfile, to_stdout=not quiet)
     save_results(
         tagged,
         inverse_lastoutputfile,
         to_stdout=False,
         inverse=True,
     )
+
+    if js_mark_file is not None:
+        write_mark_js(js_mark_file, iter(tagged))
 
     return any(new_things)
 
@@ -586,7 +623,14 @@ def run(args: Namespace) -> bool:
         replay(inverse_lastoutputfile, "Inverse replay of: ")
         return True
     elif args.url:
-        return remember(args.url, datadir, lastoutputfile, inverse_lastoutputfile)
+        return remember(
+            args.url,
+            datadir,
+            lastoutputfile,
+            inverse_lastoutputfile,
+            args.mark,
+            args.quiet,
+        )
     else:
         raise Exception("one of these options should have been given")
 
