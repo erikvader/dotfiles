@@ -2,56 +2,53 @@
 
 set -e
 
-theme_dir="$HOME/themes"
-cur="$theme_dir/$1"
-cur_theme_file="/tmp/theme_select_cur"
+theme_dir=$HOME/themes
+cur_theme_file=$HOME/.theme_select_cur
 
 if [[ ! -d "$theme_dir" ]]; then
     echo "$theme_dir doesn't exist!" >&2
     exit 1
 fi
 
-if [[ -f "$cur_theme_file" ]]; then
-    cur_theme="$(cat "$cur_theme_file")"
-fi
+function set_theme {
+    local cur=$theme_dir/$1
+    if ! [[ -d $cur ]]; then
+        echo "$1 is not a directory" >&2
+        exit 1
+    fi
+    echo "$1" > "$cur_theme_file"
 
-case "$1" in
-    -s)
-        "$0" "safe"
-        exit
-        ;;
+    pic=$(find -L "$cur" -type f -print -quit)
+    if [[ -z $pic ]]; then
+        echo "no pic in $cur" >&2
+        exit 1
+    fi
+    feh --bg-fill "$pic"
+
+    create-lock-img "$pic" "$theme_dir/lock.png" "$HOME/.lock" &
+}
+
+function list_themes {
+    find -L "$theme_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n'
+}
+
+case $1 in
     -r)
-        "$0" "$("$0" -l | sed "/^$cur_theme$/d" | shuf -n1)"
-        exit
+        cur_theme=
+        if [[ -f "$cur_theme_file" ]]; then
+            read -r cur_theme < "$cur_theme_file"
+        fi
+        set_theme "$(list_themes | sed "/^$cur_theme$/d" | shuf -n1)"
         ;;
     -l)
-        find -L "$theme_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n'
-        exit 0
+        list_themes
         ;;
-    "")
-        echo "please give argument"
-        exit 1
-        ;;
-    *)
-        if ! [[ -d "$cur" ]]; then
-            echo "$1 is not a directory"
-            exit 1
+    ""|--reapply)
+        if [[ -x "$HOME"/.fehbg ]]; then
+            exec "$HOME"/.fehbg
         fi
         ;;
+    *)
+        set_theme "$1"
+        ;;
 esac
-
-echo "$1" > "$cur_theme_file"
-
-# change bg
-ln -sf "$cur/feh" "$HOME/.start_feh"
-# "$HOME/.start_feh" &!
-
-# change lock
-create-lock-img "$cur/lock" "$theme_dir/lock.png" "$HOME/.lock" &
-
-# change conky
-ln -sf "$cur/conky" "$HOME/.start_conky"
-
-# display_updater conky
-display_updater feh
-
