@@ -1,98 +1,10 @@
 #!/bin/python
 
 import sys
+from datetime import timedelta
+import time
 import networkx as nx
-import matplotlib.pyplot as plt
 
-def inc_mony(G, send, recv, mony):
-    """
-    Increment the edge between send and recv by mony, possibly
-    creating it.
-    """
-    assert(send != recv)
-    if G.has_edge(send, recv):
-        G.edges[send, recv]["money"] += mony
-    else:
-        G.add_edge(send, recv, money=mony)
-
-def dec_mony(G, send, recv, mony):
-    """
-    Decrement the edge between send and recv by mony, possibly
-    removing it. Return True if the edge got removed.
-    """
-    assert(G.edges[send, recv]["money"] - mony >= 0)
-    assert(send != recv)
-    G.edges[send, recv]["money"] -= mony
-    if G.edges[send, recv]["money"] == 0:
-        G.remove_edge(send, recv)
-        return True
-    return False
-
-def read_input():
-    """
-    Read lines from stdin and build a graph.
-    Each line is of the form: from amount receiver
-    """
-    G = nx.DiGraph()
-    for line in sys.stdin:
-        words = line.split()
-        if len(words) != 3:
-            raise Exception("invalid format on line typ")
-
-        if not words[1].isdigit():
-            raise Exception("middle value must be an integer")
-
-        if words[0] == words[2]:
-            raise Exception("self loops are not allowed")
-
-        send = words[0]
-        recv = words[2]
-        mony = int(words[1])
-        inc_mony(G, send, recv, mony)
-
-    return G
-
-def draw_net(G):
-    """
-    Draw it
-    """
-    pos = nx.spring_layout(G)
-    nx.draw(G, pos, with_labels=True)
-    edge_labels = nx.get_edge_attributes(G, "money")
-    nx.draw_networkx_edge_labels(G, pos, edge_labels = edge_labels)
-    plt.show()
-
-def sinks_n_sources(G):
-    """
-    Separate all nodes in to two groups: one of nodes that exclusively
-    pays others and one of nodes that exclusively receive money.
-
-    Each return value is a list of tuples of the form (n, v) where n
-    is a node and v is how much it will pay or receive in total.
-    """
-    # NOTE: it's probably possible to optimize this by not trying
-    # nodes we know are done and stuff.
-    did_something = True
-    while did_something:
-        did_something = False
-        for n in G.nodes:
-            # NOTE: lists are for making sure that G.neighbours
-            # doesn't do anything weird while the network is being
-            # modified.
-            for m in list(G.neighbors(n)):
-                for e in list(G.neighbors(m)):
-                    did_something = True
-                    to_send = min(G.edges[n, m]["money"], G.edges[m, e]["money"])
-                    dec_mony(G, m, e, to_send)
-                    if n != e:
-                        inc_mony(G, n, e, to_send)
-                    if dec_mony(G, n, m, to_send):
-                        break
-
-    sources = [(n, d) for n, d in G.out_degree(weight="money") if d > 0]
-    sinks   = [(n, d) for n, d in G.in_degree(weight="money") if d > 0]
-    # settled = [n for n, d in G.degree if d == 0]
-    return (sinks, sources)
 
 def build_bipartite(sinks, sources):
     """
@@ -116,56 +28,227 @@ def build_bipartite(sinks, sources):
     return G
 
 
-def find_payments(sinks, sources):
-    """
-    Takes sinks and sources and figures out the minimum amount of
-    transactions needed to make everyone happy.
-    """
-    # TODO: Hela den här approachen garanterar nog inte att det blir
-    # minsta möjliga antal transaktioner :(
-    # Det är kanske nödvändigt att brute-force:a allt? Eller finns det
-    # ett bättre sätt? Eller är det tillräckligt bra att bara köra
-    # max-flow en gång?
-    bip = build_bipartite(sinks, sources)
+def approx_payments(sinks, sources):
     target = sum(v for _, v in sources)
-    visited = set()
-    removed = set()
+    bip = build_bipartite(sinks, sources)
+    fv, fd = nx.algorithms.flow.maximum_flow(bip, "_source", "_sink")
+    if fv < target:
+        return None
+    return [
+        (src, amo, sin) for src, _ in sources for sin, amo in fd[src].items() if amo > 0
+    ]
 
-    def get_flowing_edges(sources, fd):
-        return [(src, sin, amo) for src, _ in sources for sin, amo in fd[src].items() if amo > 0]
 
-    def search():
-        fv, fd = nx.algorithms.flow.maximum_flow(bip, "_source", "_sink")
-        if fv < target:
-            return None
+def ckr_tostring(ckr):
+    s = str(ckr)
+    if len(s) == 1:
+        return "0.0" + s
+    if len(s) == 2:
+        return "0." + s
+    return s[:-2] + "." + s[-2:]
 
-        flowing = get_flowing_edges(sources, fd)
-        best = flowing
-        for flo in flowing:
-            edge = (flo[0], flo[1])
-            removed.add(edge)
-            r = frozenset(removed)
-            if r not in visited:
-                visited.add(r)
-                old_c = bip.edges[edge[0], edge[1]]["capacity"]
-                bip.edges[edge[0], edge[1]]["capacity"] = 0
-                res = search()
-                if res is not None and len(res) < len(best):
-                    best = res
-                bip.edges[edge[0], edge[1]]["capacity"] = old_c
-            removed.remove(edge)
 
-        return best
+def kr_to_ckr(kr):
+    if not kr:
+        return None
+    parts = kr.split(".")
+    if len(parts) > 2:
+        return None
 
-    return search()
+    if not all(p.isdigit() for p in parts):
+        return None
+
+    if len(parts) == 2 and len(parts[1]) > 2:
+        return None
+
+    return sum(int(p) * s for p, s in zip(parts, [100, 1]))
+
+
+def read_input():
+    """
+    > from amount[.ören] to
+    from shall pay amount to to
+
+    > all amount[.ören] to
+    all splits amount evenly among everyone, including to
+    """
+    trans = []
+    for line in sys.stdin:
+        words = line.split()
+        if len(words) == 3:
+            ckr = kr_to_ckr(words[1])
+            if ckr is None:
+                raise Exception("middle value must be an integer")
+
+            if words[0] == words[2]:
+                raise Exception("self loops are not allowed")
+
+            if words[2] == "all":
+                raise Exception("'all' not allowed here")
+
+            trans.append((None if words[0] == "all" else words[0], ckr, words[2]))
+        else:
+            raise Exception("invalid format on line typ")
+
+    return trans
+
+
+def expand_trans(trans, everyone):
+    expanded = []
+    for f, ckr, t in trans:
+        if f is not None:
+            expanded.append((f, ckr, t))
+        else:
+            even = ckr // len(everyone)
+            leftover = ckr % len(everyone)
+            for e in everyone:
+                am = even
+                if leftover > 0:
+                    even += 1
+                    leftover -= 1
+                if e != t:
+                    expanded.append((e, am, t))
+    return expanded
+
+
+def everyone_involved(trans):
+    ey = set()
+    for f, _, t in trans:
+        if f is not None:
+            ey.add(f)
+        ey.add(t)
+    return ey
+
+
+def sinks_n_sources(trans, everyone):
+    sns = {e: 0 for e in everyone}
+    for f, ckr, t in trans:
+        sns[t] -= ckr
+        sns[f] += ckr
+
+    return (
+        [(e, -ckr) for e, ckr in sns.items() if ckr < 0],
+        [(e, ckr) for e, ckr in sns.items() if ckr > 0],
+    )
+
+
+def find_payments(sinks, sources, timeout=None, lns=False):
+    from minizinc import Instance, Model, Solver
+
+    solver = Solver.lookup("gecode" if lns else "chuffed")
+    model = Model()
+    model.add_string(
+        """
+        include "globals.mzn";
+
+        int: S;
+        int: T;
+        array[1..S] of int: sources;
+        array[1..T] of int: sinks;
+
+        constraint assert(forall(i in 1..S)(sources[i] > 0), "sources must be positive");
+        constraint assert(forall(i in 1..T)(sinks[i] > 0), "sinks must be positive");
+        constraint assert(sum(sources) = sum(sinks), "must have equal money in as out");
+
+        int: num_arcs = S*T;
+        array[1..num_arcs, 1..2] of int: arc = array2d(
+            1..num_arcs,
+            1..2,
+            [if x = 1 then s else t endif | s in 1..S, t in S+1..S+T, x in 1..2]
+        );
+        array[1..S+T] of int: balance = sources ++ [-sinks[i] | i in 1..T];
+        int: max_capacity = max(sources ++ sinks);
+
+        array[1..num_arcs] of var 0..max_capacity: flow;
+        constraint network_flow(arc, balance, flow);
+
+        constraint implied_constraint(sum(flow) = sum(sources));
+        """
+    )
+    if lns:
+        model.add_string(
+            """
+            include "gecode.mzn";
+            solve
+            :: restart_constant(3000)
+            :: relax_and_reconstruct(flow, 95)
+            maximize count(flow, 0);
+            """
+        )
+    else:
+        model.add_string("solve maximize count(flow, 0);")
+
+    instance = Instance(solver, model)
+    instance["S"] = len(sources)
+    instance["T"] = len(sinks)
+    instance["sources"] = [ckr for _, ckr in sources]
+    instance["sinks"] = [ckr for _, ckr in sinks]
+
+    now = time.perf_counter()
+    result = instance.solve(
+        timeout=None if timeout is None else timedelta(seconds=timeout)
+    )
+    solvetime = time.perf_counter() - now
+    print("MiniZinc took {:f} seconds".format(solvetime))
+
+    if len(result) != 1:
+        return None
+    flow = result["flow"]
+
+    pays = []
+    i = 0
+    for s, _ in sources:
+        for si, _ in sinks:
+            if flow[i] > 0:
+                pays.append((s, flow[i], si))
+            i += 1
+    return pays
+
+
+def random_transactions(
+    people=10, transactions=100, amount_low=1, amount_high=1000, seed=None
+):
+    import random
+
+    random.seed(seed)
+    pop = [str(p + 1) for p in range(people)]
+    for _ in range(transactions):
+        t, f = random.sample(pop, 2)
+        amount = random.randint(amount_low, amount_high)
+        yield f, amount, t
+
 
 def main():
-    raw_net = read_input()
-    sinks, sources = sinks_n_sources(raw_net)
-    pays = find_payments(sinks, sources)
+    # NOTE: Max-flow seems to always be as good as MiniZinc, Sadge
+    trans = read_input()
+    # trans = list(random_transactions(seed="hej", people=10, transactions=10000))
+    everyone = everyone_involved(trans)
+    trans = expand_trans(trans, everyone)
 
-    for src, dst, amo in pays:
-        print("{} -{}-> {}".format(src, amo, dst))
+    sinks, sources = sinks_n_sources(trans, everyone)
+    pays_opt = find_payments(sinks, sources)
+    pays_approx = approx_payments(sinks, sources)
+
+    opt_apr = len(pays_approx)
+    opt_len = len(pays_opt) if pays_opt is not None else None
+
+    if opt_len is None:
+        print("MiniZinc found nothing")
+        pays = pays_approx
+    elif opt_len > opt_apr:
+        print("MiniZinc got {}, approx is better".format(opt_len))
+        pays = pays_approx
+    elif opt_len == opt_apr:
+        print("approx is just as good")
+        pays = pays_opt
+    else:
+        print("approx got {}, MiniZinc is better".format(opt_apr))
+        pays = pays_opt
+
+    print("{} transactions got reduced to {}".format(len(trans), len(pays)))
+    for f, ckr, t in sorted(pays, key=lambda x: (x[0], x[2])):
+        print("{} pays {} to {}".format(f, ckr_tostring(ckr), t))
+
 
 if __name__ == "__main__":
     main()
