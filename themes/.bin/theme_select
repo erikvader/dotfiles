@@ -40,6 +40,10 @@ case $1 in
         fi
         set_theme "$(list_themes | sed "/^$cur_theme$/d" | shuf -n1)"
         ;;
+    -mr)
+        find "$theme_dir" -mindepth 2 -type f -print0 | shuf -z | xargs -r0 feh --bg-fill
+        find "$theme_dir" -mindepth 2 -type f -print0 | shuf -zn1 | xargs -r0I% create-lock-img % "$theme_dir/lock.png" "$HOME/.lock" &
+        ;;
     -l)
         list_themes
         ;;
