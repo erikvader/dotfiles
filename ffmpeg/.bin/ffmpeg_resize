@@ -23,9 +23,25 @@ ffmpeg -i "$1" \
        -map 0 \
        ${nodata:+ -map -0:d} \
        -c:v libx265 \
-       -x265-params crf=23 \
-       -preset ultrafast \
+       -x265-params crf=18 \
+       -preset veryfast \
        -filter:v scale=-2:${2:-720} \
        "$outputname"
 
 mv "$outputname" "$1"
+
+# Measurement results
+# 4K -> 1080p
+# 4.12G
+#
+# the best
+# h265-crf18-veryfast-35min.mp4 1.24G
+# h264-crf18-veryfast-18min.mp4 2G
+# h264-crf18-fast-32min.mp4 2.33G
+#
+# bad
+# h265-crf18-ultrafast-19min.mp4 910M
+#
+# really bad
+# h265-crf23-ultrafast-17min.mp4 492M
+# h265-crf28-ultrafast-16min.mp4 295M
