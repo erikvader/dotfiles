@@ -1,0 +1,9 @@
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = xmonad
+[Action]
+Description = Recompiling xmonad config...
+When = PostTransaction
+Exec = /usr/bin/sudo -u erik xmonad --recompile
+Depends = xmonad
