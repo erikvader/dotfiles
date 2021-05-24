@@ -23,12 +23,12 @@ ffmpeg -i "$1" \
        -map 0 \
        ${nodata:+ -map -0:d} \
        -c:v libx265 \
-       -x265-params crf=18 \
+       -x265-params crf=${3:-23} \
        -preset veryfast \
        -filter:v scale=-2:${2:-720} \
        "$outputname"
 
-mv "$outputname" "$1"
+mv -f "$outputname" "$1"
 
 # Measurement results
 # 4K -> 1080p
