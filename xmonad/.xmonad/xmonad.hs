@@ -2,12 +2,12 @@
 {-# LANGUAGE CPP, PartialTypeSignatures #-}
 
 import System.Posix.Types (CMode(..))
-import System.Posix.IO (dupTo,closeFd,createFile,stdError)
-import Control.Exception (catch,SomeException,IOException)
+import System.Posix.IO (dupTo,closeFd,createFile,stdError,openFd,fdWrite,OpenMode(WriteOnly),defaultFileFlags,OpenFileFlags(nonBlock))
+import Control.Exception (catch,bracket,SomeException,IOException)
 import System.Directory (doesFileExist,removeFile,executable,getPermissions,getHomeDirectory)
 import System.FilePath ((</>))
 import System.Exit
-import Control.Monad (when,join)
+import Control.Monad (when,join,void)
 import Data.List
 import Data.Maybe (maybeToList,fromMaybe)
 import Data.Char (toLower)
@@ -395,10 +395,16 @@ multiPrepare output focused = do
     removeIndices c (s:ss) (i:is) | c == i    = removeIndices (c+1) ss is
                                   | otherwise = s:removeIndices (c+1) ss (i:is)
 
+    pipe_buf = 4096 -- maximum size to be atomic
+    toUtfStr :: String -> String
+    toUtfStr str = take (pipe_buf - 1) (UTF8.decodeString $ concat ["xmonad_", output, " ", str])
+                   ++ "\n"
+
     statusbarOutput :: String -> IO ()
     statusbarOutput str =
-      catch (do exi <- doesFileExist statusbarFifo
-                when exi $ writeFile statusbarFifo $ UTF8.decodeString $ "xmonad_" ++ output ++ " " ++ str ++ "\n")
+      catch (bracket (openFd statusbarFifo WriteOnly Nothing defaultFileFlags{nonBlock = True})
+                     closeFd
+                     (\fd -> void $ fdWrite fd $ toUtfStr str))
             (\e ->
                 trace ("Couldn't write to statusbar: " ++ show (e :: IOException)))
 

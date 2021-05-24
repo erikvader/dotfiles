@@ -42,5 +42,4 @@ elif [[ $1 = speakers ]]; then
 fi
 
 # update statusbar module
-STATUSBAR_FIFO="/tmp/statusbar_fifo"
-[ -p $STATUSBAR_FIFO ] && echo speakers > "$STATUSBAR_FIFO"
+exec fifoecho /tmp/statusbar_fifo speakers

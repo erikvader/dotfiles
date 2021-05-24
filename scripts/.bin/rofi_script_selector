@@ -43,7 +43,7 @@ scripts['Unmount USB drive']='usbmounter unmount'
 scripts['Power off USB drive']='usbmounter poweroff'
 scripts['Watch Movie']='watch_movie'
 scripts['Watch Movie Rebuild Index']='watch_movie -r'
-scripts['Restart Trayer']='echo TRAY > /tmp/statusbar_fifo'
+scripts['Restart Trayer']='fifoecho /tmp/statusbar_fifo TRAY'
 scripts['Mount NAS']='if mount /media/NAS; then notify-send nice; else notify-send failed; fi'
 
 choice=$(printf '%s\n' "${!scripts[@]}" | sort | fzf_dmenu)
