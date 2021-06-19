@@ -45,6 +45,8 @@ scripts['Watch Movie']='watch_movie'
 scripts['Watch Movie Rebuild Index']='watch_movie -r'
 scripts['Restart Trayer']='fifoecho /tmp/statusbar_fifo TRAY'
 scripts['Mount NAS']='if mount /media/NAS; then notify-send nice; else notify-send failed; fi'
+scripts['Connect Bluetooth Headset']='blåtand on'
+scripts['Disable Bluetooth']='blåtand off'
 
 choice=$(printf '%s\n' "${!scripts[@]}" | sort | fzf_dmenu)
 
