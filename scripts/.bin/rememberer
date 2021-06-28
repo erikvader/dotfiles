@@ -129,7 +129,7 @@ def change_color_on(tag, color: str) -> str:
     return 'document.querySelector("{}").style.color = "{}";\n'.format(sel, color)
 
 
-def rarbgScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+def rarbgScraper(soup: Soup, url: ParseResult, **_kwargs) -> List[Thing]:
     def path_to_key(path: str) -> str:
         return extract_path(path, 2, 1)
 
@@ -177,7 +177,7 @@ def rarbgScraper(soup: Soup, url: ParseResult) -> List[Thing]:
         raise UserError("wrong page")
 
 
-def PHScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+def PHScraper(soup: Soup, url: ParseResult, **_kwargs) -> List[Thing]:
     if not url.path.startswith("/view_video.php"):
         raise UserError("wrong page")
 
@@ -202,7 +202,7 @@ def PHScraper(soup: Soup, url: ParseResult) -> List[Thing]:
     return [Thing(name=name, key=key)]
 
 
-def XVideosScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+def XVideosScraper(soup: Soup, url: ParseResult, **_kwargs) -> List[Thing]:
     if not url.path.startswith("/video"):
         raise UserError("wrong page")
 
@@ -216,7 +216,7 @@ def XVideosScraper(soup: Soup, url: ParseResult) -> List[Thing]:
     return [Thing(name=name, key=key)]
 
 
-def trettontrettiosjuScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+def trettontrettiosjuScraper(soup: Soup, url: ParseResult, **_kwargs) -> List[Thing]:
     def path_to_key(path: str) -> str:
         return extract_path(path, 3, 1)
 
@@ -262,7 +262,7 @@ def trettontrettiosjuScraper(soup: Soup, url: ParseResult) -> List[Thing]:
         raise UserError("wrong page")
 
 
-def TnaFlixScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+def TnaFlixScraper(soup: Soup, url: ParseResult, **_kwargs) -> List[Thing]:
     try:
         key = extract_path(url.path, 3, 2)
         if not key.startswith("video"):
@@ -280,27 +280,57 @@ def TnaFlixScraper(soup: Soup, url: ParseResult) -> List[Thing]:
     return [Thing(name=name, key=key)]
 
 
-def SpankbangScraper(soup: Soup, url: ParseResult) -> List[Thing]:
-    try:
-        test = extract_path(url.path, 3, 1)
-        if test != "video":
+def SpankbangScraper(
+    soup: Soup,
+    url: ParseResult,
+    everything: bool,
+    **_kwargs,
+) -> List[Thing]:
+    def video_key(urlpath: str) -> Optional[str]:
+        try:
+            test = extract_path(urlpath, 3, 1)
+            if test != "video":
+                return None
+        except ParseException:
+            return None
+        return extract_path(urlpath, 3, 0)
+
+    def current_page() -> List[Thing]:
+        if (key := video_key(url.path)) is None:
             raise UserError("wrong page")
-    except ParseException as e:
-        raise UserError("wrong page") from e
 
-    key = extract_path(url.path, 3, 0)
+        title = soup.select_one("#video > div.left > h1[title]")
+        if not title:
+            raise ParseException("couldn't find video title")
+        name = title["title"]
+        if not name:
+            raise ParseException("title name empty")
 
-    title = soup.select_one("#video > div.left > h1[title]")
-    if not title:
-        raise ParseException("couldn't find video title")
-    name = title["title"]
-    if not name:
-        raise ParseException("title name empty")
+        return [Thing(name=name, key=key, jsmark=change_color_on(title, "lime"))]
 
-    return [Thing(name=name, key=key)]
+    def findall() -> List[Thing]:
+        if video_key(url.path) is not None:
+            things = current_page()
+        else:
+            things = []
+
+        others = soup.select("div.video-list > div.video-item > a.n")
+        for video in others:
+            if "href" not in video.attrs:
+                continue
+            href = video["href"]
+            if (key := video_key(href)) is None:
+                continue
+            name = scrape_text(video)
+            things.append(
+                Thing(name=name, key=key, jsmark=change_color_on(video, "lime"))
+            )
+        return things
+
+    return findall() if everything else current_page()
 
 
-def XnxxScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+def XnxxScraper(soup: Soup, url: ParseResult, **_kwargs) -> List[Thing]:
     if not url.path.startswith("/video-"):
         raise UserError("wrong page")
 
@@ -315,7 +345,7 @@ def XnxxScraper(soup: Soup, url: ParseResult) -> List[Thing]:
     return [Thing(name=name, key=key)]
 
 
-def theyAreHugeScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+def theyAreHugeScraper(soup: Soup, url: ParseResult, **_kwargs) -> List[Thing]:
     if not url.path.startswith("/v/"):
         raise UserError("wrong page")
 
@@ -330,7 +360,7 @@ def theyAreHugeScraper(soup: Soup, url: ParseResult) -> List[Thing]:
     return [Thing(name=name, key=key)]
 
 
-def myhentaigalleryScraper(soup: Soup, url: ParseResult) -> List[Thing]:
+def myhentaigalleryScraper(soup: Soup, url: ParseResult, **_kwargs) -> List[Thing]:
     if not url.path.startswith("/gallery/thumbnails/"):
         raise UserError("wrong page")
 
@@ -388,12 +418,21 @@ def parse_arguments() -> Namespace:
         "url", type=urlparse, nargs="?", help="The full URL the page is from"
     )
     g.add_argument(
-        "--replay", action="store_true", help="Show the previous output again"
-    )
-    g.add_argument(
-        "--replay-other",
+        "--replay",
         action="store_true",
-        help="Show the previous output again, but list the other entries that weren't listed before",
+        help="Show the previous output again",
+    )
+
+    parser.add_argument(
+        "--no-remember",
+        action="store_true",
+        help="Don't remember new things",
+    )
+
+    parser.add_argument(
+        "--everything",
+        action="store_true",
+        help="find more on the page, not the current",
     )
 
     parser.add_argument(
@@ -403,12 +442,6 @@ def parse_arguments() -> Namespace:
         Set exit status to 0 if there were new things added, 1 if everything is old and 2
         if an error occured
         """,
-    )
-
-    parser.add_argument(
-        "--mark",
-        help="Write javascript to that will mark remembered entries to FILE",
-        metavar="FILE",
     )
 
     parser.add_argument(
@@ -546,30 +579,35 @@ def write_mark_js(jsfile: Path, things: Iterator[TaggedThing]):
                 f.write(t.jsmark)
 
 
+def write_results(
+    url: ParseResult,
+    things: List[TaggedThing],
+    save_file: Path,
+    to_stdout=True,
+) -> None:
+    with open(save_file, "a+") as f:
+        flock(f, LOCK_EX)
+        f.seek(0)
+        f.truncate(0)
+
+        def tee(line: str) -> None:
+            if to_stdout:
+                print(line)
+            print(line, file=f)
+
+        print(urlunparse(url), file=f)
+        print_new_things(things, printer=tee)
+
+
 def remember(
     url: ParseResult,
     datadir: Path,
     lastoutputfile: Path,
-    inverse_lastoutputfile: Path,
-    js_mark_file: Optional[Path] = None,
+    lastjsfile: Path,
     quiet: bool = False,
+    save: bool = True,
+    everything: bool = False,
 ) -> bool:
-    def save_results(
-        things: List[TaggedThing], save_file: Path, to_stdout=True, inverse=False
-    ) -> None:
-        with open(save_file, "a+") as f:
-            flock(f, LOCK_EX)
-            f.seek(0)
-            f.truncate(0)
-
-            def tee(line: str) -> None:
-                if to_stdout:
-                    print(line)
-                print(line, file=f)
-
-            print(urlunparse(url), file=f)
-            print_new_things(things, printer=tee, inverse=inverse)
-
     if not url.hostname or not url.scheme:
         raise UserError("url is not fully qualified or is invalid")
     if url.scheme not in ["http", "https"]:
@@ -586,7 +624,7 @@ def remember(
     if scraper is None:
         raise UserError("'{}' is not supported".format(url.hostname))
 
-    things = scraper(webpage, url)
+    things = scraper(webpage, url, everything=everything)
 
     if not things:
         raise Exception("didn't find any things but the scraper didn't error")
@@ -594,19 +632,12 @@ def remember(
     with Storage(siteName, datadir) as s:
         keys = set(t.key for t in s.read())
         new_things = [t.key not in keys for t in things]
-        s.append(t for t, is_new in zip(things, new_things) if is_new)
+        tagged = list(zip(things, new_things))
+        if save:
+            s.append(t for t, is_new in tagged if is_new)
 
-    tagged = list(zip(things, new_things))
-    save_results(tagged, lastoutputfile, to_stdout=not quiet)
-    save_results(
-        tagged,
-        inverse_lastoutputfile,
-        to_stdout=False,
-        inverse=True,
-    )
-
-    if js_mark_file is not None:
-        write_mark_js(js_mark_file, iter(tagged))
+    write_results(url, tagged, lastoutputfile, to_stdout=not quiet)
+    write_mark_js(lastjsfile, iter(tagged))
 
     return any(new_things)
 
@@ -614,22 +645,20 @@ def remember(
 def run(args: Namespace) -> bool:
     datadir = create_data_dir()
     lastoutputfile = datadir / ".last_output"
-    inverse_lastoutputfile = datadir / ".last_output_inverse"
+    lastjsfile = datadir / ".last_js"
 
     if args.replay:
         replay(lastoutputfile)
-        return True
-    elif args.replay_other:
-        replay(inverse_lastoutputfile, "Inverse replay of: ")
         return True
     elif args.url:
         return remember(
             args.url,
             datadir,
             lastoutputfile,
-            inverse_lastoutputfile,
-            args.mark,
+            lastjsfile,
             args.quiet,
+            not args.no_remember,
+            args.everything,
         )
     else:
         raise Exception("one of these options should have been given")
