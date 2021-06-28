@@ -5,6 +5,8 @@ SUDOPROG=sudo
 HEADSET=70:26:05:0D:2E:C8
 TIMEOUT=10
 
+set -o pipefail
+
 if [[ $1 = on ]]; then
     if ! $SUDOPROG systemctl start bluetooth; then
         notify-send 'Failed to start bluetooth.service'
@@ -18,7 +20,7 @@ if [[ $1 = on ]]; then
 
     notify-send 'Connecting to headset...'
     # NOTE: the connect doesn't fail with non-zero, but info does
-    if ! bluetoothctl --timeout "$TIMEOUT" connect "$HEADSET" || ! bluetoothctl info; then
+    if ! bluetoothctl --timeout "$TIMEOUT" connect "$HEADSET" || ! bluetoothctl info "$HEADSET" | grep -q 'Connected: yes'; then
         notify-send 'Failed to connect to headset'
         exit 1
     fi
