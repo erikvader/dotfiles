@@ -6,6 +6,7 @@ mod versionsort;
 
 use ansistring::*;
 use lazy_static::lazy_static;
+// use rand::{thread_rng, Rng};
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs::{self, DirEntry, Metadata};
@@ -42,6 +43,20 @@ lazy_static! {
 }
 
 const SUFFIXES: &[&str] = &["B ", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"];
+
+// trait OptionExt {
+//     fn maybe(self) -> Self;
+// }
+
+// impl<T> OptionExt for Option<T> {
+//     fn maybe(self) -> Self {
+//         if thread_rng().gen_bool(0.0) {
+//             None
+//         } else {
+//             self
+//         }
+//     }
+// }
 
 fn is_exec(mode: u32) -> bool {
     (libc::S_IXUSR | libc::S_IXGRP | libc::S_IXOTH) & mode != 0
