@@ -39,7 +39,7 @@ class Thing:
 
 
 SiteName = str
-Scraper = Callable[[Soup, ParseResult], List[Thing]]
+Scraper = Callable[[Soup, ParseResult], List[Thing]] # TODO: missing kwargs
 T = TypeVar("T")
 TaggedThing = Tuple[Thing, bool]
 
@@ -103,8 +103,9 @@ class Storage:
         return False
 
 
-def scrape_text(tag, allow_empty=False) -> str:
-    s = " ".join(c.strip() for c in tag.children if isinstance(c, str))
+def scrape_text(tag, allow_empty=False, recursive=False) -> str:
+    ite = tag.descendants if recursive else tag.children
+    s = " ".join(c.strip() for c in ite if isinstance(c, str))
     if not allow_empty and not s:
         raise ParseException("tag doesn't have text")
     return s
@@ -321,7 +322,7 @@ def SpankbangScraper(
             href = video["href"]
             if (key := video_key(href)) is None:
                 continue
-            name = scrape_text(video)
+            name = scrape_text(video, recursive=True)
             things.append(
                 Thing(name=name, key=key, jsmark=change_color_on(video, "lime"))
             )
