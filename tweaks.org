@@ -97,3 +97,7 @@ Section "InputClass"
   Option "Tapping" "on"
 EndSection
 #+END_SRC
+
+* DNS
+ändra i ~/etc/resolvconf.conf~ för att skriva över med nya dnser.
+ändra med =nm-applet= för att lägga till backups.
