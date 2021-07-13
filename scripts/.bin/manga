@@ -56,6 +56,7 @@ function gallery-dl-do {
     gallery-dl --dest ./\
                --option 'filename=v{volume:>03} c{chapter:>04}{chapter_minor} p{page:>06}.{extension}'\
                --option 'directory=[]'\
+               --option lang=en\
                "$@"
 }
 
@@ -80,9 +81,12 @@ function download_manga {
     esac
     shift
 
+    local need_metadata=t
     local filter='lang == "en"'
     case $1 in
-        '') ;;
+        '')
+            need_metadata=
+            ;;
         '!')
             shift
             filter="$filter and not ({\"$(join_by '", "' "$@")\"} & set(group))"
@@ -110,12 +114,13 @@ function download_manga {
 
     gallery-dl-do ${usearchive:+ --download-archive .manga/downloaded.db}\
                   --input-file .manga/url\
-                  --chapter-filter "$filter"
+                  --chapter-filter "$filter"\
+                  ${need_metadata:+ -o metadata=true}
 }
 
 function init_manga {
     local manga_name
-    manga_name=$(gallery-dl --dump-json "$1" | jq -r '[..|.manga?|strings]|unique[0]' | filter_filename)
+    manga_name=$(gallery-dl-do --dump-json "$1" | jq -r '[..|.manga?|strings]|unique[0]' | filter_filename)
     if [[ -d $manga_name ]]; then
         echo "Directory '$manga_name' already exists!"
         exit 1
@@ -208,7 +213,7 @@ function verify_cbz {
 }
 
 function list_chapters {
-    gallery-dl --dump-json "$(cat .manga/url)" | jq -r \
+    gallery-dl-do -o metadata=true --dump-json "$(cat .manga/url)" | jq -r \
         'map(
            .[2]
            | select(.lang == "en")
