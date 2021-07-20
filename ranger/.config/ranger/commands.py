@@ -329,3 +329,15 @@ class paste_ext2(Command):
             return self.fm.paste(make_safe_path=lambda dst: paste_ext2.make_safe_path(dst, splitext.splitext))
         except ModuleNotFoundError:
             self.fm.notify("couldn't find module splitext, aborting...", bad=True)
+
+class move_to_random(Command):
+    """
+    :move_to_random
+
+    Moves the cursor to a random entry in the current directory.
+    """
+    def execute(self):
+        l = len(self.fm.thisdir.files)
+        if l > 0:
+            import random
+            self.fm.thisdir.move(to=random.randrange(l))
