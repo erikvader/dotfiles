@@ -1,2 +1,2 @@
 #!/bin/sh
-youtube-dl -x --audio-format mp3 --embed-thumbnail --audio-quality 0 "$@"
+exec youtube-dl -x --audio-format mp3 --embed-thumbnail --audio-quality 0 "$@"
