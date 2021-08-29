@@ -39,7 +39,7 @@ class Thing:
 
 
 SiteName = str
-Scraper = Callable[[Soup, ParseResult], List[Thing]] # TODO: missing kwargs
+Scraper = Callable[[Soup, ParseResult], List[Thing]]  # TODO: missing kwargs
 T = TypeVar("T")
 TaggedThing = Tuple[Thing, bool]
 
@@ -284,7 +284,7 @@ def TnaFlixScraper(soup: Soup, url: ParseResult, **_kwargs) -> List[Thing]:
 def SpankbangScraper(
     soup: Soup,
     url: ParseResult,
-    everything: bool,
+    everything: bool = False,
     **_kwargs,
 ) -> List[Thing]:
     def video_key(urlpath: str) -> Optional[str]:
@@ -720,6 +720,9 @@ def remember(
 
     if not things:
         raise Exception("didn't find any things but the scraper didn't error")
+
+    if not all(t.key for t in things) or not all(t.name for t in things):
+        raise Exception("some names or keys were empty")
 
     with Storage(siteName, datadir) as s:
         keys = set(t.key for t in s.read())
