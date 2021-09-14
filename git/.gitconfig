@@ -9,3 +9,5 @@
 	enabled = 1
 [init]
 	defaultBranch = master
+[core]
+	quotepath = off
