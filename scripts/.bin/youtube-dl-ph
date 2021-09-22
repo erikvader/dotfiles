@@ -4,7 +4,7 @@ for lastarg in "$@"; do :; done
 
 output=
 case "$lastarg" in
-    *pornhub.com*)
+    *pornhub.com*|*iwara.tv*)
         output='%(title)s-%(uploader)s-%(id)s.%(ext)s'
         ;;
 esac
