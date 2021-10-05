@@ -22,7 +22,7 @@ done
 if [[ $# -ne 1 ]]; then
     echo "too many arguments? too few?" >&2
     print_help
-    exit 0
+    exit 1
 fi
 
 targ=$1
@@ -30,6 +30,7 @@ if [[ ! -e $targ ]]; then
     echo "\"$targ\" does not exist" >&2
     exit 1
 fi
+export SXIV_ZIP_OPENED_FILE=$targ
 
 temp=$(mktemp -d --tmpdir 'sxiv_zip.XXXXXXXXXX')
 trap 'rm -rf "$temp"' EXIT
@@ -73,4 +74,19 @@ else
     exit 1
 fi
 
-find -L "$temp" -type f | LC_ALL=C sort -V | sxiv -i
+progfile=${targ}.progress
+progress=
+if [[ -f $progfile ]]; then
+    read -r progress < "$progfile"
+fi
+
+find -L "$temp" -type f | LC_ALL=C sort -V | \
+    if [[ -n $progress ]]; then
+        notify-send 'Continuing from' "$progress"
+        gawk -F/ -v x="$progress" '
+BEGIN { found=0 }
+found == 0 && $NF == x { found=1 }
+found == 1 { print }'
+    else
+        cat
+    fi | sxiv -i

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+case "$1" in
+    C-s)
+        if [ "$SXIV_ZIP_OPENED_FILE" ]; then
+            read -r line
+            basename "$line" > "$SXIV_ZIP_OPENED_FILE".progress
+            notify-send 'Progress saved'
+        fi
+    ;;
+esac
