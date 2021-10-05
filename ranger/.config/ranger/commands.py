@@ -341,3 +341,44 @@ class move_to_random(Command):
         if l > 0:
             import random
             self.fm.thisdir.move(to=random.randrange(l))
+
+class file_swap(Command):
+    """
+    :file_swap
+
+    Swap the file contents of two files, follows symlinks.
+    """
+    def execute(self):
+        sel = self.fm.thistab.get_selection()
+        if len(sel) != 2:
+            self.fm.notify("must select exactly two files", bad=True)
+            return
+        from os import rename
+        try:
+            f1 = self._get_file(sel[0])
+            f2 = self._get_file(sel[1])
+
+            if f1 is None or f2 is None:
+                self.fm.notify("must be regular files", bad=True)
+                return
+
+            if not self._on_same_fs(f1, f2):
+                self.fm.notify("both files must be on the same filesystem", bad=True)
+                return
+
+            tmp = f1+"TMP"
+            rename(f1, tmp)
+            rename(f2, f1)
+            rename(tmp, f2)
+        except OSError as e:
+            self.fm.notify(repr(e), bad=True)
+
+    def _on_same_fs(self, f1, f2):
+        from os import lstat
+        return lstat(f1).st_dev == lstat(f2).st_dev
+
+    def _get_file(self, f):
+        from os.path import isfile, realpath
+        if isfile(f.path):
+            return realpath(f.path)
+        return None
