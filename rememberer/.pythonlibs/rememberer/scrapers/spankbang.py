@@ -21,6 +21,9 @@ def SpankbangScraper(
         if (key := video_key(url.path)) is None:
             raise UserError("wrong page")
 
+        if soup.select_one("div.video_removed_page") is not None:
+            raise UserError("video is removed")
+
         title = soup.select_one("#video > div.left > h1[title]")
         if not title:
             raise ParseException("couldn't find video title")
@@ -31,10 +34,7 @@ def SpankbangScraper(
         return [Thing(name=name, key=key, jsmark=change_color_on(title, "lime"))]
 
     def findall() -> List[Thing]:
-        if video_key(url.path) is not None:
-            things = current_page()
-        else:
-            things = []
+        things = ignore_user_error(current_page)
 
         others = soup.select("div.video-list > div.video-item > a.n")
         for video in others:

@@ -2,7 +2,7 @@
 from ..types import ParseException, Soup, Thing, UserError
 from urllib.parse import parse_qs, ParseResult, urlparse
 from beautifulsoupUtils import unique_selector  # type: ignore
-from typing import Iterator, Any, List, Optional
+from typing import Iterator, Any, List, Optional, Callable
 import sys
 
 
@@ -50,3 +50,10 @@ def change_color_on(tag, color: str) -> str:
 
 def change_colors_on(tags: Iterator[Any], color: str) -> str:
     return ";".join(change_color_on(t, color) for t in tags)
+
+
+def ignore_user_error(scraper: Callable[[], List[Thing]]) -> List[Thing]:
+    try:
+        return scraper()
+    except UserError:
+        return []
