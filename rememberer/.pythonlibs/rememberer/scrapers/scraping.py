@@ -1,5 +1,5 @@
 # pylint: disable=unused-import
-from ..types import ParseException, Soup, Thing, UserError
+from ..types import ParseException, Soup, Thing, UserError, T
 from urllib.parse import parse_qs, ParseResult, urlparse
 from beautifulsoupUtils import unique_selector  # type: ignore
 from typing import Iterator, Any, List, Optional, Callable
@@ -52,8 +52,8 @@ def change_colors_on(tags: Iterator[Any], color: str) -> str:
     return ";".join(change_color_on(t, color) for t in tags)
 
 
-def ignore_user_error(scraper: Callable[[], List[Thing]]) -> List[Thing]:
+def ignore_user_error(f: Callable[..., List[T]], *args, **kwargs) -> List[T]:
     try:
-        return scraper()
+        return f(*args, **kwargs)
     except UserError:
         return []
