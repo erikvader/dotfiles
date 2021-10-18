@@ -354,6 +354,7 @@ class file_swap(Command):
             self.fm.notify("must select exactly two files", bad=True)
             return
         from os import rename
+        from shutil import move
         try:
             f1 = self._get_file(sel[0])
             f2 = self._get_file(sel[1])
@@ -362,14 +363,14 @@ class file_swap(Command):
                 self.fm.notify("must be regular files", bad=True)
                 return
 
-            if not self._on_same_fs(f1, f2):
-                self.fm.notify("both files must be on the same filesystem", bad=True)
+            tmp = f1+"TMP"
+            if os.path.lexists(tmp):
+                self.fm.notify("tmp already exists", bad=True)
                 return
 
-            tmp = f1+"TMP"
             rename(f1, tmp)
-            rename(f2, f1)
-            rename(tmp, f2)
+            move(f2, f1)
+            move(tmp, f2)
         except OSError as e:
             self.fm.notify(repr(e), bad=True)
 
