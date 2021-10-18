@@ -1,0 +1,11 @@
+#!/bin/bash
+
+while IFS='' read -r line || [[ -n "$line" ]]; do
+    id=$(cut -d' ' -f1 <<< "$line")
+    if ! grep -qE '^ERROR:.*Unable to download webpage: HTTP Error 404: NOT FOUND' "$(tsp -o"$id")"; then
+        echo "$line"
+        if [[ $1 = -r ]]; then
+            tsp -R "$id"
+        fi
+    fi
+done < <(tsp -e | sed 1d)
