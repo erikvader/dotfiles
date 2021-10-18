@@ -9,4 +9,4 @@ case "$lastarg" in
         ;;
 esac
 
-exec youtube-dl ${output:+ -o "$output"} "$@"
+exec youtube-dl --no-playlist ${output:+ -o "$output"} "$@"
