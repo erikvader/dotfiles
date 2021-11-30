@@ -69,7 +69,7 @@ if !state
 return
 
 $~LCtrl up::
-if instr(A_PriorKey, "control") && !state
+if instr(A_PriorKey, "control") && !state && A_TimeSincePriorKey < 1000
   send {esc}
 state := false
 return
