@@ -66,6 +66,6 @@ def findall(soup: Soup, url: ParseResult) -> List[Thing]:
         key = video_key_from_url(href) or video_key_on_playlist(video.parent)
         if key is None:
             continue
-        name = scrape_text(video, recursive=True)
+        name = scrape_text(video, recursive=True, allow_empty=True) or "<no name>"
         things.append(Thing(name=name, key=key, jsmark=change_color_on(video, "lime")))
     return things
