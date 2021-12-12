@@ -273,6 +273,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_s), sendMessage ToggleStruts),
     ((modm .|. shiftMask, xK_s), toggleMapStruts),
 
+    -- notifications
+    ((modm, xK_BackSpace), spawn "dunstctl close-all"),
+    ((modm .|. controlMask, xK_BackSpace), spawn "dunstctl history-pop"),
+
     -- Quit xmonad
     ((modm .|. shiftMask, xK_0), confirmPrompt myXPConfig "logout?" $ io exitSuccess),
     ((modm, xK_0), confirmPrompt myXPConfig "power off?" $ spawn "poweroff"),
