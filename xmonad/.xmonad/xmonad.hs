@@ -179,7 +179,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_asciicircum), spawn "pkill picom"),
 
     ((modm, xK_minus), spawn "theme_select safe"),
-    ((modm .|. shiftMask, xK_minus), spawn "theme_select -mr"),
+    ((modm .|. shiftMask, xK_minus), spawn "theme_select --mr"),
 
     -- gaps
     ((modm, xK_bracketleft), decScreenWindowSpacing 1),

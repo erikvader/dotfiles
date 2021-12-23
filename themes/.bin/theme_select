@@ -25,12 +25,20 @@ function set_theme {
     fi
     feh --bg-fill "$pic"
 
-    create-lock-img "$pic" "$theme_dir/lock.png" "$HOME/.lock" &
+    if [[ -z $theme_select_no_lock ]]; then
+        create-lock-img "$pic" "$theme_dir/lock.png" "$HOME/.lock" &
+    fi
 }
 
 function list_themes {
     find -L "$theme_dir" -mindepth 1 -maxdepth 1 -type d "$@" -printf '%f\n'
 }
+
+loopsleep=
+if [[ $1 = --loop ]]; then
+    loopsleep=$2
+    shift 2
+fi
 
 case $1 in
     -r)
@@ -40,9 +48,11 @@ case $1 in
         fi
         set_theme "$(list_themes \! -name '_*' | sed "/^$cur_theme$/d" | shuf -n1)"
         ;;
-    -mr)
+    --mr)
         find "$theme_dir" -mindepth 2 -type f \! -path "$theme_dir"/'_*' -print0 | shuf -z | xargs -r0 feh --bg-fill
-        find "$theme_dir" -mindepth 2 -type f -print0 | shuf -zn1 | xargs -r0I% create-lock-img % "$theme_dir/lock.png" "$HOME/.lock" &
+        if [[ -z $theme_select_no_lock ]]; then
+            find "$theme_dir" -mindepth 2 -type f -print0 | shuf -zn1 | xargs -r0I% create-lock-img % "$theme_dir/lock.png" "$HOME/.lock" &
+        fi
         ;;
     -l)
         list_themes
@@ -52,7 +62,17 @@ case $1 in
             exec "$HOME"/.fehbg
         fi
         ;;
+    safe)
+        set_theme safe
+        pkill --exact theme_select
+        ;;
     *)
         set_theme "$1"
         ;;
 esac
+
+if [[ -n $loopsleep ]]; then
+    sleep "$loopsleep"
+    export theme_select_no_lock=t
+    exec theme_select --loop "$loopsleep" "$@"
+fi
