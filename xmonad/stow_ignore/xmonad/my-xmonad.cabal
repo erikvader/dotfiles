@@ -1,0 +1,26 @@
+name:                my-xmonad
+version:             0.1.0.0
+build-type:          Simple
+cabal-version:       >=1.10
+
+executable xmonad
+  main-is:             ../xmonad.hs
+  other-modules:       Erik.DoubleMaster
+                       Erik.IndiPP
+                       Erik.MyLimitWindows
+                       Erik.MyStuff
+                       Erik.ThreeColP
+  build-depends:       base
+                     , xmonad >= 0.17
+                     , xmonad-contrib >= 0.17
+                     , mtl
+                     , X11
+                     , containers
+                     , regex-compat
+                     , unix
+                     , directory
+                     , filepath
+                     , utf8-string
+  hs-source-dirs:      ./lib
+  default-language:    Haskell2010
+  -- ghc-options:         -Wall -Werror -fno-warn-missing-signatures -threaded
