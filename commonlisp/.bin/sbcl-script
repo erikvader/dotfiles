@@ -1,0 +1,3 @@
+#!/bin/sh
+# Runs sbcl as appropriate for scripts
+exec sbcl --core "$HOME"/quicklisp/script.core --script "$@"
