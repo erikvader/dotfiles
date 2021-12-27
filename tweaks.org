@@ -101,3 +101,10 @@ EndSection
 * DNS
 ändra i ~/etc/resolvconf.conf~ för att skriva över med nya dnser.
 ändra med =nm-applet= för att lägga till backups.
+
+* Graphical sudo
+Vissa GUI-program vill autentisera för att göra något sudo.
+Görs via polkit elr nåt. Starta denna vid startup:
+#+BEGIN_SRC sh
+/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+#+END_SRC
