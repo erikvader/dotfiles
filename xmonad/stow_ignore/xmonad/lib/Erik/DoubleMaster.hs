@@ -3,7 +3,7 @@
 module Erik.DoubleMaster (DoubleMaster(..), MasterResize(..)) where
 
 import XMonad
-import XMonad.StackSet
+import XMonad.StackSet hiding (stack)
 import Data.List
 
 inc = 3/100
@@ -29,10 +29,11 @@ instance LayoutClass DoubleMaster a where
       (halve1, halve2) = splitHorizontallyBy s rect
 
       line :: Rectangle -> [a] -> [(a, Rectangle)]
-      line rect [w] = [(w, rect)]
-      line rect (w:ws) =
+      line _ [] = []
+      line rectt [w] = [(w, rectt)]
+      line rectt (w:ws) =
         let
-          (r1, rs) = splitVertically (length ws) <$> splitVerticallyBy r rect
+          (r1, rs) = splitVertically (length ws) <$> splitVerticallyBy r rectt
         in (w, r1) : zip ws rs
 
       reflect ws = let (wins, rects) = unzip $ reverse ws

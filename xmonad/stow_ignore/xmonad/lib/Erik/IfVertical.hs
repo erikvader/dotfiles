@@ -3,7 +3,7 @@
 module Erik.IfVertical (ifVertical) where
 
 import XMonad
-import XMonad.StackSet
+import XMonad.StackSet hiding (tag)
 
 data IfVertical l1 l2 a = IfVertical Bool (l1 a) (l2 a) deriving (Read, Show)
 
@@ -14,7 +14,7 @@ verticalFromMaybeH (IfVertical _ ver hor) Nothing = Just $ IfVertical False ver 
 verticalFromMaybeH (IfVertical _ ver _) (Just l)  = Just $ IfVertical False ver l
 
 instance (LayoutClass l1 a, LayoutClass l2 a) => LayoutClass (IfVertical l1 l2) a where
-  runLayout (Workspace tag old@(IfVertical lastVert vertLay horLay) a) rect@(Rectangle _ _ w h)
+  runLayout (Workspace tag old@(IfVertical _ vertLay horLay) a) rect@(Rectangle _ _ w h)
     | w > h     = (verticalFromMaybeH old <$>) <$> runLayout (Workspace tag horLay a) rect
     | otherwise = (verticalFromMaybeV old <$>) <$> runLayout (Workspace tag vertLay a) rect
 

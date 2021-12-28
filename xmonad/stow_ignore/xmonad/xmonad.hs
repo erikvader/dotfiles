@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-name-shadowing -fno-warn-missing-signatures #-}
-{-# LANGUAGE CPP, PartialTypeSignatures #-}
+{-# LANGUAGE CPP #-}
 
 import System.Posix.Types (CMode(..))
 import System.Posix.IO (dupTo,closeFd,createFile,stdError,openFd,fdWrite,OpenMode(WriteOnly),defaultFileFlags,OpenFileFlags(nonBlock))
@@ -326,7 +325,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     tabNothing 2 _ = 0
     tabNothing n _ = min 1 (n - 1)
     tabShift 2 _ = 1
-    tabShift n _ = 0
+    tabShift _ _ = 0
     tabControl n _ = min 2 (n - 1)
 
 logLimitWindows :: [X (Maybe String)]

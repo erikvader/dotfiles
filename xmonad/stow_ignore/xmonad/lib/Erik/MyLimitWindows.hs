@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-name-shadowing -fno-warn-missing-signatures #-}
 {-# LANGUAGE CPP, RecordWildCards, FlexibleInstances, MultiParamTypeClasses, DeriveDataTypeable, PatternGuards #-}
 
 module Erik.MyLimitWindows (
@@ -141,7 +140,7 @@ bury = do
 -- | Only display the first @n@ windows.
 -- n, full and off are the default values
 limitWindows :: Int -> Bool -> Bool -> l a -> ModifiedLayout LimitWindows l a
-limitWindows n full off = ModifiedLayout (LimitWindows FirstN n full off)
+limitWindows n fulll off = ModifiedLayout (LimitWindows FirstN n fulll off)
 
 -- | Only display @n@ windows around the focused window. This makes sense with
 -- layouts that arrange windows linearily, like 'XMonad.Layout.Layout.Accordion'.
@@ -188,13 +187,13 @@ instance LayoutModifier LimitWindows a where
         return $ lw { llimit = newLimit }
     | Just LimitToggle <- fromMessage mes = return $ Just $ lw { loff  = not loff }
     | Just LimitFull   <- fromMessage mes = return $ Just $ lw { lfull = not lfull }
-    | Just LimitQuery  <- fromMessage mes = updateCurrentState >> return Nothing
+    | Just LimitQuery  <- fromMessage mes = updateCurrentState2 >> return Nothing
     | otherwise = return Nothing
     where
       pos x   = guard (x>=1)     >> return x
       app f x = guard (f x /= x) >> return (f x)
-      updateCurrentState :: X ()
-      updateCurrentState = do
+      updateCurrentState2 :: X ()
+      updateCurrentState2 = do
         wor <- W.workspace . W.current <$> gets windowset
         let sta = W.stack wor
             (s, (s1, s2)) = visibleSizes (if lfull then 1 else llimit) sta

@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-name-shadowing -fno-warn-missing-signatures #-}
 {-# LANGUAGE DeriveDataTypeable, TupleSections #-}
 module Erik.IndiPP (
   indiPPStartupHook,
@@ -42,8 +41,8 @@ updateXineramaMapping = getXineramaMapping >>= \xm -> XS.put (IndiPPState xm)
 getXineramaMapping :: X [(ScreenId, String)]
 getXineramaMapping = do
   d <- asks display
-  r <- asks theRoot
-  physcrns <- io $ getXrandr d r
+  root <- asks theRoot
+  physcrns <- io $ getXrandr d root
   mapMaybe (\(si, r) -> (\(s, _) -> (si, s)) <$> find ((==r) . snd) physcrns) <$> getXinerama
 
 getXinerama :: X [(ScreenId, Rectangle)]
@@ -56,7 +55,7 @@ getXrandr dis root = do
   mres <- xrrGetScreenResources dis root
   ml <- forM mres $ \res ->
           let outputs = xrr_sr_outputs res
-          in (catMaybes <$> mapM (xrrGetOutputInfo dis res) outputs) >>= getRect res
+          in mapM (xrrGetOutputInfo dis res) outputs >>= getRect res . catMaybes
   return $ fromMaybe [] ml
   where
     getRect :: XRRScreenResources -> [XRROutputInfo] -> IO [(String, Rectangle)]

@@ -1,12 +1,12 @@
-{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-name-shadowing -fno-warn-missing-signatures #-}
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances #-}
+
 module Erik.CompactWorkspaces (
   compactWorkspaceCombinations, combinations,
   compactWorkspacePermutations, permutations,
   compactWorkspace
     ) where
 
-import XMonad
+import XMonad hiding (keys)
 import qualified Data.Set as S
 import Data.List (elemIndex,sortOn,sort)
 
@@ -22,7 +22,7 @@ permutations_ (x:xs) = [[x]] ++ permutations_ xs ++ concat [comb x y | y <- perm
   where
     comb :: a -> [a] -> [[a]]
     comb y [] = [[y]]
-    comb y (x:xs) = (y:x:xs) : [x:z | z <- comb y xs]
+    comb y (a:as) = (y:a:as) : [a:z | z <- comb y as]
 
 -- sort output from combinations or permutations in a sensible way
 niceSort :: Ord a => [[a]] -> [[a]]
@@ -66,7 +66,7 @@ instance Compact S.Set KeySym where
 -- for permutations
 instance Compact [] KeySym where
   cempty = []
-  cadd x ls | elem x ls = ls
+  cadd x ls | x `elem` ls = ls
             | otherwise = x:ls
   cfromList = reverse
   cequal a b = S.fromList a == S.fromList b

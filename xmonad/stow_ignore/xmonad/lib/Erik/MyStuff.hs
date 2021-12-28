@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -W -fwarn-unused-imports -Wall -fno-warn-name-shadowing -fno-warn-missing-signatures #-}
 module Erik.MyStuff (
   rotLastUp, rotLastDown, rotLast',
   rotUp, rotDown,
@@ -18,7 +17,8 @@ module Erik.MyStuff (
   banish
 ) where
 
-import XMonad
+import Prelude hiding (log)
+import XMonad hiding (mapped)
 import qualified XMonad.StackSet as W
 import Data.List (find, elemIndex)
 import Data.Maybe (isNothing,isJust,fromMaybe,mapMaybe,listToMaybe)
@@ -37,6 +37,7 @@ import Text.Regex
 import XMonad.Actions.PhysicalScreens
 import Data.Ratio
 import XMonad.Actions.Warp (warpToWindow)
+import Data.Bifunctor (first)
 
 -- pointerDance (num of jumps) (delay in microseconds)
 -- pointerDance :: Int -> Int -> X ()
@@ -107,20 +108,20 @@ rotDown = reverse . rotUp . reverse
 -- runs a X command(?) depending on the description of the current
 -- layout. Useful for assigning layout specific keybinds.
 onLayout :: [(String, X a)] -> X a -> X a
-onLayout xs def = do
+onLayout xs deff = do
   d <- description . W.layout . W.workspace . W.current <$> gets windowset
   case find ((== d) . fst) xs of
     Just (_, x) -> x
-    Nothing -> def
+    Nothing -> deff
 
 -- runs f on the lowest index empty hidden or current workspace, if there is one
 windowsLowestEmpty :: (WorkspaceId -> WindowSet -> WindowSet) -> [String] -> X ()
 windowsLowestEmpty f order = windows (\w -> maybe id f (findLowestEmpty w) w)
   where
     findLowestEmpty :: WindowSet -> Maybe WorkspaceId
-    findLowestEmpty w = find f order
+    findLowestEmpty w = find g order
       where
-        f id = maybe False (isNothing . W.stack) $ find ((id ==) . W.tag) candidates
+        g i = maybe False (isNothing . W.stack) $ find ((i ==) . W.tag) candidates
         candidates = (:[]) . W.workspace . W.current <> W.hidden $ w
 
 mapWorkspaces :: (WorkspaceId -> X a) -> X()
@@ -164,7 +165,7 @@ instance ExtensionClass MyUpdatePointerActive where
   initialValue = MyUpdatePointerActive True
 
 myUpdatePointerToggle :: X ()
-myUpdatePointerToggle = toggle <$> XS.get >>= \m -> log m >> XS.put m
+myUpdatePointerToggle = XS.get >>= (\m -> log m >> XS.put m) . toggle
   where
     toggle (MyUpdatePointerActive b) = MyUpdatePointerActive (not b)
     log (MyUpdatePointerActive b) = notifySend ("pointer update is "++if b then "on" else "off") ""
@@ -207,7 +208,7 @@ getClass w = withDisplay $ \dsp -> io $
 
 defaultIcon = "#"
 -- default settings on mkRegex might be wrong (not sure)
-windowIcons = map (\(a,b) -> (mkRegex a, b)) [
+windowIcons = map (first mkRegex) [
   ("^mpv$", "m"),
   ("^MATLAB", "m")
   ]
@@ -242,11 +243,11 @@ toggleMapStruts = do
   allMapped <- and <$> mapM isMapped docks
   setMappingOf (not allMapped) docks
 
--- if show is true, then map all windows in ws
---                  else unmap all windows in ws
+-- if showit is true, then map all windows in ws
+--                    else unmap all windows in ws
 setMappingOf :: Bool -> [Window] -> X ()
-setMappingOf show = mapM_ (\w -> withDisplay $ \d -> io $ f d w)
-  where f | show = mapWindow
+setMappingOf showit = mapM_ (\w -> withDisplay $ \d -> io $ f d w)
+  where f | showit = mapWindow
           | otherwise = unmapWindow
 
 -- get all dock windows according to checkDock from XMonad.Hooks.ManageDocks
@@ -292,7 +293,7 @@ switchScreen sc nextScreen = do
 
 -- withFocused with a default value in case no window is focused
 withFocusedDef :: a -> (Window -> X a) -> X a
-withFocusedDef def f = withWindowSet $ \w -> maybe (return def) f (W.peek w)
+withFocusedDef deff f = withWindowSet $ \w -> maybe (return deff) f (W.peek w)
 
 cursorPosition :: X (Maybe (Rational, Rational))
 cursorPosition =
@@ -301,8 +302,8 @@ cursorPosition =
       wa <- io $ getWindowAttributes d w
       (insideWindow, _, _, _, _, x, y, _) <- io $ queryPointer d w
       return $ if insideWindow
-               then Just ((fromIntegral x) % (fromIntegral $ wa_width wa),
-                          (fromIntegral y) % (fromIntegral $ wa_height wa))
+               then Just (fromIntegral x % fromIntegral (wa_width wa),
+                          fromIntegral y % fromIntegral (wa_height wa))
                else Nothing
 
 banish :: X ()
