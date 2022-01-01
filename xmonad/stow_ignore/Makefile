@@ -13,3 +13,7 @@ endif
 
 $(XMONAD): $(SRCS)
 	stack --stack-yaml $(STACKYAML) --local-bin-path $(TARGETDIR) install
+
+.PHONY: restart
+restart: $(XMONAD)
+	xmonad --restart

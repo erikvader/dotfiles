@@ -1,60 +1,54 @@
-{-# LANGUAGE CPP #-}
-
 import System.Posix.Types (CMode(..))
 import System.Posix.IO (dupTo,closeFd,createFile,stdError,openFd,fdWrite,OpenMode(WriteOnly),defaultFileFlags,OpenFileFlags(nonBlock))
 import Control.Exception (catch,bracket,SomeException,IOException)
 import System.Directory (doesFileExist,removeFile,executable,getPermissions,getHomeDirectory)
 import System.FilePath ((</>))
-import System.Exit
-import Control.Monad (when,join,void)
-import Data.List
-import Data.Maybe (maybeToList,fromMaybe)
+import System.Exit (exitSuccess)
+import Control.Monad (when,void)
+import Data.List (find,stripPrefix,isPrefixOf,findIndices)
+import Data.Maybe (fromMaybe)
 import Data.Char (toLower)
 
 import Graphics.X11.ExtraTypes.XF86
 
-import XMonad hiding ( (|||) )
+import XMonad
+import qualified XMonad.StackSet as W
+import qualified Data.Map        as M
 
 import Codec.Binary.UTF8.String as UTF8
 
 import XMonad.Actions.Warp hiding (banish)
-import XMonad.Actions.PhysicalScreens
-import XMonad.Actions.SwapWorkspaces
+import XMonad.Actions.PhysicalScreens (viewScreen,onNextNeighbour,onPrevNeighbour,sendToScreen,getScreen)
+import XMonad.Actions.SwapWorkspaces (swapTo,swapWithCurrent)
+import XMonad.Actions.EasyMotion (selectWindow)
 
-import XMonad.Util.SpawnOnce
-import XMonad.Util.WorkspaceCompare
-import XMonad.Util.Cursor
+import XMonad.Util.SpawnOnce (spawnOnce)
+import XMonad.Util.WorkspaceCompare (getSortByXineramaPhysicalRule)
+import XMonad.Util.Cursor (setDefaultCursor)
+import XMonad.Util.Types (Direction1D(Prev,Next))
 
-import XMonad.Prompt.ConfirmPrompt
+import XMonad.Prompt.ConfirmPrompt (confirmPrompt)
+import XMonad.Prompt (XPConfig,font)
 
-import XMonad.Hooks.DynamicLog
-import XMonad.Hooks.ManageDocks
-import XMonad.Hooks.EwmhDesktops
-import XMonad.Hooks.ManageHelpers
-import XMonad.Hooks.UrgencyHook
-import XMonad.Hooks.WorkspaceHistory
-import XMonad.Hooks.DynamicProperty
+import XMonad.Hooks.DynamicLog (PP(..),wrap,shorten)
+import XMonad.Hooks.ManageDocks (ToggleStruts(..),avoidStruts,docks)
+import XMonad.Hooks.EwmhDesktops (ewmhFullscreen,setEwmhActivateHook,ewmh)
+import XMonad.Hooks.ManageHelpers (doCenterFloat,isDialog)
+import XMonad.Hooks.UrgencyHook (withUrgencyHook,NoUrgencyHook(..),doAskUrgent)
+import XMonad.Hooks.WorkspaceHistory (workspaceHistoryHook,workspaceHistory)
+import XMonad.Hooks.DynamicProperty (dynamicPropertyChange)
 
-import qualified XMonad.Layout.Dwindle as Dwind
-import XMonad.Layout.MultiToggle
-import XMonad.Layout.MultiToggle.Instances
-import XMonad.Layout.Renamed
-import XMonad.Layout.LayoutCombinators
-import XMonad.Layout.PerWorkspace
-import qualified XMonad.Layout.GridVariants as GV
-import XMonad.Layout.Spacing
-import XMonad.Layout.SimplestFloat
+import XMonad.Layout.MultiToggle (mkToggle,single,Toggle(Toggle))
+import XMonad.Layout.MultiToggle.Instances (StdTransformers(MIRROR))
+import XMonad.Layout.Renamed (renamed,Rename(CutWordsLeft))
+import XMonad.Layout.PerWorkspace (onWorkspace)
+import XMonad.Layout.GridVariants (Grid(Grid))
+import XMonad.Layout.Spacing (spacingRaw,Border(Border))
+import XMonad.Layout.SimplestFloat (simplestFloat)
 
 import Erik.MyStuff
 import Erik.IndiPP
 import qualified Erik.MyLimitWindows as L
-import Erik.ThreeColP
-import Erik.DoubleMaster
-
-import qualified XMonad.StackSet as W
-import qualified Data.Map        as M
-
-import XMonad.Prompt
 
 myXPConfig :: XPConfig
 myXPConfig = def {
@@ -69,25 +63,8 @@ scratchWS = "S"
 
 myWorkspaces = map show [1..(9 :: Int)] ++ [scratchWS]
 
-  --TODO: simplestfloat type
-#define COMMA ,
-#define GRID GV.Grid (16/10)
-#define TALL Tall 1 (3/100) (1/2)
-#define TEMPLATE(X,Y,F1,F2) F1 X F2 \
-                            F1 DoubleMaster (2/3) (1/2) F2 \
-                            F1 (simplestFloat :: _ Window) F2 \
-                            F1 Y F2 \
-                            F1 ThreeColMid 1 (3/100) (1/3) (1/2) F2 \
-                            F1 GV.SplitGrid GV.L 1 1 (1/2) (16/9) (3/100) F2 \
-                            F1 renamed [Replace "Spiral"] (Dwind.Spiral Dwind.R Dwind.CW 1.4 1.1)
-#define LAYOUTS(X,Y) (TEMPLATE(X,Y,,|||))
-#define NAMES(X,Y) TEMPLATE(X,Y,description $,COMMA)
-
-myBaseLayouts = onWorkspace scratchWS LAYOUTS(GRID,TALL) LAYOUTS(TALL,GRID)
-
-#ifndef __HLINT__
-myBaseLayoutsNames = [NAMES(TALL,GRID)]
-#endif
+myBaseLayouts = onWorkspace scratchWS (Grid (16/10))
+                                      (Tall 1 (3/100) (1/2) ||| simplestFloat)
 
 myLayoutHook =
   L.limitWindows 2 False True $
@@ -124,33 +101,27 @@ scratchVisit = gets windowset >>= (\ss -> func $ map (W.tag . W.workspace) (W.cu
 myKeys conf@XConfig {XMonad.modMask = modm} =
   M.fromList $
   [
+    -- other
+    ((modm, xK_w), sendMessage $ Toggle MIRROR),
+    ((modm, xK_Tab), selectWindow def >>= flip whenJust (windows . W.focusWindow)),
+
     -- limitWindows
     ((modm, xK_y), L.decreaseLimit),
     ((modm, xK_e), L.increaseLimit),
     ((modm, xK_c), L.toggleLimit),
     ((modm, xK_f), L.toggleFull),
-    ((modm, xK_w), sendMessage $ Toggle MIRROR),
 
-    --cycle
-    ((modm, xK_i), L.rotateVisibleUp),
-    ((modm, xK_u), L.rotateVisibleDown),
-    ((modm .|. shiftMask, xK_i), L.rotateFocHiddenUp),
-    ((modm .|. shiftMask, xK_u), L.rotateFocHiddenDown),
-
+    -- empty workspaces
     ((modm, xK_o), windowsLowestEmpty W.view $ XMonad.workspaces conf),
     ((modm .|. shiftMask, xK_o), windowsLowestEmpty shiftView $ XMonad.workspaces conf),
     ((modm .|. controlMask, xK_o), windowsLowestEmpty W.shift $ XMonad.workspaces conf),
 
-    -- rofi
+    -- executers
     ((modm, xK_x), spawn "fzf_run"),
-    ((modm, xK_Escape), spawn "fzf_window_switcher"),
     ((modm, xK_r), spawn "rofi_script_selector"),
     ((modm .|. shiftMask, xK_r), spawn "open_downloaded_pdf"),
 
     -- screens
-    ((modm, xK_Tab), switchScreen def tabNothing),
-    ((modm .|. shiftMask, xK_Tab), switchScreen def tabShift),
-    ((modm .|. controlMask, xK_Tab), switchScreen def tabControl),
     ((modm .|. controlMask, xK_j), onNextNeighbour def W.view),
     ((modm .|. controlMask, xK_k), onPrevNeighbour def W.view),
     ((modm .|. controlMask .|. shiftMask, xK_j), onNextNeighbour def swapWith),
@@ -159,11 +130,11 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- printscreen
     ((0, xK_Print), spawn "maim_clipboard -su"),
+    ((controlMask, xK_Print), spawn "maim-notify -su"),
     ((shiftMask, xK_Print), spawn "maim-notify -u"),
 
     -- flash
     ((modm, xK_z), spawn "flasher"),
-    ((modm .|. shiftMask, xK_z), spawn "mouse_dance"),
 
     -- toggle prog mode
     ((modm .|. shiftMask, xK_m), spawn "prog_mode_toggle"),
@@ -177,14 +148,11 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_apostrophe), spawn "xrandr-invert-colors"),
     ((modm, xK_asciicircum), spawn "pkill picom"),
 
+    -- theme
     ((modm, xK_minus), spawn "theme_select safe"),
     ((modm .|. shiftMask, xK_minus), spawn "theme_select --mr"),
 
-    -- gaps
-    ((modm, xK_bracketleft), decScreenWindowSpacing 1),
-    ((modm, xK_bracketright), incScreenWindowSpacing 1),
-    ((modm, xK_at), toggleScreenSpacingEnabled >> toggleWindowSpacingEnabled),
-
+    -- brightness
     ((modm, xK_Left), spawn "i3_brightness -steps 1 -dec 1"),
     ((modm, xK_Right), spawn "i3_brightness -steps 1 -inc 1"),
     ((0, xF86XK_MonBrightnessUp), spawn "i3_brightness -steps 1 -inc 10"),
@@ -205,33 +173,29 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
      -- Rotate through the available layout algorithms
     ((modm, xK_space), sendMessage NextLayout),
-
     --  Reset the layouts on the current workspace to default
     ((modm .|. shiftMask, xK_space ), setLayout $ XMonad.layoutHook conf),
 
     -- Resize viewed windows to the correct size
     ((modm, xK_n), refresh),
 
-    ((modm, xK_a), banish),
-    ((modm .|. shiftMask, xK_a), warpToWindow 0.5 0.5),
-    ((modm .|. controlMask, xK_a), myUpdatePointerToggle),
+    -- Pointer stuff
+    ((modm, xK_p), banish),
+    ((modm .|. shiftMask, xK_p), warpToWindow 0.5 0.5),
+    ((modm .|. controlMask, xK_p), myUpdatePointerToggle),
 
     -- Move focus to the previous window
     ((modm, xK_k), windows W.focusUp),
-
     ((modm, xK_j), windows W.focusDown),
+    -- Swap the focused window with the next window
+    ((modm .|. shiftMask, xK_j), windows W.swapDown),
+    -- Swap the focused window with the previous window
+    ((modm .|. shiftMask, xK_k), windows W.swapUp),
 
     -- Move focus to the master window
     ((modm, xK_b), windows W.focusMaster),
-
     -- Swap the focused window and the master window
     ((modm .|. shiftMask, xK_b), windows W.swapMaster),
-
-    -- Swap the focused window with the next window
-    ((modm .|. shiftMask, xK_j), windows W.swapDown),
-
-    -- Swap the focused window with the previous window
-    ((modm .|. shiftMask, xK_k), windows W.swapUp),
 
     -- moves workspaces up or down
     ((modm, xK_period), swapTo Next),
@@ -240,26 +204,13 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- Shrink the master area
     ((modm, xK_h), sendMessage Shrink),
-
     -- Expand the master area
     ((modm, xK_l), sendMessage Expand),
 
     -- Increment the number of windows in the master area
-    ((modm .|. shiftMask, xK_h), onLayout [
-          ("SplitGrid", sendMessage $ GV.IncMasterRows 1),
-          ("DoubleMaster", sendMessage MasterShrink)
-        ]
-      (sendMessage (IncMasterN 1))),
-
+    ((modm .|. shiftMask, xK_h), sendMessage (IncMasterN 1)),
     -- Deincrement the number of windows in the master area
-    ((modm .|. shiftMask, xK_l), onLayout [
-          ("SplitGrid", sendMessage $ GV.IncMasterRows (-1)),
-          ("DoubleMaster", sendMessage MasterExpand)
-        ]
-      (sendMessage (IncMasterN (-1)))),
-
-    ((modm .|. controlMask, xK_h), onLayout [("SplitGrid", sendMessage $ GV.IncMasterCols 1)] (return ())),
-    ((modm .|. controlMask, xK_l), onLayout [("SplitGrid", sendMessage $ GV.IncMasterCols (-1))] (return ())),
+    ((modm .|. shiftMask, xK_l), sendMessage (IncMasterN (-1))),
 
     -- Push window back into tiling
     ((modm, xK_t), withFocused $ windows . W.sink),
@@ -269,8 +220,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- Use this binding with avoidStruts from Hooks.ManageDocks.
     -- See also the statusBar function from Hooks.DynamicLog.
     --
-    ((modm, xK_s), sendMessage ToggleStruts),
-    ((modm .|. shiftMask, xK_s), toggleMapStruts),
+    ((modm, xK_u), sendMessage ToggleStruts),
+    ((modm .|. shiftMask, xK_u), toggleMapStruts),
 
     -- notifications
     ((modm, xK_BackSpace), spawn "dunstctl close-all"),
@@ -278,21 +229,17 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
 
     -- Quit xmonad
     ((modm .|. shiftMask, xK_0), confirmPrompt myXPConfig "logout?" $ io exitSuccess),
-    ((modm, xK_0), confirmPrompt myXPConfig "power off?" $ spawn "poweroff"),
-
-    -- Restart xmonad
-    ((modm .|. shiftMask, xK_c), spawn "if xmonad --recompile; then xmonad --restart; notify-send 'XMonad restarted'; else notify-send 'XMonad failed to compile'; fi")
+    ((modm, xK_0), confirmPrompt myXPConfig "power off?" $ spawn "poweroff")
     ]
     ++
 
     --
     -- mod-[1..9], Switch to workspace N
-    --
-    -- mod-[1..9], Switch to workspace N
-    -- mod-shift-[1..9], Move client to workspace N
+    -- mod-control-[1..9], Move client to workspace N
+    -- mod-shift-[1..9], Move client and swith to workspace N
     --
     [((m .|. modm, k), windows (f i))
-        | (i, k) <- zip (XMonad.workspaces conf) ([xK_1 .. xK_9] ++ [xK_d])
+        | (i, k) <- zip (XMonad.workspaces conf) ([xK_1 .. xK_9] ++ [xK_v])
         , (f, m) <- [(W.greedyView, 0),
                      (shiftView, shiftMask),
                      (W.shift, controlMask)
@@ -301,32 +248,22 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ++
 
     -- NOTE: overwrite greedyView from above
-    [((modm, xK_d), scratchVisit)]
-
-    ++
-
-    -- jump to layout
-    [((modm .|. mod1Mask, k), sendMessage $ JumpToLayout l) | (l, k) <- zip myBaseLayoutsNames [xK_1 .. xK_9]]
+    [((modm, xK_v), scratchVisit)]
 
     ++
 
     --
-    -- mod-{F1,F2,f3}, Switch to physical/Xinerama screens 1, 2, or 3
-    -- mod-shift-{F1,F2,f3}, Move client to screen 1, 2, or 3
+    -- mod-{a,s,d}, Switch to physical/Xinerama screens 1, 2, or 3
+    -- mod-shift-{a,s,d}, Move client to screen 1, 2, or 3 and view
+    -- mod-control-{a,s,d}, Move window
+    -- mod-shift-control-{a,s,d}, move screen
     --
     [((m .|. modm, key), f sc)
-        | (key, sc) <- zip [xK_F1, xK_F2, xK_F3] [0..]
+        | (key, sc) <- zip [xK_a, xK_s, xK_d] [0..]
         , (f, m) <- [(viewScreen def, 0),
-                     (\i -> sendToScreen def i >> viewScreen def i, shiftMask .|. controlMask),
-                     (\i -> getScreen def i >>= maybe (return Nothing) screenWorkspace >>= flip whenJust (windows . W.greedyView), shiftMask),
+                     (\i -> sendToScreen def i >> viewScreen def i, shiftMask),
                      (sendToScreen def, controlMask)
                     ]]
-  where
-    tabNothing 2 _ = 0
-    tabNothing n _ = min 1 (n - 1)
-    tabShift 2 _ = 1
-    tabShift _ _ = 0
-    tabControl n _ = min 2 (n - 1)
 
 logLimitWindows :: [X (Maybe String)]
 logLimitWindows =
@@ -411,20 +348,6 @@ multiPrepare output focused = do
             (\e ->
                 trace ("Couldn't write to statusbar: " ++ show (e :: IOException)))
 
--- advertise fullscreen support (which isn't done by the
--- ewmh/fullscreen package for some reason)
--- https://github.com/xmonad/xmonad-contrib/issues/288
-fullscreenStartupHook :: X ()
-fullscreenStartupHook = withDisplay $ \dpy -> do
-    r <- asks theRoot
-    a <- getAtom "_NET_SUPPORTED"
-    c <- getAtom "ATOM"
-    f <- getAtom "_NET_WM_STATE_FULLSCREEN"
-    io $ do
-        sup <- join . maybeToList <$> getWindowProperty32 dpy a r
-        when (fromIntegral f `notElem` sup) $
-            changeProperty32 dpy r a c propModeAppend [fromIntegral f]
-
 myConfig = def {
   modMask = myModMask,
   borderWidth = 0,
@@ -434,8 +357,9 @@ myConfig = def {
   workspaces = myWorkspaces,
   manageHook = centerFloatMH <+> toScratchMH <+> manageHook def,
   handleEventHook = dynamicPropertyChange "WM_CLASS" toScratchMH <+> handleEventHook def,
-  startupHook = startupHook def <+> myStartupHook <+> fullscreenStartupHook,
-  logHook = logHook def <+> myUpdatePointer
+  startupHook = startupHook def <+> myStartupHook,
+  layoutHook = avoidStruts myLayoutHook,
+  logHook = logHook def <+> myUpdatePointer <+> workspaceHistoryHook
   }
   where
     centerFloatMH = composeAll [ appName =? "URxvtFZF" --> doCenterFloat, isDialog --> doFloat ]
@@ -443,6 +367,9 @@ myConfig = def {
     -- lowercase =?
     q =?? s = (map toLower <$> q) =? map toLower s
     scratchWindows = ["spotify", "discord", "deluge", "telegram-desktop"]
+    --TODO: add if it is a problem with trayer on the bottom. These lines should be correct.
+    -- import XMonad.Util.Hacks (trayAbovePanelEventHook)
+    -- trayer = trayAbovePanelEventHook (className =? "trayer") (className =? "dzen")
 
 errorFile :: FilePath
 errorFile = "/tmp/xmonad-error"
@@ -459,10 +386,7 @@ main = do
             )
     (\e -> trace (show (e :: SomeException)))
 
-  xmonad $ indiPP format $ withUrgencyHook NoUrgencyHook $ ewmh $ docks $ myConfig {
-    layoutHook = avoidStruts myLayoutHook,
-    handleEventHook = handleEventHook myConfig <+> fullscreenEventHook,
-    logHook = logHook myConfig <+> workspaceHistoryHook <+> workspaceNamesClearerLogHook
-    }
+  xmonad . indiPP format . withUrgencyHook NoUrgencyHook . ewmhstuff . docks $ myConfig
   where
     format = multiPP multiPrepare
+    ewmhstuff = ewmhFullscreen . setEwmhActivateHook doAskUrgent . ewmh

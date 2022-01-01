@@ -6,7 +6,6 @@ module Erik.MyStuff (
   shiftView,
   mapWorkspaces,
   swapWith,
-  workspaceNamesClearerLogHook,
   centerFloat,
   myUpdatePointer, myUpdatePointerToggle,
   notifySend,
@@ -22,8 +21,7 @@ import XMonad hiding (mapped)
 import qualified XMonad.StackSet as W
 import Data.List (find, elemIndex)
 import Data.Maybe (isNothing,isJust,fromMaybe,mapMaybe,listToMaybe)
-import Control.Monad (when,unless,filterM)
-import XMonad.Actions.WorkspaceNames (getWorkspaceNames',setWorkspaceName)
+import Control.Monad (unless,filterM)
 import XMonad.Actions.UpdatePointer
 import qualified XMonad.Util.ExtensibleState as XS
 import Data.Bits (testBit)
@@ -138,25 +136,6 @@ swapWith wi ws = W.view cur . W.greedyView wi $ ws
 newtype WorkspaceNamesCache = WorkspaceNamesCache String
 instance ExtensionClass WorkspaceNamesCache where
   initialValue = WorkspaceNamesCache ""
-
--- clears the name of a hidden workspace if that workspace is empty and if it has a name
-workspaceNamesClearerLogHook :: X ()
-workspaceNamesClearerLogHook = do
-  ss <- gets windowset
-  let hash = concatMap hashfun $ W.current ss:W.visible ss
-  (WorkspaceNamesCache oldHash) <- XS.get
-  when (hash /= oldHash) $ do
-    clearAllEmpty (W.hidden ss)
-    XS.put $ WorkspaceNamesCache hash
-  where
-    hashfun s = concat [show $ W.screen s, show $ W.tag . W.workspace $ s, show $ W.screenDetail s]
-
-    clearAllEmpty :: [WindowSpace] -> X ()
-    clearAllEmpty hiddens = do
-      gwn <- getWorkspaceNames'
-      -- predikatet måste gå att göra finare
-      let cands = filter (\x -> (isNothing . W.stack) x && (isJust . gwn . W.tag) x) hiddens
-      mapM_ (flip setWorkspaceName "" . W.tag) cands
 
 ----------------------------- my update pointer -----------------------------
 
