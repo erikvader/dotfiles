@@ -2,6 +2,7 @@
 # make install force=t
 # force=t make install
 
+BRANCH := build2
 BUILDDIR := /tmp/st-build
 TARGET := /usr/local/bin/st
 
@@ -17,7 +18,7 @@ $(TARGET):
 	rm -rf $(BUILDDIR)
 	mkdir -p $(BUILDDIR)
 	@echo 'curling...'
-	curl -L https://github.com/erikvader/st/archive/master.tar.gz | tar -C $(BUILDDIR) -xz --strip-components 1
+	curl -L https://github.com/erikvader/st/archive/$(BRANCH).tar.gz | tar -C $(BUILDDIR) -xz --strip-components 1
 	@echo 'uninstalling...'
 	sudo $(MAKE) -C $(BUILDDIR) uninstall
 	@echo 'building...'
