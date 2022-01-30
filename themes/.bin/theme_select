@@ -3,7 +3,8 @@
 set -e
 
 theme_dir=$HOME/themes
-cur_theme_file=$HOME/.theme_select_cur
+cur_theme_file=$theme_dir/.theme_select_cur
+fair_state=$theme_dir/.fair_state
 
 if [[ ! -d "$theme_dir" ]]; then
     echo "$theme_dir doesn't exist!" >&2
@@ -30,8 +31,24 @@ function set_theme {
     fi
 }
 
+function num_screens {
+    xrandr | grep -cE '\bconnected\b'
+}
+
 function list_themes {
-    find -L "$theme_dir" -mindepth 1 -maxdepth 1 -type d "$@" -printf '%f\n'
+    find -L "$theme_dir" -mindepth 1 -maxdepth 1 -type d "$@"
+}
+
+function list_themes_skip_hidden {
+    list_themes \! -name '_*' "$@"
+}
+
+function list_themes_files {
+    find "$theme_dir" -mindepth 2 -type f "$@"
+}
+
+function list_themes_files_skip_hidden {
+    list_themes_files \! -path "$theme_dir"/'_*' "$@"
 }
 
 loopsleep=
@@ -46,16 +63,31 @@ case $1 in
         if [[ -f "$cur_theme_file" ]]; then
             read -r cur_theme < "$cur_theme_file"
         fi
-        set_theme "$(list_themes \! -name '_*' | sed "/^$cur_theme$/d" | shuf -n1)"
+        set_theme "$(list_themes_skip_hidden -printf '%f\n' | sed "/^$cur_theme$/d" | shuf -n1)"
         ;;
     --mr)
-        find "$theme_dir" -mindepth 2 -type f \! -path "$theme_dir"/'_*' -print0 | shuf -z | xargs -r0 feh --bg-fill
+        list_themes_files_skip_hidden -print0 | shuf -z | xargs -r0 feh --bg-fill
         if [[ -z $theme_select_no_lock ]]; then
-            find "$theme_dir" -mindepth 2 -type f -print0 | shuf -zn1 | xargs -r0I% create-lock-img % "$theme_dir/lock.png" "$HOME/.lock" &
+            list_themes_files -print0 | shuf -zn1 | xargs -r0I% create-lock-img % "$theme_dir/lock.png" "$HOME/.lock" &
         fi
         ;;
+    --fr)
+        ns=$(num_screens)
+        if [[ ! -s $fair_state ]]; then
+            list_themes_files_skip_hidden -print | shuf > "$fair_state"
+        fi
+        num_state=$(wc -l < "$fair_state")
+        if [[ $num_state -lt $ns ]]; then
+            tmpfile=$(mktemp -p.)
+            sort "$fair_state" > "$tmpfile"
+            comm -31 "$tmpfile" <(list_themes_files_skip_hidden -print | sort) | shuf >> "$fair_state"
+            rm "$tmpfile"
+        fi
+        head -n "$ns" "$fair_state" | xargs -rd'\n' feh --bg-fill
+        sed -i "1,${ns}d" "$fair_state"
+        ;;
     -l)
-        list_themes
+        list_themes -printf '%f\n'
         ;;
     ""|--reapply)
         if [[ -x "$HOME"/.fehbg ]]; then
