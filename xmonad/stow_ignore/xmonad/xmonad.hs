@@ -18,7 +18,7 @@ import qualified Data.Map        as M
 import Codec.Binary.UTF8.String as UTF8
 
 import XMonad.Actions.Warp hiding (banish)
-import XMonad.Actions.PhysicalScreens (viewScreen,onNextNeighbour,onPrevNeighbour,sendToScreen,getScreen)
+import XMonad.Actions.PhysicalScreens (viewScreen,onNextNeighbour,onPrevNeighbour,sendToScreen)
 import XMonad.Actions.SwapWorkspaces (swapTo,swapWithCurrent)
 import XMonad.Actions.EasyMotion (selectWindow)
 
@@ -59,7 +59,7 @@ myModMask = mod4Mask
 
 statusbarFifo = "/tmp/statusbar_fifo"
 
-scratchWS = "S"
+scratchWS = "V"
 
 myWorkspaces = map show [1..(9 :: Int)] ++ [scratchWS]
 

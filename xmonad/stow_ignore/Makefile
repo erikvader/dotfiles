@@ -1,4 +1,4 @@
-TARGETDIR := $(HOME)/bin
+TARGETDIR := $(HOME)/.bin
 XMONAD := $(TARGETDIR)/xmonad
 SRCDIR := ./xmonad
 SRCS := $(SRCDIR)/xmonad.hs
