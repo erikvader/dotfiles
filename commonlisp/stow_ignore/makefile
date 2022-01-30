@@ -1,13 +1,11 @@
 QUICKLISP := $(HOME)/quicklisp/setup.lisp
 QUICKLISPDOWNLOAD := /tmp/quicklisp.lisp
-CORE := $(HOME)/quicklisp/script.core
-GENCORE := ./create-script-core.lisp
 
 .PHONY: install
-install: $(QUICKLISP) $(CORE)
+install: $(QUICKLISP)
 
 ifdef force
-.PHONY: $(QUICKLISP) $(CORE)
+.PHONY: $(QUICKLISP)
 endif
 
 $(QUICKLISP):
@@ -17,6 +15,3 @@ $(QUICKLISP):
 	sbcl --no-userinit --no-sysinit --non-interactive --load $(QUICKLISPDOWNLOAD) --eval '(quicklisp-quickstart:install)'
 	@echo 'Cleaning up...'
 	rm -f $(QUICKLISPDOWNLOAD)
-
-$(CORE): $(GENCORE)
-	sbcl --script $(GENCORE) $(QUICKLISP) $(CORE)
