@@ -1,0 +1,19 @@
+#!/bin/sh
+
+if [ $# -gt 3 ] || [ $# -lt 1 ]; then
+    echo invalid usage >&2
+    echo "$0" path '[denoise [scale]]'
+    exit 1
+fi
+
+file=$1
+denoise=${2:-1}
+scale=${3:-2}
+
+dst=${file%.*}_waifu2x.png
+
+echo "file: $file"
+echo "denoise: $denoise"
+echo "scale: $scale"
+echo "destination: $dst"
+exec waifu2x-ncnn-vulkan -i "$file" -o "$dst" -f png -n "$denoise" -s "$scale"
