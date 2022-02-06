@@ -1,5 +1,6 @@
 use libc::getgrgid;
 use libc::getpwuid;
+use libc::getuid;
 use std::ffi::CStr;
 
 pub fn uid2name(uid: u32) -> Option<String> {
@@ -24,4 +25,8 @@ pub fn gid2name(gid: u32) -> Option<String> {
         }
     }
     None
+}
+
+pub fn current_uid() -> u32 {
+    unsafe { getuid() }
 }

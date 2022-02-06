@@ -313,12 +313,15 @@ fn list_dir(path: &str, versionsort: bool) -> bool {
         tab.sort(&names);
     }
 
-    if let Some(Some(_)) =
+    if let Some(Some(the_uid)) =
         users
             .into_iter()
             .reduce(|l, r| if l.is_some() && l == r { l } else { None })
     {
-        tab.remove_col(1);
+        let my_uid = current_uid();
+        if the_uid == my_uid {
+            tab.remove_col(1);
+        }
     }
 
     if tab.is_empty() {
