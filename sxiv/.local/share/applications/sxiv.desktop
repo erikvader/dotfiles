@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=sxiv
+Comment=Launches the simple X image viewer
+Exec=sxiv %F
+Terminal=false

@@ -6,7 +6,7 @@ BUILDDIR := /tmp/sxiv-build
 TARGET := /usr/local/bin/sxiv
 
 .PHONY: install
-install: $(TARGET)
+install: $(TARGET) xdg
 
 ifdef force
 .PHONY: $(TARGET)
@@ -28,3 +28,7 @@ $(TARGET):
 	sudo $(MAKE) -C $(BUILDDIR) install
 	@echo 'removing build dir'
 	rm -rf $(BUILDDIR)
+
+.PHONY: xdg
+xdg:
+	xdg-mime default sxiv.desktop image/png image/jpeg image/webp image/gif
