@@ -1,10 +1,8 @@
-
 QUTEDIR := $(HOME)/.config/qutebrowser
 QUTELOCALSHARE := $(HOME)/.local/share/qutebrowser
 MYCONFIG := https://github.com/erikvader/qutebrowser-config
 
 QUTE_DESKTOP := org.qutebrowser.qutebrowser.desktop
-TORRENT_DESKTOP := deluge.desktop
 
 .PHONY: install
 install: $(QUTEDIR) xdg
@@ -15,4 +13,3 @@ $(QUTEDIR):
 .PHONY: xdg
 xdg:
 	xdg-settings set default-web-browser $(QUTE_DESKTOP)
-	xdg-mime default $(TORRENT_DESKTOP) x-scheme-handler/magnet
