@@ -32,7 +32,7 @@ function add {
     while [[ "$1" ]]; do
         case "$1" in
             --mover) mover=t ;;
-            *) exclude=$1 ;;
+            *) exclude="$exclude$1"$'\n' ;;
         esac
         shift
     done
@@ -44,7 +44,7 @@ function add {
     fi
     echo -e "\033[34m${src}\033[0m"
     # NOTE: if $linkdest doesn't exist, then rsync just complains and continues anyway
-    rsync -avhs --delete --info=progress2 --safe-links --link-dest="$linkdest" --exclude="$exclude" "$src" "$target"
+    rsync -avhs --delete --info=progress2 --safe-links --link-dest="$linkdest" --exclude-from=- "$src" "$target" <<< "$exclude"
 }
 
 function end {
