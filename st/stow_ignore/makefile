@@ -2,7 +2,7 @@
 # make install force=t
 # force=t make install
 
-BRANCH := build2
+BRANCH := build3
 BUILDDIR := /tmp/st-build
 TARGET := /usr/local/bin/st
 
