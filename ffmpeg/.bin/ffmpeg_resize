@@ -12,23 +12,46 @@ if [[ $1 = --no-data ]]; then
     shift
 fi
 
-basename=$(basename -- "$1")
-dirname=$(dirname -- "$1")
+if [[ $# -lt 1 ]]; then
+    echo invalid usage >&2
+    exit 1
+fi
+
+arg_filename=$1
+arg_resolution=${2:-720}
+arg_crf=$3
+
+if [[ -z $arg_crf ]]; then
+    case $arg_resolution in
+        1080) arg_crf=18 ;;
+        *) arg_crf=23 ;;
+    esac
+fi
+
+basename=$(basename -- "$arg_filename")
+dirname=$(dirname -- "$arg_filename")
 ext=${basename##*.}
 name=${basename%.*}
 outputname=${dirname}/${name}_resized.${ext}
 
-ffmpeg -i "$1" \
+ffmpeg -i "$arg_filename" \
        -c copy \
        -map 0 \
        ${nodata:+ -map -0:d} \
        -c:v libx265 \
-       -x265-params crf=${3:-23} \
+       -x265-params crf="$arg_crf" \
        -preset veryfast \
-       -filter:v scale=-2:${2:-720} \
+       -filter:v scale=-2:"$arg_resolution" \
        "$outputname"
 
-mv -f "$outputname" "$1"
+old_size=$(stat --format=%s "$arg_filename")
+new_size=$(stat --format=%s "$outputname")
+
+echo -n The file is 0
+bc <<< "scale=2; $new_size / $old_size"
+echo its original size
+
+mv -f "$outputname" "$arg_filename"
 
 # Measurement results
 # 4K -> 1080p
