@@ -61,6 +61,7 @@ case $1 in
     -r)
         cur_theme=
         if [[ -f "$cur_theme_file" ]]; then
+            # TODO: handle multiple lines
             read -r cur_theme < "$cur_theme_file"
         fi
         set_theme "$(list_themes_skip_hidden -printf '%f\n' | sed "/^$cur_theme$/d" | shuf -n1)"
@@ -83,7 +84,7 @@ case $1 in
             comm -31 "$tmpfile" <(list_themes_files_skip_hidden -print | sort) | shuf >> "$fair_state"
             rm "$tmpfile"
         fi
-        head -n "$ns" "$fair_state" | xargs -rd'\n' feh --bg-fill
+        head -n "$ns" "$fair_state" | tee >(xargs -rd'\n' feh --bg-fill) > "$cur_theme_file"
         sed -i "1,${ns}d" "$fair_state"
         ;;
     -l)
