@@ -156,6 +156,7 @@ handle_image() {
         ## Video
         video/*)
             # Thumbnail
+            thumbnailer-metadata "${FILE_PATH}" "${IMAGE_CACHE_PATH}" && exit 6
             ffmpegthumbnailer -i "${FILE_PATH}" -o "${IMAGE_CACHE_PATH}" -s 0 && exit 6
             exit 1;;
 

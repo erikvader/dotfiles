@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+
+if [ $# -ne 2 ]; then
+    echo 'invalid usage' >&2
+    exit 1
+fi
+
+input=$1
+output=$2
+
+ffmpegthumbnailer -i "$input" -o "$output" -s 1024
+
+readarray -t data < <(mediainfo --Output=JSON -- "$input" \
+                          | jq -r '.media.track[] | select(.["@type"] == "Video") | .Width, .Height, .Format, .Duration, .FrameRate')
+
+row1="Resolution: ${data[0]}x${data[1]}"
+row2="Codec: ${data[2]}"
+row3="Duration: $(date -ud "@${data[3]}" +%T)"
+row4="FPS: ${data[4]}"
+
+mogrify -background black -gravity north -splice 0x75 \
+        -font helvetica -pointsize 25 -fill white -gravity NorthWest \
+        -annotate +10+10 "$row1" \
+        -annotate +10+40 "$row2" \
+        -annotate +350+10 "$row3" \
+        -annotate +350+40 "$row4" \
+        -- "$output"
