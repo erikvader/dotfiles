@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=ranger-st
+Comment=Launches the ranger file manager in a new terminal
+Icon=utilities-terminal
+Terminal=false
+Exec=st tmux new-session zsh -is eval ranger-cd
+Categories=ConsoleOnly;System;FileTools;FileManager
+MimeType=inode/directory;
+Keywords=File;Manager;Browser;Explorer;Launcher;Vi;Vim;Python
