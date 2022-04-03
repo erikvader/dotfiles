@@ -83,6 +83,7 @@ function download_manga {
 
     local need_metadata=t
     local filter='lang == "en"'
+    local groups=$*
     case $1 in
         '')
             need_metadata=
@@ -111,6 +112,8 @@ function download_manga {
             filter="$filter and chapter == $chap_range"
             ;;
     esac
+
+    printf "%s:\t%s\n" "$chap_range" "$groups" >> .manga/download_history
 
     gallery-dl-do ${usearchive:+ --download-archive .manga/downloaded.db}\
                   --input-file .manga/url\
@@ -217,11 +220,11 @@ function list_chapters {
         'map(
            .[2]
            | select(.lang == "en")
-           | {chapter: ((.chapter | tostring) + .chapter_minor | tonumber), group: (.group | join("; "))}
+           | {chapter: ((.chapter | tostring) + .chapter_minor | tonumber), group: (.group | sort | join("; "))}
          )
          | group_by(.chapter)
-         | map((.[0].chapter | tostring) + ": " + (map(.group) | join(", ")))
-         | .[]'
+         | map((.[0].chapter | tostring) + ": " + (map(.group) | sort | join(", ")))
+         | .[]' | tee .manga/chapters
 }
 
 foldercheck=t
@@ -230,86 +233,66 @@ if [[ $1 = -f ]]; then
     shift
 fi
 
+function ensure_manga_folder {
+    if [[ -n $1 && -z $foldercheck ]]; then
+        echo "this command really really needs to be inside a manga directory" >&2
+        exit 1
+    fi
+    if [[ -n $foldercheck && ! -d .manga ]]; then
+        echo "not inside a manga directory" >&2
+        exit 1
+    fi
+}
+
+function ensure_argument {
+    if [[ -z $1 ]]; then
+        echo "missing required argument $2" >&2
+        exit 1
+    fi
+}
+
 case $1 in
     init)
-        if [[ $2 ]]; then
-            init_manga "$2"
-        else
-            echo "missing required argument MANGA_URL"
-            exit 1
-        fi
+        ensure_argument "$2" MANGA_URL
+        init_manga "$2"
         ;;
     download)
-        if [[ $2 && ( -z $foldercheck || -d .manga ) ]]; then
-            download_manga "${@:2}"
-        else
-            echo "missing required argument CHAPTER_RANGE or not inside a manga directory"
-            exit 1
-        fi
+        ensure_manga_folder t
+        ensure_argument "$2" CHAPTER_RANGE
+        download_manga "${@:2}"
         ;;
     gather)
-        if [[ $2 && ( -z $foldercheck || -d .manga ) ]]; then
-            gather "$2"
-        else
-            echo "missing required argument VOLUME or not inside a manga directory"
-            exit 1
-        fi
+        ensure_manga_folder
+        ensure_argument "$2" VOLUME
+        gather "$2"
         ;;
     gather-all)
-        if [[ -z $foldercheck || -d .manga ]]; then
-            gather-all
-        else
-            echo "not inside a manga directory"
-            exit 1
-        fi
+        ensure_manga_folder
+        gather-all
         ;;
     flatten)
-        if [[ $2 ]]; then
-            flatten "$2"
-        else
-            echo "expected required argument FOLDER"
-            exit 1
-        fi
+        ensure_argument "$2" FOLDER
+        flatten "$2"
         ;;
     progress)
-        if [[ -z $foldercheck || -d .manga ]]; then
-            progress
-        else
-            echo "not in manga folder"
-            exit 1
-        fi
+        ensure_manga_folder
+        progress
         ;;
     list)
-        if [[ -z $foldercheck || -d .manga ]]; then
-            list_chapters
-        else
-            echo "not in manga folder"
-            exit 1
-        fi
+        ensure_manga_folder t
+        list_chapters
         ;;
     verify)
-        if [[ -z $foldercheck || -d .manga ]]; then
-            verify "$2"
-        else
-            echo "not in manga folder"
-            exit 1
-        fi
+        ensure_manga_folder
+        verify "$2"
         ;;
     verify-cbz)
-        if [[ $# -ge 2 ]]; then
-            verify_cbz "${@:2}"
-        else
-            echo "no cbz-files given"
-            exit 1
-        fi
+        ensure_argument "$2" FILE
+        verify_cbz "${@:2}"
         ;;
     download-link)
-        if [[ $# -eq 1 ]]; then
-            gallery-dl-do "$1"
-        else
-            echo "no link was given"
-            exit 1
-        fi
+        ensure_argument "$1" LINK
+        gallery-dl-do "$1"
         ;;
     -h|--help)
         print_help
