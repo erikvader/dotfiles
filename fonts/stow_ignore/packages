@@ -1,6 +1,19 @@
+# statusbar
 ttf-bitstream-vera
-ttf-dejavu
+
+# note sure
 ttf-droid
 ttf-liberation
-ttf-ubuntu-font-family
+
+# good base + japanese
 noto-fonts
+noto-fonts-cjk
+
+# preferred monospace font
+ttf-ubuntu-font-family
+
+# color emojis
+noto-fonts-emoji
+
+# dejavu without emojis to make sure colored ones are always used
+ttf-dejavu-emojiless
