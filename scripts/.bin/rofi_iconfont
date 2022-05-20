@@ -1,7 +1,9 @@
 #!/bin/bash
 
-selected=$(rofi -dmenu -i -p "$1" < "$2")
+selected=$(fzf_dmenu --tiebreak=index --prompt="$1: " < "$2")
 
-if [[ -n $selected ]]; then
-    cut -d' ' -f1 <<< "$selected" | tr -d '\n' | xclip -selection clipboard -i
+if [[ -z $selected ]]; then
+    exit 1
 fi
+
+cut -d' ' -f1 <<< "$selected" | tr -d '\n' | xclip -selection clipboard -i

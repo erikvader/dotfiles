@@ -1,0 +1,7 @@
+#!/bin/bash
+
+window=$(xdotool getactivewindow)
+
+if rofi_iconfont "$@"; then
+    xdotool key --window "$window" ctrl+v
+fi

@@ -105,6 +105,7 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     -- other
     ((modm, xK_w), sendMessage $ Toggle MIRROR),
     ((modm, xK_Tab), selectWindow def >>= flip whenJust (windows . W.focusWindow)),
+    ((modm .|. shiftMask, xK_e), spawn "rofi_iconfont_paste emoji \"$HOME/.emoji\""),
 
     -- limitWindows
     ((modm, xK_y), L.decreaseLimit),
