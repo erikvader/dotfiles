@@ -7,7 +7,7 @@ from fzf_dmenu import fzf_dmenu
 from notify_send import notify_send
 
 def get_drives():
-   res = S.run(["lsblk", "-JO"], stdout=S.PIPE, check=True)
+   res = S.run(["lsblk", "-J", "-o", "label,tran,fstype,mountpoint,path,vendor,model", "--tree"], stdout=S.PIPE, check=True)
    lsblk = json.loads(res.stdout)
    usb_drives = [x for x in lsblk["blockdevices"] if x["tran"] == "usb"]
    return usb_drives
