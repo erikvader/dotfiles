@@ -47,9 +47,7 @@ ffmpeg -i "$arg_filename" \
 old_size=$(stat --format=%s "$arg_filename")
 new_size=$(stat --format=%s "$outputname")
 
-echo -n The file is 0
-bc <<< "scale=2; $new_size / $old_size"
-echo its original size
+echo The file is "0$(bc <<< "scale=2; $new_size / $old_size")" of its original size
 
 mv -f "$outputname" "$arg_filename"
 
