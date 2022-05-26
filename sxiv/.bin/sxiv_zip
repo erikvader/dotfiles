@@ -74,19 +74,19 @@ else
     exit 1
 fi
 
+files=$(find -L "$temp" -type f | LC_ALL=C sort -V)
+startpage=1
+
 progfile=${targ}.progress
-progress=
 if [[ -f $progfile ]]; then
     read -r progress < "$progfile"
+    notify-send 'Continuing from' "$progress"
+
+    startpage=$(gawk -F/ -v x="$progress" '
+BEGIN { found=0; page=1 }
+found == 0 && $NF == x { found=1 }
+found == 0 { page++ }
+END { print page }' <<< "$files")
 fi
 
-find -L "$temp" -type f | LC_ALL=C sort -V | \
-    if [[ -n $progress ]]; then
-        notify-send 'Continuing from' "$progress"
-        gawk -F/ -v x="$progress" '
-BEGIN { found=0 }
-found == 0 && $NF == x { found=1 }
-found == 1 { print }'
-    else
-        cat
-    fi | sxiv -i
+sxiv -in "$startpage" <<< "$files"
