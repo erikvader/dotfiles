@@ -7,6 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-xcb = "^0.8"
+xcb = "^1.1"
 xcb-util = {version = "^0.2.1", features = ["ewmh", "icccm"]}
 tabular = "^0.1.2"
