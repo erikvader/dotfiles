@@ -11,7 +11,7 @@ alias diff="diff --color=auto"
 alias sss='ss -an'
 alias sssp='sss -p'
 
-alias pg='pgrep -l'
+alias pg='pgrep -li'
 
 alias cclip="xclip -selection clipboard"
 
