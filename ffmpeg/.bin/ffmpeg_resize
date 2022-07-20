@@ -5,12 +5,16 @@
 
 set -e
 
-nodata=
 # mp4 (I think) has some special data streams sometimes, that can't be copied.
-if [[ $1 = --no-data ]]; then
-    nodata=t
-    shift
-fi
+nodata=
+flip=
+while true; do
+    case "$1" in
+        --no-data) nodata=t; shift ;;
+        --flip) flip=t; shift ;;
+        *) break ;;
+    esac
+done
 
 if [[ $# -lt 1 ]]; then
     echo invalid usage >&2
@@ -42,10 +46,11 @@ ffmpeg -i "$arg_filename" \
        -x265-params crf="$arg_crf" \
        -preset veryfast \
        -filter:v scale=-2:"$arg_resolution" \
+       ${flip:+ -vf hflip} \
        "$outputname"
 
-old_size=$(stat --format=%s "$arg_filename")
-new_size=$(stat --format=%s "$outputname")
+old_size=$(stat -L --format=%s "$arg_filename")
+new_size=$(stat -L --format=%s "$outputname")
 
 echo The file is "0$(bc <<< "scale=2; $new_size / $old_size")" of its original size
 
