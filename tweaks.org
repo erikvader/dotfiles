@@ -108,3 +108,7 @@ Görs via polkit elr nåt. Starta denna vid startup:
 #+BEGIN_SRC sh
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 #+END_SRC
+
+* Dropbox
+fixa så att systemd servicen inte startar om dropbox i en oändlig loop:
+https://wiki.archlinux.org/title/dropbox#Prevent_automatic_updates
