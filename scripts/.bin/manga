@@ -144,7 +144,7 @@ function flatten {
             echo "$line" '->' "$fname" >> "$1/log.txt"
         done
 
-    zip -rm0j "$1.cbz" "$1"
+    zip -rm0jT "$1.cbz" "$1"
     rm -r "$1"
 }
 
@@ -152,7 +152,7 @@ function gather {
     local manga_name
     manga_name=$(basename "$PWD" | filter_filename)
     find . -mindepth 1 -maxdepth 1 -type f -regex '\./v0*'"$1"' .*' |\
-        zip --names-stdin -0 --move "$manga_name v$1.cbz"
+        zip --names-stdin -0 --move --test "$manga_name v$1.cbz"
 }
 
 function gather-all {
