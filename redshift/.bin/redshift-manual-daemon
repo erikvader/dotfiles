@@ -1,6 +1,6 @@
 #!/bin/bash
 
-levels=(0 $(seq 3200 -200 2000))
+levels=(0 3200)
 ind=0
 
 function toggle {
