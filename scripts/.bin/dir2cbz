@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+if [[ $# -eq 0 ]]; then
+    echo 'give me arguments plz' >&2
+    exit 1
+fi
+
+RESET=$(tput sgr0)
+RED=$(tput bold setaf 1)
+BLUE=$(tput bold setaf 4)
+YELLOW=$(tput bold setaf 3)
+
+ZIP_LOG=/tmp/dir2cbz.log
+
+for d in "$@"; do
+    if [[ ! -d $d ]]; then
+        echo "${YELLOW}Warning:${RESET}" "'$d' is not a directory, skipping..." >&2
+        continue
+    fi
+
+    echo "${BLUE}Creating:${RESET} $d.cbz..."
+    if ! zip -vrmT0 "$d".cbz "$d" &>"$ZIP_LOG"; then
+        echo "${RED}Error:${RESET} zip failed, see '$ZIP_LOG'" >&2
+        exit 1
+    fi
+done
