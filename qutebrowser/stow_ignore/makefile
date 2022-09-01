@@ -7,8 +7,14 @@ QUTE_DESKTOP := org.qutebrowser.qutebrowser.desktop
 .PHONY: install
 install: $(QUTEDIR) xdg
 
+ifdef force
+.PHONY: $(QUTEDIR)
+endif
+
 $(QUTEDIR):
 	git clone $(MYCONFIG) $(QUTEDIR)
+	mkdir -p $(QUTELOCALSHARE)
+	ln -s $(QUTEDIR)/js $(QUTELOCALSHARE)
 
 .PHONY: xdg
 xdg:
