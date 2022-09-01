@@ -166,9 +166,9 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((0, xF86XK_AudioPrev), spawn "playerctl previous"),
 
     -- launch a terminal
-    ((modm, xK_Return), spawn "st tmux new-session"),
+    ((modm, xK_Return), spawn "st-tmux"),
     ((modm .|. altMask, xK_Return), spawn "st"),
-    ((modm .|. controlMask, xK_Return), spawn "st tmux new-session zsh -is eval ranger-cd"),
+    ((modm .|. controlMask, xK_Return), spawn "st-tmux-ranger"),
     ((modm .|. shiftMask, xK_Return), spawn "emacsclient -nc"),
 
     -- close focused window
