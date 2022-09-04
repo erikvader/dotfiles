@@ -383,3 +383,19 @@ class file_swap(Command):
         if isfile(f.path):
             return realpath(f.path)
         return None
+
+class clear_image_preview_cache(Command):
+    """
+    :clear_image_preview_cache
+
+    Remove image cache from selected files.
+    """
+    def execute(self):
+        from ranger.core.actions import Actions
+        from os import remove
+        import ranger
+
+        for sel in self.fm.thistab.get_selection():
+            path = os.path.realpath(sel.path)
+            imgcache = os.path.join(ranger.args.cachedir, Actions.sha1_encode(path))
+            remove(imgcache)
