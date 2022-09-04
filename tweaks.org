@@ -110,5 +110,12 @@ Görs via polkit elr nåt. Starta denna vid startup:
 #+END_SRC
 
 * Dropbox
-fixa så att systemd servicen inte startar om dropbox i en oändlig loop:
+fixa så att systemd-servicen inte startar om dropbox i en oändlig loop:
 https://wiki.archlinux.org/title/dropbox#Prevent_automatic_updates
+
+TL;DR från länken:
+Få dropbox att sluta autouppdatera sig med:
+#+BEGIN_SRC sh
+rm -rf ~/.dropbox-dist
+install -dm0 ~/.dropbox-dist
+#+END_SRC
