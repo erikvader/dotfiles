@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# TODO: flag to use something else than h265 eg for wmv
+# TODO: flag to use something else than h265 eg for wmv and webm
 # TODO: flag to also re-encode audio stream
 
 set -e
