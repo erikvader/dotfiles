@@ -16,8 +16,7 @@ export INSTALLDIR := $(HOME)/.bin
 maybe-install = $(call install,$(call not-installed,$1,$2),$2)
 install = $(if $1,$($2INSTALL) $1,@echo packages '($2)' already installed for $(patsubst %:install,%,$@))
 not-installed = $(filter-out $(filter $1,$(shell $($2LIST))),$1)
-# hashtag is a comment character for make, so it has to be escaped
-install-from = $(if $(wildcard $1),$(call maybe-install,$(shell grep -v '^\#' "$1"),$2),)
+install-from = $(if $(wildcard $1),$(call maybe-install,$(shell grep -v '^#' "$1"),$2),)
 
 maybe-make = $(if $(wildcard $1/[Mm]akefile),$(MAKE) -C $1 $2,)
 
