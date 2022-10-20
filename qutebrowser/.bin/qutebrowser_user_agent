@@ -1,0 +1,12 @@
+#!/bin/bash
+
+PORT=12345
+
+nc -l $PORT | grep '^User-Agent: ' | cut -d ' ' -f2- | tr -d '\r' &
+
+qutebrowser --nowindow -T localhost:$PORT &>/dev/null &
+PID=$!
+
+sleep 5
+kill $PID
+wait
