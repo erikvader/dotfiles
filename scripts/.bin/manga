@@ -209,9 +209,9 @@ function verify_cbz {
     trap '(umount "$temp" 2>/dev/null || true); rm -d "$temp"' EXIT
     for cbz in "$@"; do
         echo "$cbz"
-        archivemount -o readonly "$cbz" "$temp"
-        (cd "$temp" && verify)
-        umount "$temp"
+        fuse-zip -r "$cbz" "$temp"
+        (cd "$temp" && verify -r)
+        fusermount -u "$temp"
     done
 }
 
