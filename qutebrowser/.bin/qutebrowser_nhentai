@@ -1,0 +1,15 @@
+#!/bin/bash
+
+USERAGENT='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/5.15.6 Chrome/87.0.4280.144 Safari/537.36'
+COOKIES=/tmp/qutebrowser_nhentai_cookies
+
+if [ ! -f $COOKIES ]; then
+    qutebrowser_cookies .nhentai.net > "$COOKIES"
+fi
+
+exec gallery-dl \
+     --cookies "$COOKIES" \
+     -o user-agent="$USERAGENT" \
+     --option 'filename={num:>03}.{extension}' \
+     --option 'directory=["{category}", "{gallery_id} {title[:128]}"]' \
+     "$@"
