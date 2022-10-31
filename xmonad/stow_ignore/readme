@@ -1,2 +1,0 @@
-Place pacman hook in /etc/pacman.d/hooks
-Is named as it is so it runs after ghc-register.hook

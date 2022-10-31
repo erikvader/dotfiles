@@ -44,6 +44,7 @@ alias gsts='git submodule foreach "git status"'
 alias gbr='git branch -avv'
 
 alias SS='sudo systemctl'
+alias SU='systemctl --user'
 
 REPOS=( "$HOME/.emacs.d" "$HOME/dotfiles" "$HOME/.config/qutebrowser" "$HOME/Documents/statusbar" "$HOME/.pythonlibs/emdb" )
 function repos_cmd {

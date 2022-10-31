@@ -8,5 +8,6 @@ Environment=SSH_AUTH_SOCK=%t/ssh-agent.socket
 Environment=DISPLAY=:0
 ExecStart=/usr/bin/ssh-agent -D -a $SSH_AUTH_SOCK
 
+# TODO: xmonad.target to slippa att setta massa environment, iaf display
 [Install]
 WantedBy=default.target
