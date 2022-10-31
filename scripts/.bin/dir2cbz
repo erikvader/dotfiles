@@ -11,6 +11,7 @@ RESET=$(tput sgr0)
 RED=$(tput bold setaf 1)
 BLUE=$(tput bold setaf 4)
 YELLOW=$(tput bold setaf 3)
+GREEN=$(tput bold setaf 2)
 
 ZIP_LOG=/tmp/dir2cbz.log
 
@@ -20,8 +21,8 @@ for d in "$@"; do
         continue
     fi
 
-    echo "${BLUE}Creating:${RESET} $d.cbz..."
-    if ! zip -vrmT0 "$d".cbz "$d" &>"$ZIP_LOG"; then
+    echo -n "${BLUE}Creating:${RESET} $d.cbz..."
+    if ! zip -vrmT9 "$d".cbz "$d" 2>&1 | tee "$ZIP_LOG" | sed -nE 's/^total.*-> ([0-9]+)% savings$/'" ${GREEN}Reduced:${RESET} \1%"'/p'; then
         echo "${RED}Error:${RESET} zip failed, see '$ZIP_LOG'" >&2
         exit 1
     fi
