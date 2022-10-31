@@ -24,6 +24,8 @@ export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/ssh-agent.socket
 [[ -f $HOME/.zprofile.local ]] && . "$HOME/.zprofile.local"
 
 # Auto startx depending on the tty
-# https://wiki.gentoo.org/wiki/X_without_Display_Manager
-[[ -z $DISPLAY ]] && (( $EUID != 0 )) && [[ ${TTY/tty} != $TTY ]] && (( ${TTY:8:1} == 1 )) && startx
+# https://wiki.archlinux.org/title/xinit#Autostart_X_at_login
+if [[ -z "${DISPLAY}" && "${XDG_VTNR}" -eq 1 ]]; then
+    startx
+fi
 
