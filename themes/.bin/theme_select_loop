@@ -14,8 +14,13 @@ if [[ $# -lt 2 ]]; then
     exit 1
 fi
 
+echo $$ > "$PID_FILE"
+
 delay=$1
 shift
 
-echo $$ > "$PID_FILE"
-exec watch -n "$delay" theme_select "$@" &>/dev/null
+trap 'jobs -p | xargs -r kill' EXIT
+while true; do
+    theme_select "$@"
+    sleep "$delay"
+done

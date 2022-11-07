@@ -6,7 +6,9 @@ THEME_DIR=$HOME/themes
 STATE_DIR=$THEME_DIR/__state__
 CUR_THEME_FILE=$STATE_DIR/.current
 
-if [[ ! -d "$THEME_DIR" && ! -d "$STATE_DIR" ]]; then
+trap 'jobs -p | xargs -r kill' EXIT
+
+if [[ ! -d "$THEME_DIR" && ! -d "$STATE_DIR" && "$1" != init ]]; then
     echo "Theme dir doesn't exist, try using: $0 init" >&2
     exit 1
 fi
