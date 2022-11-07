@@ -11,8 +11,8 @@ executable xmonad
                        Erik.MyStuff
                        Erik.ThreeColP
   build-depends:       base
-                     , xmonad >= 0.17
-                     , xmonad-contrib >= 0.17
+                     , xmonad >= 0.17.1
+                     , xmonad-contrib >= 0.17.1
                      , mtl
                      , X11
                      , containers
