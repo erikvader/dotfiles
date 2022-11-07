@@ -2,110 +2,97 @@
 
 set -e
 
-theme_dir=$HOME/themes
-cur_theme_file=$theme_dir/.theme_select_cur
-fair_state=$theme_dir/.fair_state
+THEME_DIR=$HOME/themes
+STATE_DIR=$THEME_DIR/__state__
+CUR_THEME_FILE=$STATE_DIR/.current
 
-if [[ ! -d "$theme_dir" ]]; then
-    echo "$theme_dir doesn't exist!" >&2
+if [[ ! -d "$THEME_DIR" && ! -d "$STATE_DIR" ]]; then
+    echo "Theme dir doesn't exist, try using: $0 init" >&2
     exit 1
 fi
 
-function set_theme {
-    local cur=$theme_dir/$1
-    if ! [[ -d $cur ]]; then
-        echo "$1 is not a directory" >&2
-        exit 1
+function theme_file {
+    local apply=$THEME_DIR/$1
+    if [[ ! -e "$apply" || "$apply" -ef "$THEME_DIR" ]]; then
+        echo "Theme '$1' is not valid, it doesn't exist or is empty" >&2
+        return 1
     fi
-    echo "$1" > "$cur_theme_file"
 
-    pic=$(find -L "$cur" -type f -print -quit)
-    if [[ -z $pic ]]; then
-        echo "no pic in $cur" >&2
-        exit 1
+    if [[ -d $apply ]]; then
+        apply=$(find "$apply" -type f \! -name '.*' -print -quit)
+        if [[ -z $apply ]]; then
+            echo "No picture file in theme '$1'" >&2
+            return 1
+        fi
     fi
-    feh --bg-fill "$pic"
+    echo "$apply"
+}
 
-    if [[ -z $theme_select_no_lock ]]; then
-        create-lock-img "$pic" "$theme_dir/lock.png" "$HOME/.lock" &
-    fi
+function apply_theme {
+    sort | tee "$CUR_THEME_FILE" | \
+        while IFS='' read -r line || [[ -n "$line" ]]; do
+            theme_file "$line"
+        done | \
+            xargs -d'\n' -r feh --bg-fill
+
 }
 
 function num_screens {
     xrandr | grep -cE '\bconnected\b'
 }
 
-function list_themes {
-    find -L "$theme_dir" -mindepth 1 -maxdepth 1 -type d "$@"
+function random_theme {
+    comm -23 <(list_no_hidden) "$CUR_THEME_FILE" | shuf -n "$1"
 }
 
-function list_themes_skip_hidden {
-    list_themes \! -name '_*' "$@"
+function list_all {
+    find "$THEME_DIR" -mindepth 1 -maxdepth 1 \! -path "$STATE_DIR" -printf '%f\n' | sort
 }
 
-function list_themes_files {
-    find "$theme_dir" -mindepth 2 -type f "$@"
+function list_hidden {
+    find "$THEME_DIR" -mindepth 2 -maxdepth 2 -name .hidden -printf '%P\n' | sed 's|/\.hidden$||' | sort
 }
 
-function list_themes_files_skip_hidden {
-    list_themes_files \! -path "$theme_dir"/'_*' "$@"
+function list_no_hidden {
+    comm -23 <(list_all) <(list_hidden)
 }
 
-loopsleep=
-if [[ $1 = --loop ]]; then
-    loopsleep=$2
-    shift 2
-fi
+function init {
+    echo "Creating $THEME_DIR"
+    mkdir "$THEME_DIR"
+    echo "Creating $STATE_DIR"
+    mkdir "$STATE_DIR"
+    echo "Creating $CUR_THEME_FILE"
+    touch "$CUR_THEME_FILE"
+    echo
+    echo "You should create a safe theme, see theme_select_safe"
+}
+
+function re_apply {
+    if [[ -x "$HOME"/.fehbg ]]; then
+        exec "$HOME"/.fehbg
+    else
+        echo Found no .fehbg >&2
+        return 1
+    fi
+}
 
 case $1 in
-    -r)
-        cur_theme=
-        if [[ -f "$cur_theme_file" ]]; then
-            # TODO: handle multiple lines
-            read -r cur_theme < "$cur_theme_file"
-        fi
-        set_theme "$(list_themes_skip_hidden -printf '%f\n' | sed "/^$cur_theme$/d" | shuf -n1)"
+    ""|--help)
+        echo This is a help message # TODO: 
+        exit
         ;;
-    --mr)
-        list_themes_files_skip_hidden -print0 | shuf -z | xargs -r0 feh --bg-fill
-        if [[ -z $theme_select_no_lock ]]; then
-            list_themes_files -print0 | shuf -zn1 | xargs -r0I% create-lock-img % "$theme_dir/lock.png" "$HOME/.lock" &
-        fi
-        ;;
-    --fr)
-        ns=$(num_screens)
-        if [[ ! -s $fair_state ]]; then
-            list_themes_files_skip_hidden -print | shuf > "$fair_state"
-        fi
-        num_state=$(wc -l < "$fair_state")
-        if [[ $num_state -lt $ns ]]; then
-            tmpfile=$(mktemp -p.)
-            sort "$fair_state" > "$tmpfile"
-            comm -31 "$tmpfile" <(list_themes_files_skip_hidden -print | sort) | shuf >> "$fair_state"
-            rm "$tmpfile"
-        fi
-        head -n "$ns" "$fair_state" | tee >(xargs -rd'\n' feh --bg-fill) > "$cur_theme_file"
-        sed -i "1,${ns}d" "$fair_state"
-        ;;
-    -l)
-        list_themes -printf '%f\n'
-        ;;
-    ""|--reapply)
-        if [[ -x "$HOME"/.fehbg ]]; then
-            exec "$HOME"/.fehbg
-        fi
-        ;;
-    safe)
-        set_theme safe
-        pkill --exact theme_select
-        ;;
+    init) init ;;
+    list-all) list_all ;;
+    list) list_no_hidden ;;
+    re-apply) re_apply ;;
+    apply) apply_theme <<< "$2" ;;
+    random) apply_theme < <(random_theme 1) ;;
+    multi-random) random_theme "$(num_screens)" | apply_theme ;;
+    fair-multi-random) # TODO:
+    ;;
     *)
-        set_theme "$1"
+        echo Unknown command "$1" >&2
+        exit 1
         ;;
 esac
-
-if [[ -n $loopsleep ]]; then
-    sleep "$loopsleep"
-    export theme_select_no_lock=t
-    exec theme_select --loop "$loopsleep" "$@"
-fi

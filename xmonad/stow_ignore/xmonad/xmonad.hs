@@ -151,8 +151,8 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm, xK_asciicircum), spawn "pkill picom"),
 
     -- theme
-    ((modm, xK_minus), spawn "theme_select safe"),
-    ((modm .|. shiftMask, xK_minus), spawn "theme_select --mr"),
+    ((modm, xK_minus), spawn "theme_select_safe"),
+    ((modm .|. shiftMask, xK_minus), spawn "theme_select multi-random"),
 
     -- brightness
     ((modm, xK_Left), spawn "i3_brightness -steps 1 -dec 1"),

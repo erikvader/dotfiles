@@ -1,0 +1,21 @@
+#!/bin/bash
+
+THEME_DIR=$HOME/themes
+STATE_DIR=$THEME_DIR/__state__
+PID_FILE=$STATE_DIR/.loop.pid
+
+if [[ "$1" = --kill ]]; then
+    pkill -F "$PID_FILE"
+    exit
+fi
+
+if [[ $# -lt 2 ]]; then
+    echo invalid usage >&2
+    exit 1
+fi
+
+delay=$1
+shift
+
+echo $$ > "$PID_FILE"
+exec watch -n "$delay" theme_select "$@" &>/dev/null

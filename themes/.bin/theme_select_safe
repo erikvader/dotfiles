@@ -1,0 +1,14 @@
+#!/bin/bash
+
+THEME_DIR=$HOME/themes
+STATE_DIR=$THEME_DIR/__state__
+SAFE_THEME_FILE=$STATE_DIR/.safe
+
+theme_select_loop --kill
+
+if IFS='' read -r theme < "$SAFE_THEME_FILE" && [[ "$theme" ]]; then
+    theme_select apply "$theme"
+else
+    echo Failed to read "$SAFE_THEME_FILE" >&2
+    exit 1
+fi
