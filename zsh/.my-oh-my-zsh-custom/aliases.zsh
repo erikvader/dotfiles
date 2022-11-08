@@ -26,7 +26,8 @@ alias yr='yay -Rn'
 alias yrr='yay -Rsn'
 alias yrrr='yay -Rsnc'
 alias ylibc="yay -S --aur --mflags '--nocheck' libc++ libc++abi libc++experimental"
-alias yo='yay -Qdt' # list orphans
+alias yo='yay -Qdt'
+alias yor='yo -q | yr -'
 
 alias ..='cd ..'
 alias l='ls -Av'
