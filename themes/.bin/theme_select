@@ -5,13 +5,7 @@ set -e
 THEME_DIR=$HOME/themes
 STATE_DIR=$THEME_DIR/__state__
 CUR_THEME_FILE=$STATE_DIR/.current
-
-trap 'jobs -p | xargs -r kill' EXIT
-
-if [[ ! -d "$THEME_DIR" && ! -d "$STATE_DIR" && "$1" != init ]]; then
-    echo "Theme dir doesn't exist, try using: $0 init" >&2
-    exit 1
-fi
+# fair_state=$theme_dir/.fair_state # TODO: 
 
 function theme_file {
     local apply=$THEME_DIR/$1
@@ -59,18 +53,7 @@ function list_no_hidden {
     comm -23 <(list_all) <(list_hidden)
 }
 
-function init {
-    echo "Creating $THEME_DIR"
-    mkdir "$THEME_DIR"
-    echo "Creating $STATE_DIR"
-    mkdir "$STATE_DIR"
-    echo "Creating $CUR_THEME_FILE"
-    touch "$CUR_THEME_FILE"
-    echo
-    echo "You should create a safe theme, see theme_select_safe"
-}
-
-function re_apply {
+function reapply {
     if [[ -x "$HOME"/.fehbg ]]; then
         exec "$HOME"/.fehbg
     else
@@ -80,14 +63,35 @@ function re_apply {
 }
 
 case $1 in
-    ""|--help)
-        echo This is a help message # TODO: 
+    init)
+        echo "Creating $THEME_DIR"
+        mkdir "$THEME_DIR"
+        echo "Creating $STATE_DIR"
+        mkdir "$STATE_DIR"
+        echo "Creating $CUR_THEME_FILE"
+        touch "$CUR_THEME_FILE"
+        echo
+        echo "You can create a safe theme, see theme_select_safe"
         exit
         ;;
+    ""|--help|help)
+        echo this is a help message
+        exit
+        ;;
+esac
+
+if [[ ! -d "$THEME_DIR" && ! -d "$STATE_DIR" ]]; then
+    echo "Theme dir doesn't exist, try using: $0 init" >&2
+    exit 1
+fi
+
+trap 'jobs -p | xargs -r kill' EXIT
+
+case $1 in
     init) init ;;
     list-all) list_all ;;
     list) list_no_hidden ;;
-    re-apply) re_apply ;;
+    reapply) reapply ;;
     apply) apply_theme <<< "$2" ;;
     random) apply_theme < <(random_theme 1) ;;
     multi-random) random_theme "$(num_screens)" | apply_theme ;;
@@ -98,3 +102,19 @@ case $1 in
         exit 1
         ;;
 esac
+
+# --fr)
+#     ns=$(num_screens)
+#     if [[ ! -s $fair_state ]]; then
+#         list_themes_files_skip_hidden -print | shuf > "$fair_state"
+#     fi
+#     num_state=$(wc -l < "$fair_state")
+#     if [[ $num_state -lt $ns ]]; then
+#         tmpfile=$(mktemp -p.)
+#         sort "$fair_state" > "$tmpfile"
+#         comm -31 "$tmpfile" <(list_themes_files_skip_hidden -print | sort) | shuf >> "$fair_state"
+#         rm "$tmpfile"
+#     fi
+#     head -n "$ns" "$fair_state" | tee >(xargs -rd'\n' feh --bg-fill) > "$cur_theme_file"
+#     sed -i "1,${ns}d" "$fair_state"
+#     ;;
