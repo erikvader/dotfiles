@@ -119,3 +119,9 @@ Få dropbox att sluta autouppdatera sig med:
 rm -rf ~/.dropbox-dist
 install -dm0 ~/.dropbox-dist
 #+END_SRC
+
+* Kernel upgrades and modules
+[[https://github.com/saber-nyan/kernel-modules-hook][github]]
+#+BEGIN_SRC sh
+pacman -Syu kernel-modules-hook
+#+END_SRC
