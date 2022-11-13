@@ -1,0 +1,41 @@
+#!/bin/bash
+
+output=
+compression=nil
+while getopts 'ho:c' arg; do
+    case $arg in
+        o) output="$OPTARG" ;;
+        c) compression=t ;;
+        h | *)
+            echo Invalid usage >&2
+            # TODO: only one infile is supported atm
+            echo "$0" '-o OUTFILE INFILE [INFILE..]' >&2
+            exit 1
+            ;;
+    esac
+done
+
+if [[ -z $output ]]; then
+    echo Missing required argument output-file >&2
+    exit 1
+fi
+
+inputs=( "${@:$OPTIND}" )
+
+if [[ ${#inputs} -eq 0 ]]; then
+    echo Missing required input files >&2
+    exit 1
+fi
+
+echo "Inputs: ${inputs[*]}"
+echo "Output: $output"
+echo "Compression: $compression"
+
+sbcl --non-interactive \
+     --load "${inputs[0]}" \
+     --eval '(flet ((main () (main sb-ext:*posix-argv*)))
+                   (sb-ext:save-lisp-and-die
+                        "'"$output"'"
+                        :executable t
+                        :compression '"$compression"'
+                        :toplevel'" #'main))"
