@@ -5,7 +5,7 @@ set -e
 THEME_DIR=$HOME/themes
 STATE_DIR=$THEME_DIR/__state__
 CUR_THEME_FILE=$STATE_DIR/.current
-# fair_state=$theme_dir/.fair_state # TODO: 
+FAIR_STATE_FILE=$STATE_DIR/.fair_state
 
 function theme_file {
     local apply=$THEME_DIR/$1
@@ -39,6 +39,10 @@ function num_screens {
 
 function random_theme {
     comm -23 <(list_no_hidden) "$CUR_THEME_FILE" | shuf -n "$1"
+}
+
+function random_theme_fair {
+    list_no_hidden | cycle-shuf -n "$1" -f "$FAIR_STATE_FILE"
 }
 
 function list_all {
@@ -95,26 +99,9 @@ case $1 in
     apply) apply_theme <<< "$2" ;;
     random) apply_theme < <(random_theme 1) ;;
     multi-random) random_theme "$(num_screens)" | apply_theme ;;
-    fair-multi-random) # TODO:
-    ;;
+    fair-multi-random) random_theme_fair "$(num_screens)" | apply_theme ;;
     *)
         echo Unknown command "$1" >&2
         exit 1
         ;;
 esac
-
-# --fr)
-#     ns=$(num_screens)
-#     if [[ ! -s $fair_state ]]; then
-#         list_themes_files_skip_hidden -print | shuf > "$fair_state"
-#     fi
-#     num_state=$(wc -l < "$fair_state")
-#     if [[ $num_state -lt $ns ]]; then
-#         tmpfile=$(mktemp -p.)
-#         sort "$fair_state" > "$tmpfile"
-#         comm -31 "$tmpfile" <(list_themes_files_skip_hidden -print | sort) | shuf >> "$fair_state"
-#         rm "$tmpfile"
-#     fi
-#     head -n "$ns" "$fair_state" | tee >(xargs -rd'\n' feh --bg-fill) > "$cur_theme_file"
-#     sed -i "1,${ns}d" "$fair_state"
-#     ;;
