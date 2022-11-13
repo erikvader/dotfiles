@@ -17,3 +17,6 @@ noto-fonts-emoji
 
 # dejavu without emojis to make sure colored ones are always used
 ttf-dejavu-emojiless
+
+# used by conky metro, probably nice to have
+ttf-opensans
