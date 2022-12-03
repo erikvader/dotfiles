@@ -38,7 +38,6 @@ alias lll='ls -lAhv'
 alias naspoweroff='umount /media/NAS && ssh -t nas "sudo poweroff"'
 alias tvpoweroff='ssh -t tv@TV "sudo poweroff"'
 alias tvsuspend='ssh -t tv@TV "sudo systemctl suspend"'
-alias tvhibernate='ssh -t tv@TV "sudo systemctl hibernate"'
 alias tvwakeup='wol 3c:97:0e:b1:53:44'
 
 # copy of glola
