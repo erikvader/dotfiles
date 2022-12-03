@@ -30,7 +30,7 @@ set smartcase
 set showmatch
 nnoremap <BS> :let @/=''<cr>
 
-set listchars=tab:t>
+set listchars=tab:>-
 set list
 
 set background=dark
