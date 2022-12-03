@@ -6,3 +6,5 @@
     (load quicklisp-init)))
 
 (setf sb-impl::*default-external-format* :utf-8)
+
+(pushnew '*default-pathname-defaults* asdf:*central-registry*)
