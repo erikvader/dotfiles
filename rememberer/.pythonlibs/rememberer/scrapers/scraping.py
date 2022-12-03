@@ -39,13 +39,18 @@ def extract_parameter(query: str, param: str) -> str:
     return keys[0]
 
 
-def change_color_on(tag, color: str) -> str:
-    sel = unique_selector(tag)
+def change_color_on(
+    tag,
+    color: str,
+    fuzzy_body: bool = False,
+    style: str = "color",
+) -> str:
+    sel = unique_selector(tag, fuzzy_body=fuzzy_body)
     if sel is None:
         print("couldn't get selector for {}".format(tag), file=sys.stderr)
         return ""
 
-    return 'document.querySelector("{}").style.color = "{}";\n'.format(sel, color)
+    return 'document.querySelector("{}").style.{} = "{}";\n'.format(sel, style, color)
 
 
 def change_colors_on(tags: Iterator[Any], color: str) -> str:
