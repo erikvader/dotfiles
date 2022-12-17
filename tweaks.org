@@ -71,6 +71,7 @@ To control how many login attempts is needed for locking an account
 and the timeout, edit: ~/etc/security/faillock.conf~. Can reset
 manually with the ~faillock~ command.
 * mouse
+** speed
 Place these in ~/etc/X11/xorg.conf.d/~
 Set mouse to flat profile and max speed.
 #+BEGIN_SRC
@@ -96,6 +97,13 @@ Section "InputClass"
   Option "AccelProfile" "flat"
   Option "Tapping" "on"
 EndSection
+#+END_SRC
+
+** theme
+Use =lxappearance= that modifies ~$HOME/.icons/default/index.theme~.
+If that for some reasons doesn't work everywhere, do [[https://wiki.archlinux.org/title/Cursor_themes#XDG_specification][this]]:
+#+BEGIN_SRC sh
+ln -s /usr/share/icons/xcursor-breeze-snow/cursors ~/.icons/default/cursors
 #+END_SRC
 
 * DNS
