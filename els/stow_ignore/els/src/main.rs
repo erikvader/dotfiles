@@ -168,7 +168,7 @@ fn entry_link(entry: &DirEntry) -> AnsiString {
         res.push_str("->");
         res.push_reset();
         res.push_str(" ");
-        res.push_ansistring(&entry_name(point.file_name(), point_color));
+        res.push_ansistring(&entry_name(Some(point.as_os_str()), point_color));
         res
     } else {
         let mut res = AnsiString::empty();
