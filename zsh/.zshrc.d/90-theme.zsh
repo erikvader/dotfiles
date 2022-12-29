@@ -1,5 +1,6 @@
-# -*- mode: sh; -*-
+# Modified version of https://github.com/ohmyzsh/ohmyzsh/blob/master/themes/bira.zsh-theme
 # ZSH Theme - Preview: http://gyazo.com/8becc8a7ed5ab54a0262a470555c3eed.png
+
 # return_code="%(?..%{$fg[red]%}%? ↵%{$reset_color%})"
 
 if [[ $UID -eq 0 ]]; then
