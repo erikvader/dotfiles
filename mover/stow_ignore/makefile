@@ -12,6 +12,6 @@ ifdef force
 endif
 
 $(TARGET):
-	cd $(DIR); cargo build --release
+	cd $(DIR) && cargo build --release
 	cp -t $(@D) $(DIR)/target/release/$(@F)
-	cd $(DIR); cargo clean
+	cd $(DIR) && cargo clean
