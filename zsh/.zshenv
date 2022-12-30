@@ -31,3 +31,6 @@ export VIRTUAL_ENV_DISABLE_PROMPT=1
 export FZF_BASE_COMMAND='find -L . -mindepth 1 %s \\( -fstype dev -o -fstype proc %s \\) -prune -o \\( -name .git -o -name dosdevices \\) -prune -printf "%%P\\n" -o %s -printf "%%P\\n" 2>/dev/null'
 export FZF_DEFAULT_COMMAND=$(printf "$FZF_BASE_COMMAND" "" "" "")
 export FZF_CTRL_T_COMMAND=$(printf "$FZF_BASE_COMMAND" "-maxdepth 1 " "" "")
+
+# ranger wont load default conf, only user
+export RANGER_LOAD_DEFAULT_RC=FALSE
