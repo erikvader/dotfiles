@@ -12,9 +12,9 @@ TRAPWINCH() {
     zle && zle -R
 }
 
-
 alias diff='diff --color=auto'
 alias ls='ls --color=auto'
+alias grep='grep --color=auto'
 
 function man {
     LESS_TERMCAP_md=$'\e[01;35m' \

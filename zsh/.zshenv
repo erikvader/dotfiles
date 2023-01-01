@@ -8,6 +8,8 @@ pythonpath=($HOME/.pythonlibs $pythonpath)
 export PYTHONPATH
 
 export EDITOR=/usr/bin/vim
+export VISUAL=$EDITOR
+export PAGER=/usr/bin/less
 
 # java doesn't like xmonad
 export _JAVA_AWT_WM_NONREPARENTING=1
@@ -18,7 +20,7 @@ export QT_AUTO_SCREEN_SCALE_FACTOR=0
 # move all __pycache__
 export PYTHONPYCACHEPREFIX=$HOME/.cache/pycache
 
-# TODO: why is this needed?
+# tell ssh-add where ssh-agent.service is listening
 export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/ssh-agent.socket
 
 # smartcase in less
