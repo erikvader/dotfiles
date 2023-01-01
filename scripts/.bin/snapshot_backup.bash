@@ -28,6 +28,11 @@ function add {
     local exclude=
     local mover=
 
+    if [[ ! -e "$src" ]]; then
+        echo the source "'$src'" does not exist >&2
+        exit 1
+    fi
+
     shift 2
     while [[ "$1" ]]; do
         case "$1" in
