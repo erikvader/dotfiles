@@ -21,6 +21,10 @@ bindkey ' ' magic-space
 autoload -Uz bracketed-paste-magic
 zle -N bracketed-paste bracketed-paste-magic
 
+# escape URLs when typed or pasted
+autoload -Uz url-quote-magic
+zle -N self-insert url-quote-magic
+
 # M-w kills back a WORD
 autoload -U select-word-style
 select-word-style default
