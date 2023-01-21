@@ -1,0 +1,22 @@
+#!/bin/bash
+
+USERAGENT=/tmp/qutebrowser_myhentaigallery_user_agent
+COOKIES=/tmp/qutebrowser_myhentaigallery_cookies
+UA=
+
+if [ ! -f $COOKIES ]; then
+    echo 'Fetching cookies...'
+    qutebrowser_cookies .myhentaigallery.com > "$COOKIES"
+fi
+
+if [ ! -f $USERAGENT ]; then
+    echo 'Fetching user agent...'
+    qutebrowser_user_agent > "$USERAGENT"
+fi
+
+UA=$(cat "$USERAGENT")
+
+exec gallery-dl \
+     --cookies "$COOKIES" \
+     -o user-agent="$UA" \
+     "$@"
