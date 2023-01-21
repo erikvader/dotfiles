@@ -1,7 +1,7 @@
 # Modified version of https://github.com/ohmyzsh/ohmyzsh/blob/master/themes/bira.zsh-theme
 # ZSH Theme - Preview: http://gyazo.com/8becc8a7ed5ab54a0262a470555c3eed.png
 
-# return_code="%(?..%{$fg[red]%}%? ↵%{$reset_color%})"
+return_code="%(?..%{$fg[red]%}%? ↵%{$reset_color%})"
 
 if [[ $UID -eq 0 ]]; then
     user_host='%{$terminfo[bold]$fg[red]%}%n@%m%{$reset_color%}'
@@ -42,7 +42,7 @@ function virtualenv_prompt {
 
 PROMPT="┌─[${user_host}]──[${current_dir}]"'$(git_prompt_info)$(ranger_prompt)$(wine_prompt)$(virtualenv_prompt)'"
 └─%B${user_symbol}%b "
-#RPS1="%B${return_code}%b"
+RPS1="%B${return_code}%b"
 
 unset user_host
 unset user_symbol
