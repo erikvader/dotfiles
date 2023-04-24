@@ -131,9 +131,10 @@ myKeys conf@XConfig {XMonad.modMask = modm} =
     ((modm .|. controlMask, xK_b), screenWorkspace 0 >>= flip whenJust (windows . W.view)),
 
     -- printscreen
-    ((0, xK_Print), spawn "maim_clipboard -su"),
-    ((controlMask, xK_Print), spawn "maim-notify -su"),
-    ((shiftMask, xK_Print), spawn "maim-notify -u"),
+    ((0, xK_Print), spawn "maim_clipboard -su"), -- clipboard selection
+    ((shiftMask, xK_Print), spawn "maim-notify -su"), -- save selection
+    ((controlMask, xK_Print), spawn "maim-current-window"), -- save current
+    ((shiftMask .|. controlMask, xK_Print), spawn "maim-notify -u"), -- save everything
 
     -- flash
     ((modm, xK_z), spawn "flasher"),

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+exec maim-notify -u -i "$(xdotool getactivewindow)"
