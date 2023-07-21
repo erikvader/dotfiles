@@ -4,6 +4,10 @@ mod table;
 mod users;
 mod versionsort;
 
+// TODO: Den här är sjukt mycket långsammare än vanlig `ls` när det är många filer som
+// kommer och går snabbt (youtube-dl), lista ut vad vanliga ls gör och gör samma sak här,
+// om det går
+
 use ansistring::*;
 use lazy_static::lazy_static;
 // use rand::{thread_rng, Rng};

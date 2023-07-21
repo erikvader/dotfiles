@@ -6,6 +6,7 @@ First, get the `PKGBUILD` used by the official emacs packages on Arch.
 Read more [here](https://wiki.archlinux.org/title/Arch_Build_System).
 
 ```sh
+# TODO: pkgctl
 asp update emacs
 asp export extra/emacs-nativecomp
 ```
