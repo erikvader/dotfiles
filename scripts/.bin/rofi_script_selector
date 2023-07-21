@@ -6,7 +6,8 @@ scripts["Switch to speakers"]='speakers speakers'
 scripts["Switch to headphones"]='speakers headphones'
 scripts["Clipboard history"]='CM_LAUNCHER=rofi-script clipmenu "$(CM_LAUNCHER=rofi-script clipmenu | fzf_dmenu)"'
 scripts["Invert colors"]="xrandr-invert-colors"
-scripts["Toggle redshift"]="pkill -USR1 '^redshift$'"
+scripts["Enable redshift"]="pkill -f -USR1 redshift-manual-daemon"
+scripts["Disable redshift"]="pkill -f -USR2 redshift-manual-daemon"
 scripts["Audio powersave toggle"]="gksudo toggle_audio_powersave"
 scripts["Manjaro i3 menu"]="morc_menu"
 scripts["Manjaro Settings Manager"]="manjaro-settings-manager"
