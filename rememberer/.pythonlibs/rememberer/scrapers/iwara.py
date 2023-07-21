@@ -9,21 +9,22 @@ def IwaraScraper(
     **_kwargs,
 ) -> List[Thing]:
     def video_key(urlpath: str) -> Optional[str]:
-        try:
-            test = extract_path(urlpath, 2, 0)
-            if test != "videos":
-                return None
-        except ParseException:
-            return None
-        return extract_path(urlpath, 2, 1)
+        for length in [2, 3]:
+            try:
+                test = extract_path(urlpath, length, 0)
+                if test != "video":
+                    return None
+            except ParseException:
+                continue
+            return extract_path(urlpath, length, 1)
+
+        return None
 
     def current_page() -> List[Thing]:
         if (key := video_key(url.path)) is None:
             raise UserError("wrong page")
 
-        title = soup.select_one(
-            "div.content > div.node-info > div.submitted > h1.title"
-        )
+        title = soup.select_one("section.content div.page-video__details > div.text")
         if not title:
             raise ParseException("couldn't find video title")
         name = scrape_text(title)
@@ -38,26 +39,25 @@ def IwaraScraper(
         else:
             things = []
 
-        places = ["div.node-video.node-sidebar_teaser", "div.node-video.node-teaser"]
+        places = [
+            "div.page-profile__content div.videoTeaser",
+            "div.page-video__sidebar div.videoTeaser",
+        ]
         others = [t for p in places for t in soup.select(p)]
         for video in others:
-            title = video.select_one("h3.title > a")
-            name = scrape_text(title) if title is not None else "N/A"
+            title = video.select_one("a.videoTeaser__title")
+            name = scrape_text(title, recursive=True)
 
-            if (a := video.select_one("div.field a[href]")) is None:
-                # NOTE: there are sometimes invisible ones in "More like this"
-                continue
+            if "href" not in title.attrs:
+                raise ParseException("no href on anchor")
 
-            href = urlparse(a["href"]).path
+            href = urlparse(title["href"]).path
             if (key := video_key(href)) is None:
-                raise ParseException("invalid link in tag")
-
-            to_color = video.select("div.icon-bg > div")
-            if title is not None:
-                to_color.append(title)
+                print(href)
+                raise ParseException("invalid link in anchor")
 
             things.append(
-                Thing(name=name, key=key, jsmark=change_colors_on(to_color, "lime"))
+                Thing(name=name, key=key, jsmark=change_colors_on(title, "lime"))
             )
         return things
 
