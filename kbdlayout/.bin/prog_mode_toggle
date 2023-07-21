@@ -59,7 +59,7 @@ function sweoff {
 
 function off {
     if (set -e
-        setxkbmap se
+        setxkbmap se nodeadkeys
         pkill xcape 2>/dev/null
         echo off "$no_caps" > "$status_file"
        )
