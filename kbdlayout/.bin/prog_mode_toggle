@@ -1,40 +1,33 @@
 #!/bin/bash
 
-# needs to have $status_file initialized beforehand
-# start as off with making the caps lock into a control+escape with xcape enabled
-#   echo off > status_file
-# a second non-empty word means that xcape should not be enabled
-#   echo off 1 > status_file
-
 status_file="/tmp/program_mode"
 
-if [[ "$1" = init ]]; then
-    echo off ${2:+1} > "$status_file"
-    exit 0
-fi
-
-read -r -a arr < "$status_file"
-status=${arr[0]}
-no_caps=${arr[1]}
+function basic {
+    setxkbmap se nodeadkeys
+    xset r rate 300 35
+}
 
 function on {
     if (set -e
-        setxkbmap se nodeadkeys
+        basic
         sleep 0.5
-        xmodmap "$HOME/.xmodmap_prog"
+        xmodmap -e 'keycode 21 = grave acute dead_acute dead_grave dead_acute dead_grave dead_acute dead_grave' \
+                -e 'keycode 35 = asciicircum asciitilde diaeresis diaeresis diaeresis diaeresis diaeresis' \
+                -e 'keycode 13 = 4 dollar currency cent currency cent currency cent' \
+                -e 'keycode 34 = at backslash aring Aring aring Aring aring Aring' \
+                -e 'keycode 48 = bracketright braceright adiaeresis Adiaeresis adiaeresis Adiaeresis adiaeresis Adiaeresis' \
+                -e 'keycode 47 = bracketleft braceleft odiaeresis Odiaeresis odiaeresis Odiaeresis odiaeresis Odiaeresis' \
+                -e 'keycode 49 = bar section at paragraph at paragraph at paragraph'
+
         if [[ -f $HOME/.xmodmap_prog.local ]]; then
             xmodmap "$HOME/.xmodmap_prog.local"
         fi
-        if [[ -z $no_caps ]]; then
-            xmodmap -e 'clear lock' -e 'keycode 66 = Control_R' -e 'add control = Control_R'
-            xcape -e 'Control_R=Escape'
-        fi
-        xset r rate 300 35 # keyboard repeat speed
-        echo on "$no_caps" > "$status_file"
+
+        xmodmap -e 'clear lock' -e 'keycode 66 = Control_R' -e 'add control = Control_R'
+        xcape -e 'Control_R=Escape'
        )
     then
-        # notify-send 'Programming keyboard mode' 'on'
-        :
+        echo on > "$status_file"
     else
         notify-send 'Programming keyboard mode' 'error turning on :('
         exit 1
@@ -45,48 +38,41 @@ function sweon {
     xmodmap -e 'keycode 47 = odiaeresis Odiaeresis' \
             -e 'keycode 48 = adiaeresis Adiaeresis' \
             -e 'keycode 34 = aring Aring' &&
-    echo swe "$no_caps" > "$status_file"
-    # notify-send 'åäö mode' 'on'
+    echo swe > "$status_file"
 }
 
 function sweoff {
     xmodmap -e 'keycode 47 = bracketleft braceleft odiaeresis Odiaeresis odiaeresis Odiaeresis' \
             -e 'keycode 48 = bracketright braceright adiaeresis Adiaeresis adiaeresis Adiaeresis' \
             -e 'keycode 34 = at backslash aring Aring aring Aring' &&
-    echo on "$no_caps" > "$status_file"
-    # notify-send 'åäö mode' 'off'
+    echo on > "$status_file"
 }
 
 function off {
-    if (set -e
-        setxkbmap se nodeadkeys
-        pkill xcape 2>/dev/null
-        echo off "$no_caps" > "$status_file"
+    if (basic
+        pkill -x xcape 2>/dev/null
        )
     then
-        # notify-send 'Programming keyboard mode' 'off'
-        :
+        echo off > "$status_file"
     else
         notify-send 'Programming keyboard mode' 'error turning off :('
         exit 1
     fi
 }
 
+status=off
+if [[ -f "$status_file" ]]; then
+    read -r status < "$status_file"
+fi
+
 case "$1" in
-    off)
-        off
-        ;;
-    on)
-        on
-        ;;
+    basic) basic ;;
+    off) off ;;
+    on) on ;;
     swetoggle)
         case "$status" in
-            swe)
-                sweoff
-                ;;
-            on)
-                sweon
-                ;;
+            swe) sweoff ;;
+            on) sweon ;;
             *)
                 notify-send 'åäö mode' "program mode is not enabled, can't toggle"
                 exit 1
@@ -95,12 +81,8 @@ case "$1" in
         ;;
     "")
         case "$status" in
-            on | swe)
-                off
-                ;;
-            off)
-                on
-                ;;
+            on | swe) off ;;
+            off) on ;;
             *)
                 echo "something is wrong with your file" >&2
                 exit 1
@@ -118,5 +100,4 @@ case "$1" in
 esac
 
 
-# update statusbar module
 exec fifoecho /tmp/statusbar_fifo progmode
