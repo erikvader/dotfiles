@@ -1,4 +1,0 @@
-#!/bin/bash
-
-xprop -root -spy 8u "_XMONAD_STATUS_$MONITOR" | sed -uEn -e 's/^_XMONAD_STATUS_'"$MONITOR"'\(STRING\) = "//; s/"$//; s/\\"/"/g; p'
-

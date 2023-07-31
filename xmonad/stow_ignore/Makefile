@@ -17,3 +17,7 @@ $(XMONAD): $(SRCS)
 .PHONY: restart
 restart: $(XMONAD)
 	xmonad --restart
+
+.PHONY: install-devtools
+install-devtools:
+	stack --stack-yaml $(STACKYAML) install hlint ShellCheck hindent
