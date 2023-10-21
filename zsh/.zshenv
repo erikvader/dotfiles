@@ -1,6 +1,6 @@
 # NOTE: can also use typeset -U path PATH and typeset -T PATH path :
 typeset -U path PATH
-path=($HOME/.bin $HOME/.local/bin $path)
+path=($HOME/.cargo/bin $HOME/.bin $HOME/.local/bin $path)
 export PATH
 
 typeset -UT PYTHONPATH pythonpath :
