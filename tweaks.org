@@ -70,6 +70,11 @@ HandlePowerKey=ignore
 To control how many login attempts is needed for locking an account
 and the timeout, edit: ~/etc/security/faillock.conf~. Can reset
 manually with the ~faillock~ command.
+* keyboard
+Sets the keyboard layout permanently in xorg.
+#+BEGIN_SRC sh
+localectl set-x11-keymap se '' nodeadkeys
+#+END_SRC
 * mouse
 ** speed
 Place these in ~/etc/X11/xorg.conf.d/~
