@@ -12,7 +12,7 @@ ifdef force
 .PHONY: $(TARGET)
 endif
 
-$(TARGET):
+$(TARGET): config.h
 	@echo 'creating a new build dir'
 	rm -rf $(BUILDDIR)
 	mkdir -p $(BUILDDIR)
