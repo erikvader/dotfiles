@@ -70,6 +70,7 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
 
     -- executers
     ((modm, xK_e), spawn "fzf_run"),
+    ((shift modm, xK_e), spawn "rofi_iconfont_paste emoji \"$HOME/.emoji\""),
     ((modm, xK_r), spawn "rofi_script_selector"),
     ((shift modm, xK_r), spawn "open_downloaded_pdf"),
 
