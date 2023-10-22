@@ -108,6 +108,7 @@ static const keymap_t keys[] = {
 	{ 0,            XK_period,        i_navigate,           +1 },
 	{ 0,            XK_n,             i_scroll_to_edge,     DIR_LEFT | DIR_UP },
 	{ 0,            XK_space,         i_navigate,           +1 },
+	{ 0,            XK_y,             i_navigate,           -1 },
 	{ 0,            XK_p,             i_navigate,           -1 },
 	{ 0,            XK_comma,         i_navigate,           -1 },
 	{ 0,            XK_p,             i_scroll_to_edge,     DIR_LEFT | DIR_UP },
