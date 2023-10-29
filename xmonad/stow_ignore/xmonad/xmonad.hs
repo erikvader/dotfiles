@@ -75,9 +75,7 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
     ((shift modm, xK_r), spawn "open_downloaded_pdf"),
 
     -- screenshots
-    ((0, xK_Print), spawn "maim-notify -su"), -- screenshot selection
-    ((modm, xK_p), spawn "maim-notify -su"),
-    ((shiftMask, xK_Print), spawn "maim-current-window"), -- screenshot current window
+    ((modm, xK_p), spawn "maim-notify -su"), -- screenshot selection
     ((shift modm, xK_p), spawn "maim-current-window"),
 
     -- toggle prog mode
@@ -187,6 +185,12 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
                      (sendToScreen def, shiftMask)
                     ]]
 
+myMouseBindings _ =
+  M.fromList
+  [
+  ((0, 9), const $ spawn "maim-current-window")
+  ]
+
 myFocusPPXin :: PP
 myFocusPPXin = def
     {
@@ -266,6 +270,7 @@ myConfig = def {
   focusedBorderColor = "#dddddd",
   normalBorderColor = "#555555",
   keys = myKeys,
+  mouseBindings = myMouseBindings,
   workspaces = ["C", "V", "X", "B", "Z"],
   manageHook = centerFloatMH <+> manageHook def,
   startupHook = startupHook def <+> runXmonadStartupOnce <+> setDefaultCursor xC_left_ptr,
