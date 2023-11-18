@@ -50,6 +50,20 @@ function filter_filename {
     tr -cd 'A-Za-z0-9 ._-'
 }
 
+function current_manga_name {
+    local manga_name
+    manga_name=$(basename "$PWD" | filter_filename)
+    if [[ $manga_name = / ]]; then
+        echo "why are you doing this at the root?" >&2
+        exit 1
+    fi
+    if [[ -z $manga_name ]]; then
+        echo "the current manga name is empty" >&2
+        exit 1
+    fi
+    echo "$manga_name"
+}
+
 function find_latest {
     find . -maxdepth 1 -mindepth 1 -type f -name '*.cbz' | gawk '
 BEGIN { chap=0 }
@@ -155,7 +169,7 @@ function flatten {
 
 function gather {
     local manga_name
-    manga_name=$(basename "$PWD" | filter_filename)
+    manga_name=$(current_manga_name)
     find . -mindepth 1 -maxdepth 1 -type f -regex '\./v0*'"$1"' .*' |\
         LC_ALL=C sort |\
         zip --names-stdin -0 --move --test "$manga_name v$1.cbz"
@@ -242,11 +256,7 @@ function upload {
 
     if [[ -z $targetdir ]]; then
         local manga_name
-        manga_name=$(basename "$PWD")
-        if [[ $manga_name = / ]]; then
-            echo "why are you doing this at the root?" >&2
-            exit 1
-        fi
+        manga_name=$(current_manga_name)
         targetdir='~'/Tachiyomi/local/$manga_name
     fi
 
