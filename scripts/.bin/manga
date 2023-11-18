@@ -30,6 +30,11 @@ function print_help {
     echo -e "$r    Checks for corrupted image files using ImageMagick. Do it recursively with -r"
     echo -e "$w  manga [FLAGS..] verify-cbz FILE [FILE..]"
     echo -e "$r    Verifies an already existing cbz-file for corrupted files"
+    echo -e "$w  manga [FLAGS..] upload IP [PORT [USER [PASS [TARGETDIR]]]]"
+    echo -e "$r    Uploads all cbz files of the current directory to the device at IP using sftp."
+    echo -e "$r    PORT is the port number to use, USER is the username and PASS is the password."
+    echo -e "$r    TARGETDIR defaults to the local source of the tachiyomi app, with the containing folder"
+    echo -e "$r    name as the manga name."
     echo
     echo -e "Flags:"
     echo -e "$w  -f$r: don't require the presence of the .manga folder"
@@ -228,6 +233,29 @@ function list_chapters {
          | .[]' | tee .manga/chapters
 }
 
+function upload {
+    local ip=${1:?ip is required}
+    local port=${2:-1234}
+    local user=${3:-user}
+    local pass=${4:-pass}
+    local targetdir=$5
+
+    if [[ -z $targetdir ]]; then
+        local manga_name
+        manga_name=$(basename "$PWD")
+        if [[ $manga_name = / ]]; then
+            echo "why are you doing this at the root?" >&2
+            exit 1
+        fi
+        targetdir='~'/Tachiyomi/local/$manga_name
+    fi
+
+    echo Uploading to "'$targetdir'"
+    lftp --norc -c "
+open -u $user,$pass sftp://$ip:$port &&\
+mirror -nRrI *.cbz . '$targetdir'"
+}
+
 foldercheck=t
 if [[ $1 = -f ]]; then
     foldercheck=
@@ -294,6 +322,11 @@ case $1 in
     download-link)
         ensure_argument "$1" LINK
         gallery-dl-do "$1"
+        ;;
+    upload)
+        ensure_manga_folder
+        ensure_argument "$1" IP
+        upload "${@:2}"
         ;;
     -h|--help)
         print_help
