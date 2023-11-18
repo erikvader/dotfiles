@@ -9,10 +9,10 @@ def myhentaigalleryScraper(
     **_kwargs,
 ) -> List[Thing]:
     def comic_key(urlpath):
-        if not urlpath.startswith("/gallery/thumbnails/"):
+        if not urlpath.startswith("/g/"):
             return None
         try:
-            return extract_path(urlpath, 3, 2)
+            return extract_path(urlpath, 2, 1)
         except ParseException:
             return None
 
