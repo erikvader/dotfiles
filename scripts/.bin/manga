@@ -136,7 +136,7 @@ function init_manga {
 
 function flatten {
     local i=0
-    find "$1" -type f | sort |\
+    find "$1" -type f | LC_ALL=C sort |\
         while IFS='' read -r line; do
             : $((i++))
             fname=$(printf '%06d' "$i").${line##*.}
@@ -152,6 +152,7 @@ function gather {
     local manga_name
     manga_name=$(basename "$PWD" | filter_filename)
     find . -mindepth 1 -maxdepth 1 -type f -regex '\./v0*'"$1"' .*' |\
+        LC_ALL=C sort |\
         zip --names-stdin -0 --move --test "$manga_name v$1.cbz"
 }
 
@@ -160,7 +161,7 @@ function gather-all {
     readarray -t volumes < \
               <(find . -mindepth 1 -maxdepth 1 -type f -printf '%P\n' | \
                     sed -nE 's/^v0*([0-9]+) .*$/\1/p' | \
-                    sort -nu)
+                    LC_ALL=C sort -nu)
 
     for i in "${volumes[@]}"; do
         gather "$i"
