@@ -73,7 +73,7 @@ END { print chap }'
 
 function gallery-dl-do {
     gallery-dl --dest ./\
-               --option 'filename=v{volume:>03} c{chapter:>04}{chapter_minor} p{page:>06}.{extension}'\
+               --option 'filename=v{volume:>03} c{chapter:>04}{chapter_minor:<4}p{page:>06}.{extension}'\
                --option 'directory=[]'\
                --option lang=en\
                "$@"
