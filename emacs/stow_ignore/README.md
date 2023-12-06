@@ -17,6 +17,8 @@ the calls to `make` and `configure` in the same function. Add `-jN` to the
 nativecomp `make` call where `N` is the number of cores on your system.
 Also remove the bodies of the package functions, except for nativecomp.
 
+**TODO**: include an example
+
 # Build
 ```sh
 makepkg --clean --syncdeps --skippgpcheck
