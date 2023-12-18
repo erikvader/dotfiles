@@ -49,7 +49,8 @@ function add {
     fi
     echo -e "\033[34m${src}\033[0m"
     # NOTE: if $linkdest doesn't exist, then rsync just complains and continues anyway
-    rsync -avhs --delete --info=progress2 --safe-links --link-dest="$linkdest" --exclude-from=- "$src" "$target" <<< "$exclude"
+    # NOTE: the first group of flags is a subset of -a
+    rsync -rltD -vhs --delete --info=progress2 --safe-links --link-dest="$linkdest" --exclude-from=- "$src" "$target" <<< "$exclude"
 }
 
 function end {
