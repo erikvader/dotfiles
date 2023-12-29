@@ -22,7 +22,7 @@ for d in "$@"; do
     fi
 
     echo -n "${BLUE}Creating:${RESET} $d.cbz..."
-    if ! zip -vrmT9 "$d".cbz "$d" 2>&1 | tee "$ZIP_LOG" | sed -nE 's/^total.*-> ([0-9]+)% savings$/'" ${GREEN}Reduced:${RESET} \1%"'/p'; then
+    if ! zip -vrmT6 "$d".cbz "$d" 2>&1 | tee "$ZIP_LOG" | sed -nE 's/^total.*-> ([0-9]+)% savings$/'" ${GREEN}Reduced:${RESET} \1%"'/p'; then
         echo "${RED}Error:${RESET} zip failed, see '$ZIP_LOG'" >&2
         exit 1
     fi
