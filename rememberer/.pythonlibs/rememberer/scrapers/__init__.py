@@ -14,6 +14,7 @@ from .iwara import IwaraScraper
 from .yt import YTScraper
 from .ehentai import ehentaiScraper
 from .nhentai import nhentaiScraper
+from .hanime import hanimeScraper
 
 
 def get_scraper(hostname: SiteName) -> Optional[Scraper]:
@@ -31,5 +32,6 @@ def get_scraper(hostname: SiteName) -> Optional[Scraper]:
         "iwara": IwaraScraper,
         "youtube": YTScraper,
         "e-hentai": ehentaiScraper,
-        "nhentai": nhentaiScraper
+        "nhentai": nhentaiScraper,
+        "hanime": hanimeScraper,
     }.get(hostname)
