@@ -23,14 +23,7 @@ fi
 
 arg_filename=$1
 arg_resolution=${2:-720}
-arg_crf=$3
-
-if [[ -z $arg_crf ]]; then
-    case $arg_resolution in
-        1080) arg_crf=18 ;;
-        *) arg_crf=23 ;;
-    esac
-fi
+arg_crf=${3:-18}
 
 basename=$(basename -- "$arg_filename")
 dirname=$(dirname -- "$arg_filename")
