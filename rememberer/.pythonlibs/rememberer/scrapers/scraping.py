@@ -6,6 +6,12 @@ from typing import Iterator, Any, List, Optional, Callable
 import sys
 
 
+def select_unique(soup, query):
+    elements = soup.select(query)
+    length = len(elements)
+    return elements[0] if length == 1 else None
+
+
 def scrape_text(tag, allow_empty=False, recursive=False) -> str:
     ite = tag.descendants if recursive else tag.children
     s = " ".join(c.strip() for c in ite if isinstance(c, str))

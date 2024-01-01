@@ -15,11 +15,13 @@ from .yt import YTScraper
 from .ehentai import ehentaiScraper
 from .nhentai import nhentaiScraper
 from .hanime import hanimeScraper
+from .torrentgalaxy import torrentgalaxyScraper
 
 
 def get_scraper(hostname: SiteName) -> Optional[Scraper]:
     return {
         "rarbg": rarbgScraper,
+        "torrentgalaxy": torrentgalaxyScraper,
         "pornhub": PHScraper,
         "xvideos": XVideosScraper,
         "1337x": trettontrettiosjuScraper,

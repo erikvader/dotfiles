@@ -1,2 +1,3 @@
 /.git
 **/stow_ignore/*/target/
+.dir-locals.el
