@@ -3,8 +3,8 @@ PAC := yay
 PACLIST := $(PAC) -Qq
 PACINSTALL := $(PAC) --noconfirm -S
 ALLPAC := /tmp/dotfiles_make_all_pac
-PIPLIST := pip list --user --format freeze | sed 's/==.*$$//'
-PIPINSTALL := pip install --user
+PIPLIST := pipx list --short | cut -d' ' -f1
+PIPINSTALL := pipx install
 ALLPIP := /tmp/dotfiles_make_all_pip
 
 IGNOREDIR := stow_ignore

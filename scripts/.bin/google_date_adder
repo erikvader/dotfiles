@@ -1,4 +1,6 @@
-#!/bin/python
+#!/bin/env pip-run
+
+__requires__ = ["google-auth-oauthlib", "lark", "google-api-python-client"]
 
 from lark import Lark, Transformer, UnexpectedInput
 from datetime import datetime, timedelta, date, time

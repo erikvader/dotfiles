@@ -1,2 +1,8 @@
+# Python typechecking
 mypy
+
+# Python linting
 python-pylint
+
+# Should already be installed as a prerequisite
+python-pipx

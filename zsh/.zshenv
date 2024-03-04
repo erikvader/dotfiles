@@ -1,8 +1,10 @@
-# NOTE: can also use typeset -U path PATH and typeset -T PATH path :
+# Flag the already linked variable `path` to only contain unique elements
 typeset -U path PATH
 path=($HOME/.cargo/bin $HOME/.bin $HOME/.local/bin $path)
 export PATH
 
+# Link `pythonpath` and `PYTHONPATH` together, like `path`, and make sure only unique
+# items are added
 typeset -UT PYTHONPATH pythonpath :
 pythonpath=($HOME/.pythonlibs $pythonpath)
 export PYTHONPATH

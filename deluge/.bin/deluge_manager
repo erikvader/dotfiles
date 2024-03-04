@@ -1,4 +1,6 @@
-#!/bin/python
+#!/bin/env pip-run
+
+__requires__ = ["deluge-client~=1.9"]
 
 from deluge_client import DelugeRPCClient, FailedToReconnectException
 from ssl import SSLError

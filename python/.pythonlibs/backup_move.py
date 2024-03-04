@@ -36,7 +36,7 @@ def move_file(src, dst):
 
    for d_name in _file_gen(src_basename):
       d_path = os.path.join(dst, d_name)
-      # NOTE: race condition, open with exclusive flag instead
+      # TODO: race condition, open with exclusive flag instead
       if not os.path.exists(d_path):
          move(src, d_path)
          return d_path

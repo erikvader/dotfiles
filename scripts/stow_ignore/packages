@@ -1,16 +1,29 @@
+# maim-*
 maim
+
+# cclip
 xclip
+
+# ecolor
 python-colorama
+
+# udev_notifier
 python-pyudev
-python-xlib
+
+# speeds
 python-psutil
+
+# a lot
 fzf
-python-google-api-python-client
-python-google-auth
-python-google-auth-httplib2
-python-lark-parser
-wmctrl
+
+# swisch
+python-networkx
+
+# flasher
 transset-df
-python-beautifulsoup4
+
+# waifu2x
 waifu2x-ncnn-vulkan
+
+# manga
 fuse-zip
