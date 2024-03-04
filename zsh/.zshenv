@@ -38,3 +38,6 @@ export FZF_CTRL_T_COMMAND=$(printf "$FZF_BASE_COMMAND" "-maxdepth 1 " "" "")
 
 # ranger wont load default conf, only user
 export RANGER_LOAD_DEFAULT_RC=FALSE
+
+# Make ripgrep read a config file
+export RIPGREP_CONFIG_PATH=$HOME/.config/.ripgreprc
