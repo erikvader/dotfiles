@@ -101,6 +101,7 @@ function download_manga {
     shift
 
     local need_metadata=t
+    # TODO: add flag to not constrain by language
     local filter='lang == "en"'
     local groups=$*
     case $1 in

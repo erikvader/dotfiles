@@ -10,6 +10,7 @@ alias sss='ss -an'
 alias sssp='sss -p'
 
 alias pg='pgrep -li'
+alias pga='pg -a'
 
 alias cclip="xclip -selection clipboard"
 
