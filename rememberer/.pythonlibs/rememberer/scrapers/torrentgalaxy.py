@@ -25,7 +25,7 @@ def torrentgalaxyScraper(soup: Soup, url: ParseResult, **_kwargs) -> List[Thing]
 
     def searchPage():
         results = []
-        for a in soup.select("div.tgxtable a[href][title]"):
+        for a in soup.select("div.tgxtable div[data-href] a[href][title]"):
             key = pagekey(a["href"])
             if key is None:
                 continue
