@@ -1,53 +1,67 @@
 #!/bin/bash
 
-# TODO: flag to use something else than h265 eg for wmv and webm
-# TODO: flag to also re-encode audio stream
-
 set -e
 
 # mp4 (I think) has some special data streams sometimes, that can't be copied.
 nodata=
 flip=
-while true; do
-    case "$1" in
-        --no-data) nodata=t; shift ;;
-        --flip) flip=t; shift ;;
-        *) break ;;
+resolution=720
+crf=18
+vcodec=libx265
+
+while getopts 'nfr:c:v:' arg; do
+    case "$arg" in
+        n) nodata=t ;;
+        f) flip=t ;;
+        r) resolution=$OPTARG ;;
+        c) crf=$OPTARG ;;
+        v) vcodec=$OPTARG ;;
+        *) exit 1 ;;
     esac
 done
+shift $(( OPTIND - 1 ))
 
-if [[ $# -lt 1 ]]; then
-    echo invalid usage >&2
+if [[ $# -ne 1 ]]; then
+    echo Exactly one filename is required >&2
     exit 1
 fi
 
-arg_filename=$1
-arg_resolution=${2:-720}
-arg_crf=${3:-18}
+inputfile=$1
 
-basename=$(basename -- "$arg_filename")
-dirname=$(dirname -- "$arg_filename")
+echo Flags used:
+echo '  'nodata="$nodata"
+echo '  'flip="$flip"
+echo '  'resolution="$resolution"
+echo '  'crf="$crf"
+echo '  'vcodec="$vcodec"
+echo '  'inputfile="$inputfile"
+echo
+
+basename=$(basename -- "$inputfile")
+dirname=$(dirname -- "$inputfile")
 ext=${basename##*.}
 name=${basename%.*}
 outputname=${dirname}/${name}_resized.${ext}
 
-ffmpeg -i "$arg_filename" \
+(set -x
+ffmpeg -i "$inputfile" \
        -c copy \
        -map 0 \
        ${nodata:+ -map -0:d} \
-       -c:v libx265 \
-       -x265-params crf="$arg_crf" \
+       ${vcodec:+ -c:v "$vcodec"} \
+       ${crf:+ -x265-params crf="$crf"} \
        -preset veryfast \
-       -filter:v scale=-2:"$arg_resolution" \
+       ${resolution:+ -filter:v scale=-2:"$resolution"} \
        ${flip:+ -vf hflip} \
        "$outputname"
+)
 
-old_size=$(stat -L --format=%s "$arg_filename")
+old_size=$(stat -L --format=%s "$inputfile")
 new_size=$(stat -L --format=%s "$outputname")
 
 echo The file is "0$(bc <<< "scale=2; $new_size / $old_size")" of its original size
 
-mv -f "$outputname" "$arg_filename"
+mv -f "$outputname" "$inputfile"
 
 # Measurement results
 # 4K -> 1080p
@@ -64,3 +78,4 @@ mv -f "$outputname" "$arg_filename"
 # really bad
 # h265-crf23-ultrafast-17min.mp4 492M
 # h265-crf28-ultrafast-16min.mp4 295M
+
