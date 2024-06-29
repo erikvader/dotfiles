@@ -43,6 +43,7 @@ ext=${basename##*.}
 name=${basename%.*}
 outputname=${dirname}/${name}_resized.${ext}
 
+# TODO: can't flip and change resolution at the same time
 (set -x
 ffmpeg -i "$inputfile" \
        -c copy \
