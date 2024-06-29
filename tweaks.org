@@ -104,13 +104,6 @@ Section "InputClass"
 EndSection
 #+END_SRC
 
-** theme
-Use =lxappearance= that modifies ~$HOME/.icons/default/index.theme~.
-If that for some reasons doesn't work everywhere, do [[https://wiki.archlinux.org/title/Cursor_themes#XDG_specification][this]]:
-#+BEGIN_SRC sh
-ln -s /usr/share/icons/xcursor-breeze-snow/cursors ~/.icons/default/cursors
-#+END_SRC
-
 * DNS
 ändra i ~/etc/resolvconf.conf~ för att skriva över med nya dnser.
 ändra med =nm-applet= för att lägga till backups.
