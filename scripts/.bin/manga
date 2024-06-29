@@ -8,9 +8,10 @@ function print_help {
     echo "Usage:"
     echo -e "$w  manga [FLAGS..] init MANGA_URL"
     echo -e "$r    Creates a new directory ready to download from MANGA_URL"
-    echo -e "$w  manga [FLAGS..] download [--force] CHAPTER_RANGE [!] [GROUP...]"
+    echo -e "$w  manga [FLAGS..] download [--force] [--lang LANG] CHAPTER_RANGE [!] [GROUP...]"
     echo -e "$r    Downloads chapters from CHAPTER_RANGE from an optionally specified translator group."
-    echo -e "$r    The flag --force disregards the download cache and redownloads every specified"
+    echo -e "$r    The flag --force disregards the download cache and redownloads every specified."
+    echo -e "$r    The flag --lang sets the language to download, defaults to 'en' i.e. english."
     echo -e "$r    file that doesn't exist. CHAPTER_RANGE can be: 27 or +5 or 1- or -5 or all (or -)."
     echo -e "$r    GROUP are zero or more groups to download from, or to not download from if a single '!' is present."
     echo -e "$w  manga [FLAGS..] download-link URL"
@@ -24,8 +25,9 @@ function print_help {
     echo -e "$r    their sort order and puts them in a cbz"
     echo -e "$w  manga [FLAGS..] progress"
     echo -e "$r    Prints the first missing chapter"
-    echo -e "$w  manga [FLAGS..] list"
-    echo -e "$r    Lists all available chapters and all their groups"
+    echo -e "$w  manga [FLAGS..] list [LANG]"
+    echo -e "$r    Lists all available chapters and all their groups in the specified"
+    echo -e "$r    language, defaults to showing all languages. Use 'en' to only show english chapters."
     echo -e "$w  manga [FLAGS..] verify [-r]"
     echo -e "$r    Checks for corrupted image files using ImageMagick. Do it recursively with -r"
     echo -e "$w  manga [FLAGS..] verify-cbz FILE [FILE..]"
@@ -75,13 +77,18 @@ function gallery-dl-do {
     gallery-dl --dest ./\
                --option 'filename=v{volume:>03} c{chapter:>04}{chapter_minor:<4}p{page:>06}.{extension}'\
                --option 'directory=[]'\
-               --option lang=en\
                "$@"
 }
 
 function download_manga {
     local usearchive=t
+    local lang=en
     case $1 in
+        --lang)
+            shift
+            lang=$1
+            shift
+            ;;
         --force|-f)
             usearchive=
             shift
@@ -101,9 +108,11 @@ function download_manga {
     shift
 
     local need_metadata=t
-    # TODO: add flag to not constrain by language
-    local filter='lang == "en"'
     local groups=$*
+    local filter=True
+    if [[ -n $lang ]]; then
+        filter="lang == \"$lang\""
+    fi
     case $1 in
         '')
             need_metadata=
@@ -237,10 +246,16 @@ function verify_cbz {
 }
 
 function list_chapters {
+    local lang=$1
+    local filter='true'
+    if [[ -n $lang ]]; then
+        filter=".lang == \"$lang\""
+    fi
+
     gallery-dl-do -o metadata=true --dump-json "$(cat .manga/url)" | jq -r \
         'map(
-           .[2]
-           | select(.lang == "en")
+           .[2]'"
+           | select($filter)"'
            | {chapter: ((.chapter | tostring) + .chapter_minor | tonumber), group: (.group | sort | join("; "))}
          )
          | group_by(.chapter)
@@ -320,7 +335,7 @@ case $1 in
         ;;
     list)
         ensure_manga_folder t
-        list_chapters
+        list_chapters "$2"
         ;;
     verify)
         ensure_manga_folder
