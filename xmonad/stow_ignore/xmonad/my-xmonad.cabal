@@ -7,7 +7,9 @@ executable xmonad
   main-is:             ../xmonad.hs
   other-modules:       Erik.DoubleMaster
                        Erik.IndiPP
+                       Erik.IfVertical
                        Erik.MyLimitWindows
+                       Erik.CompactWorkspaces
                        Erik.MyStuff
                        Erik.ThreeColP
   build-depends:       base

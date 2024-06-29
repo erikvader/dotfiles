@@ -16,7 +16,7 @@ import qualified Data.Map        as M
 
 import Codec.Binary.UTF8.String as UTF8
 
-import XMonad.Actions.PhysicalScreens (viewScreen,sendToScreen)
+import XMonad.Actions.PhysicalScreens (viewScreen,sendToScreen,screenComparatorByRectangle,ScreenComparator)
 import XMonad.Actions.SwapWorkspaces (swapTo,swapWithCurrent)
 
 import XMonad.Util.SpawnOnce (spawnOnce)
@@ -39,9 +39,11 @@ import XMonad.Layout.MultiToggle.Instances (StdTransformers(FULL))
 import XMonad.Layout.Renamed (renamed,Rename(CutWordsLeft))
 import XMonad.Layout.Spacing (spacingRaw,Border(Border))
 import XMonad.Layout.SimplestFloat (simplestFloat)
+import XMonad.Layout.MultiColumns
 
 import Erik.MyStuff
 import Erik.IndiPP
+import Erik.IfVertical
 
 myXPConfig :: XPConfig
 myXPConfig = def {
@@ -57,6 +59,12 @@ runXmonadStartupOnce = do
     perms <- io $ getPermissions startupFile
     when (executable perms) $
       spawnOnce startupFile
+
+-- like verticalScreenOrderer (the default), but sorts bottom-to-top instead
+screenOrderer :: ScreenComparator
+screenOrderer = screenComparatorByRectangle comparator
+  where
+    comparator (Rectangle x1 y1 _ _) (Rectangle x2 y2 _ _) = compare (y2, x1) (y1, x2)
 
 superMask = mod4Mask
 shift = (.|.) shiftMask
@@ -181,8 +189,8 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
     --
     [((m .|. modm, key), f sc)
         | (key, sc) <- zip [xK_a, xK_s, xK_d] [0..]
-        , (f, m) <- [(viewScreen def, 0),
-                     (sendToScreen def, shiftMask)
+        , (f, m) <- [(viewScreen screenOrderer, 0),
+                     (sendToScreen screenOrderer, shiftMask)
                     ]]
 
 myMouseBindings _ =
@@ -202,7 +210,7 @@ myFocusPPXin = def
       ppSep = " ^fg(orange):^fg() ",
       ppTitle = shorten 60,
       ppLayout = colorLayout ["Full"],
-      ppSort = getSortByXineramaPhysicalRule def
+      ppSort = getSortByXineramaPhysicalRule screenOrderer
     }
   where
     colorLayout keywords s = fromMaybe s $ do
@@ -262,7 +270,10 @@ myLayoutHook =
   renamed [CutWordsLeft 1] $ -- remove smartspacing text
   spacingRaw True (Border 3 3 3 3) True (Border 3 3 3 3) True $
   mkToggle (single FULL) $
-  Tall 1 (3/100) (1/2) ||| simplestFloat
+  ifVertical vertical tall ||| simplestFloat
+  where
+    tall = Tall 1 (3/100) (1/2)
+    vertical = Mirror $ multiCol [1] 1 0.01 0.5
 
 myConfig = def {
   modMask = superMask,
