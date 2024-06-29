@@ -46,7 +46,7 @@ function random_theme_fair {
 }
 
 function list_all {
-    find "$THEME_DIR" -mindepth 1 -maxdepth 1 \! -path "$STATE_DIR" -printf '%f\n' | sort
+    find "$THEME_DIR" -mindepth 1 -maxdepth 1 -type d \! -path "$STATE_DIR" -printf '%f\n' | sort
 }
 
 function list_hidden {
