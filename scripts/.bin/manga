@@ -10,9 +10,10 @@ function print_help {
     echo -e "$r    Creates a new directory ready to download from MANGA_URL"
     echo -e "$w  manga [FLAGS..] download [--force] [--lang LANG] CHAPTER_RANGE [!] [GROUP...]"
     echo -e "$r    Downloads chapters from CHAPTER_RANGE from an optionally specified translator group."
-    echo -e "$r    The flag --force disregards the download cache and redownloads every specified."
-    echo -e "$r    The flag --lang sets the language to download, defaults to 'en' i.e. english."
-    echo -e "$r    file that doesn't exist. CHAPTER_RANGE can be: 27 or +5 or 1- or -5 or all (or -)."
+    echo -e "$r    The flag --force disregards the download cache and redownloads every specified file."
+    echo -e "$r    The flag --lang sets the language to download, defaults to 'en' i.e. english. Set to"
+    echo -e "$r    the empty string to download in any language."
+    echo -e "$r    CHAPTER_RANGE can be: 27 or +5 or 1- or -5 or all (or -)."
     echo -e "$r    GROUP are zero or more groups to download from, or to not download from if a single '!' is present."
     echo -e "$w  manga [FLAGS..] download-link URL"
     echo -e "$r    Download a chapter from URL"
@@ -247,15 +248,11 @@ function verify_cbz {
 
 function list_chapters {
     local lang=$1
-    local filter='true'
-    if [[ -n $lang ]]; then
-        filter=".lang == \"$lang\""
-    fi
 
-    gallery-dl-do -o metadata=true --dump-json "$(cat .manga/url)" | jq -r \
+    gallery-dl-do ${lang:+ -o lang="$lang"} -o metadata=true --dump-json "$(cat .manga/url)" \
+        | tee .manga/chapters.json | jq -r \
         'map(
-           .[2]'"
-           | select($filter)"'
+           .[2]
            | {chapter: ((.chapter | tostring) + .chapter_minor | tonumber), group: (.group | sort | join("; "))}
          )
          | group_by(.chapter)
