@@ -6,7 +6,9 @@ mod versionsort;
 
 // TODO: Den här är sjukt mycket långsammare än vanlig `ls` när det är många filer som
 // kommer och går snabbt (youtube-dl), lista ut vad vanliga ls gör och gör samma sak här,
-// om det går
+// om det går.
+// TODO: Efter att ha kollat på strace så gör de samma saker ser det ut som. Dubbelkolla
+// testet o se till att ls körs med flaggorna `-la` så att det blir ekvivalent
 
 use ansistring::*;
 use lazy_static::lazy_static;
@@ -47,20 +49,6 @@ lazy_static! {
 }
 
 const SUFFIXES: &[&str] = &["B ", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"];
-
-// trait OptionExt {
-//     fn maybe(self) -> Self;
-// }
-
-// impl<T> OptionExt for Option<T> {
-//     fn maybe(self) -> Self {
-//         if thread_rng().gen_bool(0.0) {
-//             None
-//         } else {
-//             self
-//         }
-//     }
-// }
 
 fn is_exec(mode: u32) -> bool {
     (libc::S_IXUSR | libc::S_IXGRP | libc::S_IXOTH) & mode != 0
