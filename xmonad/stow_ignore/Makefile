@@ -1,5 +1,4 @@
-TARGETDIR := $(HOME)/.bin
-XMONAD := $(TARGETDIR)/xmonad
+XMONAD := $(INSTALLDIR)/xmonad
 SRCDIR := ./xmonad
 SRCS := $(SRCDIR)/xmonad.hs
 STACKYAML := $(SRCDIR)/stack.yaml
@@ -12,7 +11,7 @@ ifdef force
 endif
 
 $(XMONAD): $(SRCS)
-	stack --stack-yaml $(STACKYAML) --local-bin-path $(TARGETDIR) install
+	stack --stack-yaml $(STACKYAML) --local-bin-path $(INSTALLDIR) install
 
 .PHONY: restart
 restart: $(XMONAD)

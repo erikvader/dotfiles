@@ -30,7 +30,7 @@ dirsinstall := $(addsuffix \:install,$(dirs))
 dirsmake := $(addsuffix \:make,$(dirs))
 dirsmakeadd := $(addsuffix \:makeadd,$(dirs))
 
-.PHONY: $(dirsinstall) $(dirsmake) $(dirsadd) $(dirsmakeadd) $(dirsdry) $(dirs) $(dirsdel) $(dirsre) all help install-everything
+.PHONY: $(dirsinstall) $(dirsmake) $(dirsadd) $(dirsmakeadd) $(dirsdry) $(dirs) $(dirsdel) $(dirsre) all help install-everything remove-dead-links
 
 help:
 	@echo 'My dotfiles manager'
@@ -56,7 +56,7 @@ help:
 	@echo 'Notes: Might not work with spaces in filenames at all!'
 	@echo '       GNU stow must be installed'
 
-all: install-everything $(dirsmakeadd)
+all: install-everything $(dirsmakeadd) remove-dead-links
 
 $(dirsmakeadd): %\:makeadd: %\:make %\:add
 $(dirs): %: %\:install %\:makeadd
@@ -95,3 +95,5 @@ install-everything: $(ALLPAC) $(ALLPIP)
 	$(call install-from,$(ALLPAC),PAC)
 	$(call install-from,$(ALLPIP),PIP)
 
+remove-dead-links:
+	find $(INSTALLDIR) -mindepth 1 -maxdepth 1 -xtype l -print -delete
