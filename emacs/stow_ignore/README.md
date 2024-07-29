@@ -23,38 +23,6 @@ Add the flag `--without-toolkit-scroll-bars` to the nativecomp step in
 `build()`. This will make emacs use its own scrollbars, removing the
 pain of having them get changed based on the global system theme.
 
-## Avoid building the info pages
-Can't for some reason install
-[makeinfo](https://www.gnu.org/software/texinfo/)? Its possible to
-skip that step, but it's a little fiddly.
-
-> ⚠️ This is maybe only required when building directly from the
-[source](http://git.savannah.gnu.org/cgit/emacs.git) and not from
-[releases](http://ftp.gnu.org/gnu/emacs/).
-
-Before `configure`, run `mkdir -p info/emacs` to make the configure
-script believe there already is documention included (its included in
-releases, but not from the source repo or something).
-
-Then when running `make`, add the argument `MAKEINFO=true` to use the
-program `true` instead of `makeinfo`, basically making it into a
-no-op.
-
-## Set install location
-```sh
-./configure --prefix="$HOME/emacs"
-make install
-```
-
-## Skip imaging and networking stuff
-Can't for some reason install some optional libraries? Exclude them in
-the configure step. The configure script will say what it couldn't
-find and suggest flags by itself too.
-
-```sh
-./configure --with-gnutls=ifavailable --with-jpeg=ifavailable
-```
-
 ## This is what the diff could look like
 ```diff
 --- old/emacs/PKGBUILD
@@ -148,4 +116,51 @@ makepkg --clean --syncdeps --skippgpcheck
 # Install
 ```sh
 pacman -U emacs-nativecomp-28.2-2-x86_64.pkg.tar.zst
+```
+
+Don't forget to add `emacs-nativecomp` to the ignore list in
+`/etc/pacman.conf` to avoid pacman updating emacs to another version
+with different settings.
+
+```
+IgnorePkg = emacs-nativecomp
+```
+
+# Installing on a restricted system
+These are solutions to steps that can cause problems when building on
+an old system. These steps don't assume `makepkg`, but using the
+makefile directly.
+
+## Avoid building the info pages
+Can't for some reason install
+[makeinfo](https://www.gnu.org/software/texinfo/)? Its possible to
+skip that step, but it's a little fiddly.
+
+> ⚠️ This is maybe only required when building directly from the
+[source](http://git.savannah.gnu.org/cgit/emacs.git) and not from
+[releases](http://ftp.gnu.org/gnu/emacs/).
+
+Before `configure`, run `mkdir -p info/emacs` to make the configure
+script believe there already is documention included (its included in
+releases, but not from the source repo or something).
+
+Then when running `make`, add the argument `MAKEINFO=true` to use the
+program `true` instead of `makeinfo`, basically making it into a
+no-op.
+
+## Set install location
+Install to another location if missing root access.
+
+```sh
+./configure --prefix="$HOME/emacs"
+make install
+```
+
+## Skip imaging and networking stuff
+Can't for some reason install some optional libraries? Exclude them in
+the configure step. The configure script will say what it couldn't
+find and suggest flags by itself too.
+
+```sh
+./configure --with-gnutls=ifavailable --with-jpeg=ifavailable
 ```
