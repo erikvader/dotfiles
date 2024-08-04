@@ -292,44 +292,6 @@ class my_quit(Command):
         else:
             self.fm.notify("Not quitting: multiple tabs are open")
 
-class paste_ext2(Command):
-    """
-    :paste_ext2
-
-    This is a modified version of the default :paste_ext that uses my
-    custom splitext-function to make it work properly with files such
-    as hej.tar.gz.
-
-    Like paste but tries to rename conflicting files so that the
-    file extension stays intact (e.g. file_.ext).
-    """
-
-    @staticmethod
-    def make_safe_path(dst, splitext):
-        if not os.path.exists(dst):
-            return dst
-
-        dst_name, dst_ext = splitext(dst)
-
-        if not dst_name.endswith("_"):
-            dst_name += "_"
-            if not os.path.exists(dst_name + dst_ext):
-                return dst_name + dst_ext
-        n = 0
-        test_dst = dst_name + str(n)
-        while os.path.exists(test_dst + dst_ext):
-            n += 1
-            test_dst = dst_name + str(n)
-
-        return test_dst + dst_ext
-
-    def execute(self):
-        try:
-            import splitext
-            return self.fm.paste(make_safe_path=lambda dst: paste_ext2.make_safe_path(dst, splitext.splitext))
-        except ModuleNotFoundError:
-            self.fm.notify("couldn't find module splitext, aborting...", bad=True)
-
 class move_to_random(Command):
     """
     :move_to_random
