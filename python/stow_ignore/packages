@@ -6,3 +6,11 @@ python-pylint
 
 # Should already be installed as a prerequisite
 python-pipx
+
+# For creating installable packages and running standalone python scripts with
+# dependencies
+python-hatch
+
+# For formatting code
+python-black
+
