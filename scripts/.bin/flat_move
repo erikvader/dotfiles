@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+if [[ $# -lt 2 ]]; then
+    echo invalid usage >&2
+    exit 1
+fi
+
+src=$1
+shift
+dst=$1
+shift
+
+echo Moving files from "$src" to "$dst" filtering on: "$@"
+find "$src" -type f "$@" -exec mv -t "$dst" --backup=t -v '{}' +
+
+echo Deleting empty directories 'in' "$src"
+find "$src" -mindepth 1 -type d -empty -print -delete
