@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rememberer"
+version = "0.0.1"
+requires-python = ">= 3.10"
+dependencies = [
+  "beautifulsoup4 >= 4.12",
+  "lxml >= 5",
+  ]
+scripts = {rememberer = "rememberer.__main__:main"}

@@ -1,7 +1,7 @@
 # pylint: disable=unused-import
 from ..types import ParseException, Soup, Thing, UserError, T
 from urllib.parse import parse_qs, ParseResult, urlparse
-from beautifulsoupUtils import unique_selector  # type: ignore
+from ..utils import unique_selector
 from typing import Iterator, Any, List, Optional, Callable
 import sys
 
