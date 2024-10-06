@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Shows the status of all submodules, unless they are detached and non-dirty
+
+set -e
+
+STATUS=$(git -c color.ui=always status --short --branch --ignore-submodules)
+NUM_LINES=$(wc -l <<< "$STATUS")
+grep -q 'HEAD (no branch)' <<< "$STATUS"
+DETACHED=$?
+
+if [[ "$NUM_LINES" -gt 1 || "$DETACHED" -ne 0 ]]; then
+    echo -n '#'
+    tput bold
+    tput setaf 4
+    echo " ${displaypath:-.}"
+    tput sgr0
+    echo "$STATUS"
+fi
+
+if [[ "$1" == --toplevel ]]; then
+    git submodule --quiet foreach --recursive "$0"
+fi
