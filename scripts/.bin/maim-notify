@@ -1,24 +1,25 @@
 #!/bin/bash
 
-# saves a screenshot in a directory and tries to put in the clipboard
-
 DIRECTORY="$HOME/Pictures/screenshots"
-FILENAME="$DIRECTORY/$(date '+%F_%T_%N').png"
+HIGH="$DIRECTORY/$(date '+%F_%T_%N').png"
+TEMP_DIRECTORY="${TMPDIR:-/tmp}"
+LOW="$TEMP_DIRECTORY/screenshot.jpg"
 
-if maim "$@" "$FILENAME"; then
-    notify-send 'screenshot' "saved at $FILENAME"
+if maim "$@" "$HIGH"; then
+    notify-send 'screenshot' "saved at $HIGH"
 else
     notify-send 'screenshot' 'failed or was aborted'
     exit 1
 fi
 
-SIZE=$(stat -c %s "$FILENAME")
-if [[ $SIZE -gt 500000 ]]; then
-    notify-send 'screenshot' 'too large, not available in the clipboard'
+if magick "$HIGH" "$LOW"; then
+    notify-send 'screenshot' "compressed version available at $LOW"
+else
+    notify-send 'screenshot' 'failed to create a compressed version'
     exit 1
 fi
 
-TYPE=$(file -b --mime-type "$FILENAME")
-if ! xclip -selection clipboard -t "$TYPE" -i "$FILENAME"; then
+TYPE=$(file -b --mime-type "$LOW")
+if ! xclip -selection clipboard -t "$TYPE" -i "$LOW"; then
     notify-send 'screenshot' 'xclip failed to put the screenshot in the clipboard'
 fi
