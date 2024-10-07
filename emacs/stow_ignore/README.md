@@ -113,6 +113,15 @@ pain of having them get changed based on the global system theme.
 makepkg --clean --syncdeps --skippgpcheck
 ```
 
+## PGP
+An alternative to skipping the PGP check above is to import the key
+of the maintainer listed in the `PKGBUILD`:
+```sh
+pgp --recv-key <the long fingerprint>
+```
+The keyrings used by pacman is [separate](http://allanmcrae.com/2015/01/two-pgp-keyrings-for-package-management-in-arch-linux/)
+from the user, which is why the maintainer's key needs to be imported.
+
 # Install
 ```sh
 pacman -U emacs-nativecomp-28.2-2-x86_64.pkg.tar.zst
