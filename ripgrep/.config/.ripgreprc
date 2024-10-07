@@ -1,3 +1,4 @@
 --hidden
+# This should be implicitly ignored if a .gitignore file is present, IMHO
 --glob=!.git
 
