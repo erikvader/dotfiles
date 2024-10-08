@@ -39,14 +39,9 @@ alias tvpoweroff='ssh -t tv@TV "sudo poweroff"'
 alias tvsuspend='ssh -t tv@TV "sudo systemctl suspend"'
 alias tvwakeup='wol 3c:97:0e:b1:53:44'
 
-alias gl='git log --graph --pretty='"'"'%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'"'"
-alias gla='gl --all'
-alias gst='git status'
-alias gsa='git status --untracked-files=all'
-alias gsr='git-status-recursive --toplevel'
-alias gdr='git diff --submodule=diff'
-alias gmu='git submodule update --init --checkout --recursive'
-alias gmf='git submodule foreach --recursive'
+alias g=git
+alias gup='cd "$(git rev-parse --show-cdup)"'
+alias gsuper='cd "$(git rev-parse --show-superproject-working-tree)"'
 
 alias SS='sudo systemctl'
 alias SU='systemctl --user'

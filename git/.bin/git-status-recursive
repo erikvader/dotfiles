@@ -2,14 +2,19 @@
 
 # Shows the status of all submodules, unless they are detached and non-dirty
 
-set -e
+TOPLEVEL=false
+if [[ "$1" == --toplevel ]]; then
+    TOPLEVEL=true
+fi
 
 STATUS=$(git -c color.ui=always status --short --branch --ignore-submodules)
 NUM_LINES=$(wc -l <<< "$STATUS")
-grep -q 'HEAD (no branch)' <<< "$STATUS"
-DETACHED=$?
 
-if [[ "$NUM_LINES" -gt 1 || "$DETACHED" -ne 0 ]]; then
+if $TOPLEVEL; then
+    displaypath=$(git rev-parse --show-prefix)
+fi
+
+if [[ "$NUM_LINES" -gt 1 ]] || git-detached; then
     echo -n '#'
     tput bold
     tput setaf 4
@@ -18,6 +23,6 @@ if [[ "$NUM_LINES" -gt 1 || "$DETACHED" -ne 0 ]]; then
     echo "$STATUS"
 fi
 
-if [[ "$1" == --toplevel ]]; then
+if $TOPLEVEL; then
     git submodule --quiet foreach --recursive "$0"
 fi

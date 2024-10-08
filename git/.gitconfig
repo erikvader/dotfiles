@@ -1,13 +1,49 @@
 [user]
-	name = Erik Rimskog
-	email = erik.rimskog@gmail.com
+    name = Erik Rimskog
+    email = erik.rimskog@gmail.com
 [pull]
-	ff = only
+    ff = only
 [merge]
-	conflictstyle = diff3
+    conflictstyle = diff3
 [rerere]
-	enabled = 1
+    enabled = 1
 [init]
-	defaultBranch = master
+    defaultBranch = master
 [core]
-	quotepath = off
+    quotepath = off
+[alias]
+    # add
+    a = add
+    aa = a --all
+    # rebase
+    re = rebase
+    # merge
+    me = merge
+    # commit
+    co = commit
+    # diff
+    d = diff
+    dr = d --submodule=diff
+    # status
+    s = status
+    sr = !git-status-recursive --toplevel
+    su = s --untracked-files=all
+    # fetch
+    f = fetch
+    fr = mf 'git f'
+    # pull
+    pl = pull
+    plr = mf "'if git-detached; then git pl; fi'"
+    # push
+    ps = push
+    psr = mf "'if git-detached; then git ps; fi'"
+    # switch
+    sw = switch
+    swr = "!git mf \"git sw $1 || true\" #"
+    # submodule
+    m = submodule
+    mf = m foreach --recursive
+    mu = m update --init --checkout --recursive
+    # log
+    l = log --graph --pretty='%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
+    la = l --all
