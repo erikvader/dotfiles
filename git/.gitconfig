@@ -47,3 +47,5 @@
     # log
     l = log --graph --pretty='%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
     la = l --all
+[diff]
+	algorithm = histogram
