@@ -7,7 +7,7 @@ if [[ "$1" == --toplevel ]]; then
     TOPLEVEL=true
 fi
 
-STATUS=$(git -c color.ui=always status --short --branch --ignore-submodules)
+STATUS=$(git -c color.ui=always status --short --branch --ignore-submodules=dirty)
 NUM_LINES=$(wc -l <<< "$STATUS")
 
 if $TOPLEVEL; then
