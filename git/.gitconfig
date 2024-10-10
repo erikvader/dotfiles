@@ -11,14 +11,26 @@
     defaultBranch = master
 [core]
     quotepath = off
+[diff]
+    algorithm = histogram
 [alias]
     # add
     a = add
     aa = a --all
     # rebase
-    re = rebase
+    rb = rebase
+    rbc = rb --continue
+    rba = rb --abort
+    rbm = rb --interactive --keep-base
     # merge
     me = merge
+    mec = me --no-ff
+    mef = me --ff-only
+    # reset
+    rs = reset
+    rsh = rs --hard
+    # squash
+    sq = !git-squash
     # commit
     co = commit
     # diff
@@ -27,7 +39,7 @@
     # status
     s = status
     sr = !git-status-recursive --toplevel
-    su = s --untracked-files=all
+    sa = s --untracked-files=all
     # fetch
     f = fetch
     fr = mf 'git f'
@@ -37,15 +49,16 @@
     # push
     ps = push
     psr = mf "'if git-detached; then git ps; fi'"
+    psforce = ps --force-with-lease
     # switch
     sw = switch
     swr = "!git mf \"git sw $1 || true\" #"
+    swd = sw --detached
     # submodule
     m = submodule
     mf = m foreach --recursive
     mu = m update --init --checkout --recursive
+    ms = m summary
     # log
     l = log --graph --pretty='%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
     la = l --all
-[diff]
-	algorithm = histogram
