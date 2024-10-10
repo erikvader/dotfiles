@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Squashes the current feature branch into a single commit
+
+set -e
+
+if [[ $# -ne 1 ]]; then
+    echo 'Needs a branch revision to squash against, like origin/develop' 2>&1
+    exit 1
+fi
+
+upstream=$1
+head=$(git rev-parse HEAD)
+base=$(git merge-base HEAD "$upstream")
+
+git log --pretty --oneline --graph "$base".."$head"
+
+read -p 'Squash these? (y/N): ' yn
+if [[ "$yn" != y ]]; then
+    echo Aborting...
+    exit 1
+fi
+
+echo "+ Hard reset to $base"
+git reset --hard "$base"
+
+echo "+ Squash merge with $head"
+git merge --squash "$head" || true
+
+echo
+echo "+ Fix conflicts, if any, and commit the result with 'git commit'"
+echo "+ or run 'git reset --hard ${head:0:9}' to undo"
