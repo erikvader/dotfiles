@@ -25,3 +25,6 @@ autoload -U +X bashcompinit && bashcompinit
 
 # set colors for completion
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+
+# expand aliases with tab
+zstyle ':completion:*' completer _expand_alias _complete _ignored
