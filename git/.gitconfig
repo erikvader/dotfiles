@@ -13,6 +13,8 @@
     quotepath = off
 [diff]
     algorithm = histogram
+[clean]
+    requireForce = false
 [alias]
     # add
     a = add
@@ -29,10 +31,15 @@
     # reset
     rs = reset
     rsh = rs --hard
+    rshr = "!git mf \"git rsh $1\" #"
     # squash
     sq = !git-squash
     # commit
     co = commit
+    coa = co --amend
+    # clean
+    cl = clean
+    clr = mf 'git cl'
     # diff
     d = diff
     dr = d --submodule=diff
@@ -46,6 +53,7 @@
     # pull
     pl = pull
     plr = mf "'if git-detached; then git pl; fi'"
+    plrf = mf "'if git-detached; then git f && git rsh @{upstream}; fi'"
     # push
     ps = push
     psr = mf "'if git-detached; then git ps; fi'"
@@ -53,7 +61,9 @@
     # switch
     sw = switch
     swr = "!git mf \"git sw $1 || true\" #"
-    swd = sw --detached
+    swd = sw --detach
+    swdr = "!git mf \"git swd $1 || true\" #"
+    swur = "!git mf \"if ! git-detached; then git swd $1 || true; fi\" #"
     # submodule
     m = submodule
     mf = m foreach --recursive
