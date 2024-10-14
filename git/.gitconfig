@@ -70,5 +70,5 @@
     mu = m update --init --checkout --recursive
     ms = m summary
     # log
-    l = log --graph --pretty='%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
+    l = log --boundary --graph --pretty='%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
     la = l --all
