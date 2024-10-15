@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Shows the status of the current repo in short form, unless it is detached and non-dirty
+
+set -e
+
+STATUS=$(git-display -c color.ui=always status --short --branch --ignore-submodules=dirty)
+NUM_LINES=$(wc -l <<< "$STATUS")
+
+if [[ "$NUM_LINES" -gt 2 ]] || git-not-detached; then
+    echo "$STATUS"
+fi

@@ -5,7 +5,12 @@
 set -e
 
 if [[ $# -ne 1 ]]; then
-    echo 'Needs a branch revision to squash against, like origin/develop' 2>&1
+    echo 'Needs a branch revision to squash against, like origin/develop' >&2
+    exit 1
+fi
+
+if ! git-is-clean; then
+    echo 'The repo is not clean :(' >&2
     exit 1
 fi
 
@@ -15,9 +20,9 @@ base=$(git merge-base HEAD "$upstream")
 
 git log --pretty --oneline --graph "$base".."$head"
 
-read -p 'Squash these? (y/N): ' yn
+read -rp 'Squash these? (y/N): ' yn
 if [[ "$yn" != y ]]; then
-    echo Aborting...
+    echo 'Aborting...' >&2
     exit 1
 fi
 

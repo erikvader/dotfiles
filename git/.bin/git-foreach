@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Runs a command in all submodules and the top-level repo, unlike `git submodule foreach --recursive`.
+
+set -e
+
+displaypath=$(git rev-parse --show-prefix)
+displaypath=${displaypath:-.}
+export displaypath
+
+eval "$*"
+
+export -n displaypath
+unset displaypath
+
+git submodule --quiet foreach --recursive "$*"

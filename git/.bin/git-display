@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Runs git with a nice header displaying the current submodule
+
+set -e
+
+echo -n '#'
+tput bold
+tput setaf 4
+echo " ${displaypath:-.}"
+tput sgr0
+
+exec git "$@"

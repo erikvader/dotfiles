@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Exits with 0 if the git repo is clean, i.e., not dirty
+
+OUT=$(git status --porcelain 2>/dev/null) || exit 5
+test -z "$OUT"
