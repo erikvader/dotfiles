@@ -137,17 +137,15 @@ IgnorePkg = emacs-nativecomp
 
 # Installing on a restricted system
 These are solutions to steps that can cause problems when building on
-an old system. These steps don't assume `makepkg`, but using the
-makefile directly.
+an old and/or restricted system. These steps doesn't use `makepkg`, but
+uses the source directly from
+[savannah](http://git.savannah.gnu.org/cgit/emacs.git) 
+or [ftp](http://ftp.gnu.org/gnu/emacs/).
 
 ## Avoid building the info pages
 Can't for some reason install
 [makeinfo](https://www.gnu.org/software/texinfo/)? Its possible to
 skip that step, but it's a little fiddly.
-
-> ⚠️ This is maybe only required when building directly from the
-[source](http://git.savannah.gnu.org/cgit/emacs.git) and not from
-[releases](http://ftp.gnu.org/gnu/emacs/).
 
 Before `configure`, run `mkdir -p info/emacs` to make the configure
 script believe there already is documention included (its included in
@@ -162,7 +160,6 @@ Install to another location if missing root access.
 
 ```sh
 ./configure --prefix="$HOME/emacs"
-make install
 ```
 
 ## Skip imaging and networking stuff
@@ -173,3 +170,16 @@ find and suggest flags by itself too.
 ```sh
 ./configure --with-gnutls=ifavailable --with-jpeg=ifavailable
 ```
+
+## Compile and install
+Follow the instructions in the `INSTALL` file (or copy from `PKGBUILD`),
+but they basically are:
+
+```sh
+./configure --without-toolkit-toolbars
+make -j6
+make install
+```
+
+Most default values for the configure script are fine, it's not necessary
+to copy all of the ones in the `PKGBUILD`.
