@@ -119,7 +119,7 @@ of the maintainer listed in the `PKGBUILD`:
 ```sh
 pgp --recv-key <the long fingerprint>
 ```
-The keyrings used by pacman is [separate](http://allanmcrae.com/2015/01/two-pgp-keyrings-for-package-management-in-arch-linux/)
+The keyrings used by pacman are [separate](http://allanmcrae.com/2015/01/two-pgp-keyrings-for-package-management-in-arch-linux/)
 from the user, which is why the maintainer's key needs to be imported.
 
 # Install
