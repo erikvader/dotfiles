@@ -20,9 +20,6 @@ zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'
 # complete . and ..
 zstyle ':completion:*' special-dirs true
 
-# load bash completions
-autoload -U +X bashcompinit && bashcompinit
-
 # set colors for completion
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 
