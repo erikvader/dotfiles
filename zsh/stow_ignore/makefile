@@ -1,13 +1,24 @@
-TARGET := $(HOME)/.local/share/ohmyzsh
+OHMYZSH := $(HOME)/.local/share/ohmyzsh
 CLONEURL := https://github.com/ohmyzsh/ohmyzsh.git
 REVISION := a3c579bf27b34942d4c6ad64e7cfd75788b05ea3
 
-install: $(TARGET)
+FPATH := $(HOME)/.zshfpath.d
+GITCOMP := $(FPATH)/_git
+
+TARGETS := $(OHMYZSH) $(GITCOMP)
+
+install: $(TARGETS)
 
 ifdef force
-.PHONY: $(TARGET)
+.PHONY: $(TARGETS)
 endif
 
-$(TARGET):
+$(OHMYZSH):
 	git clone $(CLONEURL) $@
-	cd $(TARGET) && git checkout $(REVISION)
+	git -C $@ checkout $(REVISION)
+
+# To get full git completions, see the install instructions in the file
+# https://github.com/git/git/blob/master/contrib/completion/git-completion.zsh
+$(GITCOMP):
+	mkdir -p $(@D)
+	ln -s /usr/share/git/completion/git-completion.zsh $@
