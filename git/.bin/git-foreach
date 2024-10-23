@@ -4,13 +4,42 @@
 
 set -e
 
+notdetached=false
+isdetached=false
+ignorestatus=false
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --not-detached)
+            notdetached=true
+            ;;
+        --is-detached)
+            isdetached=true
+            ;;
+        --ignore-fail)
+            ignorestatus=true
+            ;;
+        *) break ;;
+    esac
+    shift
+done
+
+cmd=$*
+if $ignorestatus; then
+    cmd="$cmd || true"
+fi
+if $notdetached; then
+    cmd="if git-not-detached; then $cmd; fi"
+elif $isdetached; then
+    cmd="if ! git-not-detached; then $cmd; fi"
+fi
+
 displaypath=$(git rev-parse --show-prefix)
 displaypath=${displaypath:-.}
 export displaypath
+# TODO: also add name, sm_path, sha1 and toplevel
 
-eval "$*"
+sh -c "$cmd" "$cmd"
 
 export -n displaypath
-unset displaypath
 
-git submodule --quiet foreach --recursive "$*"
+git submodule --quiet foreach --recursive "$cmd"

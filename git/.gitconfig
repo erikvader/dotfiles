@@ -14,6 +14,8 @@
 [diff]
     algorithm = histogram
 [alias]
+    # clone
+    cloner = clone --recurse-submodules
     # add
     a = add
     aa = a --all
@@ -34,17 +36,17 @@
     # reset
     rs = reset
     rsh = rs --hard
-    rshr = !git-foreach git-display rsh
+    rshr = !: reset && git-foreach git-display rsh
     # squash
-    sq = !git-squash
+    sq = !: branch && git-squash
     # commit
     co = commit
     coa = co --amend
     coan = coa --no-edit
     # clean
     cl = clean
-    clr = !git-foreach git-display cl
-    # diff
+    clr = !: clean && git-foreach git-display cl
+    # diff [A..B same as A B] [A...B same as (merge-base A B) B]
     d = diff
     dr = d --submodule=diff
     ds = d --staged
@@ -54,27 +56,27 @@
     sa = s --untracked-files=all
     # fetch
     f = fetch
-    fr = !git-foreach git-display f
+    fr = !: fetch && git-foreach git-display f
     # pull
     pl = pull
-    plr = !git-foreach "'if git-not-detached; then git-display pl; fi'"
-    plrf = !git-foreach "'if git-not-detached; then git-display f && git rsh @{upstream}; fi'"
+    plr = !: pull && git-foreach --not-detached git-display pl
+    plrf = !git-foreach --not-detached git-display f '&&' git rsh @{upstream}
     # push
     ps = push
-    psr = !git-foreach "'if git-not-detached; then git-display ps; fi'"
+    psr = !: push && git-foreach --not-detached git-display ps
     psforce = ps --force-with-lease
     # switch
     sw = switch
-    swr = "!git-foreach \"git-display sw $1 || true\" #"
+    swr = !: switch && git-foreach --ignore-fail git-display sw
     swd = sw --detach
-    swdr = "!git-foreach \"git-display swd $1 || true\" #"
-    swur = "!git-foreach \"if ! git-not-detached; then git-display swd $1 || true; fi\" #"
+    swdr = !: switch && git-foreach --ignore-fail git-display swd
+    swur = !: switch && git-foreach --is-detached --ignore-fail git-display swd
     # submodule
     m = submodule
     mf = m foreach --recursive
     mu = m update --init --checkout --recursive
     ms = m summary
-    # log
+    # log [A..B same as ^A B] [A...B same as A B ^(merge-base A B)]
     l = log --boundary --graph --pretty='%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
     la = l --all
     # worktree
