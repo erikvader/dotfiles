@@ -15,6 +15,7 @@ WORDCHARS=
 # use emacs-style keybindings
 bindkey -e
 
+# auto expand history
 bindkey ' ' magic-space
 
 # escape stuff when pasting
@@ -44,3 +45,6 @@ bindkey "${terminfo[kcuu1]}" up-line-or-beginning-search
 autoload -U down-line-or-beginning-search
 zle -N down-line-or-beginning-search
 bindkey "${terminfo[kcud1]}" down-line-or-beginning-search
+
+# expand alias similarly to bash
+bindkey '^[^e' _expand_alias
