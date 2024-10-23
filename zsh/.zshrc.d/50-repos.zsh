@@ -1,4 +1,11 @@
-REPOS=( "$HOME/.emacs.d" "$HOME/dotfiles" "$HOME/.config/qutebrowser" "$HOME/Documents/statusbar" "$HOME/.pythonlibs/emdb" )
+REPOS=(
+    $HOME/.emacs.d
+    $HOME/dotfiles
+    $HOME/.config/qutebrowser
+    $HOME/Documents/statusbar
+    $HOME/.pythonlibs/emdb
+)
+
 function repos_cmd {
     for re in "${REPOS[@]}"; do
         tput setaf 6
