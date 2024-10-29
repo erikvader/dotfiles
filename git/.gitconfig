@@ -14,6 +14,8 @@
 [diff]
     algorithm = histogram
 [alias]
+    # alias
+    alias = "!sed -Ee '1,/\\[alias]/d' -e 's/^ +//' -e \"s/^#(.*)$/$(tput setaf 4)#\\1$(tput sgr0)/\" ~/.gitconfig"
     # clone
     cloner = clone --recurse-submodules
     # add
