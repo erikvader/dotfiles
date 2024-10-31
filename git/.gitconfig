@@ -62,11 +62,13 @@
     # pull
     pl = pull
     plr = !: pull && git-foreach --not-detached git-display pl
-    plrf = !git-foreach --not-detached git-display f '&&' git rsh @{upstream}
+    plf = git f '&&' git rsh @{upstream}
+    plfr = !git-foreach --not-detached git-display plf
     # push
     ps = push
     psr = !: push && git-foreach --not-detached git-display ps
-    psforce = ps --force-with-lease
+    psf = ps --force-with-lease
+    psfr = !: push && git-foreach --not-detached git-display psf
     # switch
     sw = switch
     swr = !: switch && git-foreach --ignore-fail git-display sw
