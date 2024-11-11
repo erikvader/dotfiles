@@ -115,9 +115,11 @@ makepkg --clean --syncdeps --skippgpcheck
 
 ## PGP
 An alternative to skipping the PGP check above is to import the key
-of the maintainer listed in the `PKGBUILD`:
+of the maintainer listed in the `PKGBUILD` or from the files in the repo:
 ```sh
 pgp --recv-key <the long fingerprint>
+# or
+gpg --import keys/pgp/*
 ```
 The keyrings used by pacman are [separate](http://allanmcrae.com/2015/01/two-pgp-keyrings-for-package-management-in-arch-linux/)
 from the user, which is why the maintainer's key needs to be imported.
@@ -135,7 +137,7 @@ with different settings.
 IgnorePkg = emacs-nativecomp
 ```
 
-# Installing on a restricted system
+# Compiling and installing on a restricted system
 These are solutions to steps that can cause problems when building on
 an old and/or restricted system. These steps doesn't use `makepkg`, but
 uses the source directly from
