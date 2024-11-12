@@ -37,6 +37,15 @@ def handle_block(action, device):
 def handle_disp(action, _device):
    notify_send("Display", "Something display related happened! ({})".format(action), icon="video-display")
 
+def handle_blue(action, _device):
+   head = "Bluetooth " + ("connected" if action == "add" else "disconnected")
+   notify_send(head, "")
+
+def print_all(context):
+   monitor = pyudev.Monitor.from_netlink(context)
+   for device in iter(monitor.poll, None):
+      print(list(device.properties.items()))
+
 def main():
    context = pyudev.Context()
    usb_mon = pyudev.Monitor.from_netlink(context)
@@ -45,22 +54,25 @@ def main():
    block_mon.filter_by('block', 'partition')
    disp_mon = pyudev.Monitor.from_netlink(context)
    disp_mon.filter_by("drm")
+   blue_mon = pyudev.Monitor.from_netlink(context)
+   blue_mon.filter_by("bluetooth")
 
    usb_obs = pyudev.MonitorObserver(usb_mon, handle_usb)
    block_obs = pyudev.MonitorObserver(block_mon, handle_block)
    disp_obs = pyudev.MonitorObserver(disp_mon, handle_disp)
+   blue_obs = pyudev.MonitorObserver(blue_mon, handle_blue)
 
    usb_obs.daemon = False
    block_obs.daemon = False
    disp_obs.daemon = False
+   blue_obs.daemon = False
 
    usb_obs.start()
    block_obs.start()
    disp_obs.start()
+   blue_obs.start()
 
-   # monitor = pyudev.Monitor.from_netlink(context)
-   # for device in iter(monitor.poll, None):
-   #    print(list(device.properties.items()))
+   #print_all(context)
 
 if __name__ == "__main__":
    main()
