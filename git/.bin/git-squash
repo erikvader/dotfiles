@@ -9,29 +9,12 @@ if [[ $# -ne 1 ]]; then
     exit 1
 fi
 
-if ! git-is-clean; then
-    echo 'The repo is not clean :(' >&2
-    exit 1
-fi
-
 upstream=$1
 head=$(git rev-parse HEAD)
 base=$(git merge-base HEAD "$upstream")
 
-git log --pretty --oneline --graph "$base".."$head"
-
-read -rp 'Squash these? (y/N): ' yn
-if [[ "$yn" != y ]]; then
-    echo 'Aborting...' >&2
-    exit 1
-fi
-
-echo "+ Hard reset to $base"
-git reset --hard "$base"
-
-echo "+ Squash merge with $head"
-git merge --squash "$head" || true
+git reset --soft "$base"
 
 echo
-echo "+ Fix conflicts, if any, and commit the result with 'git commit'"
-echo "+ or run 'git reset --hard ${head:0:9}' to undo"
+echo "Commit the result with 'git commit'"
+echo "or run 'git reset --soft $head' to undo"
