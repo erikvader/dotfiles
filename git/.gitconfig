@@ -3,6 +3,11 @@
     email = erik.rimskog@gmail.com
 [pull]
     ff = only
+[fetch]
+    recurseSubmodules = on-demand
+    parallel = 0
+[submodule]
+    fetchJobs = 0
 [merge]
     conflictstyle = diff3
 [rerere]
@@ -13,6 +18,8 @@
     quotepath = off
 [diff]
     algorithm = histogram
+[format]
+    pretty = %C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset
 [alias]
     # alias
     alias = !git-alias
@@ -38,7 +45,8 @@
     # reset
     rs = reset
     rsh = rs --hard
-    rshr = !: reset && git-foreach git-display rsh
+    rshr = !: reset && git-foreach --not-detached git-display rsh
+    rshu = rsh @{upstream}
     # squash
     sq = !: branch && git-squash
     sqp = sq -p
@@ -46,17 +54,16 @@
     co = commit
     coa = co --amend
     coan = coa --no-edit
-    # clean
-    cl = clean
-    clr = !: clean && git-foreach git-display cl
     # diff [A..B same as A B] [A...B same as (merge-base A B) B]
     d = diff
     dr = d --submodule=diff
+    dm = d --submodule=log
     ds = d --staged
     # ahead
     ah = !: diff && git-ahead
     # status
     s = status
+    ss = s --short --branch
     sr = !git-foreach git-status-brief
     sa = s --untracked-files=all
     # fetch
@@ -65,8 +72,7 @@
     # pull
     pl = pull
     plr = !: pull && git-foreach --not-detached git-display pl
-    plf = git f '&&' git rsh @{upstream}
-    plfr = !git-foreach --not-detached git-display plf
+    plb = pl --rebase
     # push
     ps = push
     psr = !: push && git-foreach --not-detached git-display ps
@@ -81,10 +87,10 @@
     # submodule
     m = submodule
     mf = m foreach --recursive
-    mu = m update --init --checkout --recursive
-    ms = m summary
+    mu = m update --init --checkout
+    mur = mu --recursive
     # log [A..B same as ^A B] [A...B same as A B ^(merge-base A B)]
-    l = log --boundary --graph --pretty='%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'
+    l = log --boundary --graph
     la = l --all
     # worktree
     wt = worktree
