@@ -7,6 +7,7 @@ set -e
 notdetached=false
 isdetached=false
 ignorestatus=false
+doall=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --not-detached)
@@ -17,6 +18,9 @@ while [[ $# -gt 0 ]]; do
             ;;
         --ignore-fail)
             ignorestatus=true
+            ;;
+        --all)
+            doall=true
             ;;
         *) break ;;
     esac
@@ -31,6 +35,9 @@ if $notdetached; then
     cmd="if git-not-detached; then $cmd; fi"
 elif $isdetached; then
     cmd="if ! git-not-detached; then $cmd; fi"
+fi
+if ! $doall; then
+    cmd='case "$displaypath" in ../*) true ;; *) '"$cmd"' ;; esac'
 fi
 
 displaypath=$(git rev-parse --show-cdup)
