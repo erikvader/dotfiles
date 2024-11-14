@@ -4,17 +4,30 @@
 
 set -e
 
+preview=false
+if [[ $1 == --preview || $1 == -p ]]; then
+    preview=true
+    shift
+fi
+
 if [[ $# -ne 1 ]]; then
     echo 'Needs a branch revision to squash against, like origin/develop' >&2
     exit 1
 fi
 
 upstream=$1
-head=$(git rev-parse HEAD)
-base=$(git merge-base HEAD "$upstream")
+head=$(git rev-parse --short HEAD)
+base=$(git merge-base HEAD "$upstream" | xargs git rev-parse --short)
 
-git reset --soft "$base"
+echo "Merge base is: $base"
 
-echo
-echo "Commit the result with 'git commit'"
-echo "or run 'git reset --soft $head' to undo"
+if $preview; then
+    echo "Will squash these:"
+    git rev-list --oneline "$base".."$head"
+else
+    git reset --soft "$base"
+
+    echo
+    echo "Commit the result with 'git commit'"
+    echo "or run 'git reset --soft $head' to undo"
+fi

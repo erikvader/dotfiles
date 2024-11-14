@@ -41,6 +41,7 @@
     rshr = !: reset && git-foreach git-display rsh
     # squash
     sq = !: branch && git-squash
+    sqp = sq -p
     # commit
     co = commit
     coa = co --amend
