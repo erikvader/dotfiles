@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Prints branch status in the same way as `git status --short --branch`, but the branches
+# can be anything, not just the current and it's upstream.
+
+set -e
+
+if [[ $# -eq 1 ]]; then
+    RIGHT=$1
+    LEFT=$(git rev-parse --abbrev-ref HEAD)
+elif [[ $# -eq 2 ]]; then
+    LEFT=$1
+    RIGHT=$2
+else
+    echo 'Needs two commits to compare' >&2
+    exit 1
+fi
+
+aheadcol=$(tput setaf 2)
+behindcol=$(tput setaf 1)
+reset=$(tput sgr0)
+
+#TODO: show equal commits with --cherry-mark?
+read -r ahead behind < <(git rev-list --count --left-right "$LEFT"..."$RIGHT")
+
+echo -n "## ${aheadcol}$LEFT${reset}...${behindcol}$RIGHT${reset}"
+
+if [[ $ahead -ne 0 && $behind -ne 0 ]]; then
+    echo -n " [ahead ${aheadcol}$ahead${reset}, behind ${behindcol}$behind${reset}]"
+elif [[ $ahead -ne 0 ]]; then
+    echo -n " [ahead ${aheadcol}$ahead${reset}]"
+elif [[ $behind -ne 0 ]]; then
+    echo -n " [behind ${behindcol}$behind${reset}]"
+fi
+
+echo

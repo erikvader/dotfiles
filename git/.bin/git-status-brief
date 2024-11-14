@@ -4,9 +4,20 @@
 
 set -e
 
-STATUS=$(git-display -c color.ui=always status --short --branch --ignore-submodules=dirty)
-NUM_LINES=$(wc -l <<< "$STATUS")
+if [[ $# -ne 0 && $# -ne 1 ]]; then
+    echo "Wrong number of arguments" >&2
+    exit 1
+fi
 
-if [[ "$NUM_LINES" -gt 2 ]] || git-not-detached; then
-    echo "$STATUS"
+STATUS=$(git -c color.ui=always status --short --branch --ignore-submodules=dirty)
+NUM_LINES=$(wc -l <<< "$STATUS")
+HEADERS=1
+
+if [[ "$NUM_LINES" -gt $HEADERS ]] || git-not-detached; then
+    git-display --
+    head -n $HEADERS <<< "$STATUS"
+    if [[ $# -eq 1 ]]; then
+        git-ahead "$1"
+    fi
+    tail -n +$((HEADERS+1)) <<< "$STATUS"
 fi

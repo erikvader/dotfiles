@@ -10,4 +10,7 @@ tput setaf 4
 echo " ${displaypath:-.}"
 tput sgr0
 
-exec git "$@"
+# This is not a valid first argument to git, so its fine to use it as a special value.
+if [[ $1 != -- ]]; then
+    exec git "$@"
+fi

@@ -52,6 +52,8 @@
     d = diff
     dr = d --submodule=diff
     ds = d --staged
+    # ahead
+    ah = !: diff && git-ahead
     # status
     s = status
     sr = !git-foreach git-status-brief
