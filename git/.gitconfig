@@ -68,7 +68,7 @@
     sa = s --untracked-files=all
     # fetch
     f = fetch
-    fr = !: fetch && git-foreach git-display f
+    fr = f --recurse-submodules=yes
     # pull
     pl = pull
     plr = !: pull && git-foreach --not-detached git-display pl
