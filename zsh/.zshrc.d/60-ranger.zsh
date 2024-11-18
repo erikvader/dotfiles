@@ -1,7 +1,7 @@
 function ranger-cd {
     temp="$(mktemp)"
 
-    SHELL=r.shell ranger --choosedir "$temp"
+    SHELL=r.shell ranger --choosedir "$temp" "$@"
 
     content="$(cat "$temp" 2>/dev/null)" &&
         if [[ "$content" ]]; then
