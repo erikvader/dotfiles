@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Shows the status of the current repo in short form, unless it is detached and non-dirty
+# Shows the status of the current repo in short form, unless it is detached and non-dirty.
+# Shows git ahead info if an argument is given.
 
 set -e
 
@@ -13,11 +14,14 @@ STATUS=$(git -c color.ui=always status --short --branch --ignore-submodules=dirt
 NUM_LINES=$(wc -l <<< "$STATUS")
 HEADERS=1
 
-if [[ "$NUM_LINES" -gt $HEADERS ]] || git-not-detached; then
+DETACHED=true
+git-not-detached && DETACHED=false
+
+if [[ "$NUM_LINES" -gt $HEADERS ]] || ! $DETACHED; then
     git-display --
     head -n $HEADERS <<< "$STATUS"
-    if [[ $# -eq 1 ]]; then
-        git-ahead "$1"
+    if [[ $# -eq 1 ]] && ! $DETACHED; then
+        git-ahead --blank "$1"
     fi
     tail -n +$((HEADERS+1)) <<< "$STATUS"
 fi

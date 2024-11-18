@@ -64,6 +64,7 @@
     # status
     s = status
     ss = s --short --branch
+    # sr [branch-for-git-ahead]
     sr = !git-foreach git-status-brief
     sa = s --untracked-files=all
     # fetch

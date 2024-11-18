@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Runs a command in all submodules and the top-level repo, unlike `git submodule foreach --recursive`.
+# Runs a command in all submodules and, unlike `git submodule foreach --recursive`, also in the top-level repo.
 
 set -e
 
@@ -10,16 +10,20 @@ ignorestatus=false
 doall=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --not-detached)
+        # The submodule must have a branch checked out for the command to run
+        --not-detached|--branch|-b)
             notdetached=true
             ;;
-        --is-detached)
+        # The submodule must be in detached head for the command to run
+        --is-detached|-d)
             isdetached=true
             ;;
-        --ignore-fail)
+        # Don't abort if the command fails
+        --ignore-fail|-i)
             ignorestatus=true
             ;;
-        --all)
+        # Don't limit to only submodules in the current directory
+        --all|-a)
             doall=true
             ;;
         *) break ;;

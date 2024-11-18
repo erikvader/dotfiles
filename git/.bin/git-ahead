@@ -5,6 +5,13 @@
 
 set -e
 
+# Replace the current branch name with spaces
+blank=false
+if [[ $1 == --blank ]]; then
+    blank=true
+    shift
+fi
+
 if [[ $# -eq 1 ]]; then
     RIGHT=$1
     LEFT=$(git rev-parse --abbrev-ref HEAD)
@@ -23,6 +30,9 @@ reset=$(tput sgr0)
 #TODO: show equal commits with --cherry-mark?
 read -r ahead behind < <(git rev-list --count --left-right "$LEFT"..."$RIGHT")
 
+if $blank; then
+    LEFT=${LEFT//?/ }
+fi
 echo -n "## ${aheadcol}$LEFT${reset}...${behindcol}$RIGHT${reset}"
 
 if [[ $ahead -ne 0 && $behind -ne 0 ]]; then
