@@ -1,6 +1,6 @@
 HISTFILE=~/.zsh_history
 HISTSIZE=50000
-SAVEHIST=50000
+SAVEHIST=$HISTSIZE
 
 # save timestamps of history
 setopt extended_history
