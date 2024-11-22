@@ -45,11 +45,10 @@
     # reset
     rs = reset
     rsh = rs --hard
-    rshr = !: reset && git-foreach --not-detached git-display rsh
     rshu = rsh @{upstream}
     # squash
     sq = !: branch && git-squash
-    sqp = sq -p
+    sqp = sq --preview
     # commit
     co = commit
     coa = co --amend
@@ -64,32 +63,26 @@
     # status
     s = status
     ss = s --short --branch
-    # sr [branch-for-git-ahead]
-    sr = !git-foreach git-status-brief
+    sr = !git-foreach --no-git git-status-brief # [branch-for-git-ahead]
     sa = s --untracked-files=all
     # fetch
     f = fetch
     fr = f --recurse-submodules=yes
     # pull
     pl = pull
-    plr = !: pull && git-foreach --not-detached git-display pl
-    plb = pl --rebase
+    plr = pl --rebase
     # push
     ps = push
-    psr = !: push && git-foreach --not-detached git-display ps
-    psf = ps --force-with-lease
-    psfr = !: push && git-foreach --not-detached git-display psf
+    psforce = ps --force-with-lease
     # switch
     sw = switch
-    swr = !: switch && git-foreach --ignore-fail git-display sw
     swd = sw --detach
-    swdr = !: switch && git-foreach --ignore-fail git-display swd
-    swur = !: switch && git-foreach --is-detached --ignore-fail git-display swd
     # submodule
     m = submodule
-    mf = m foreach --recursive
     mu = m update --init --checkout
     mur = mu --recursive
+    # foreach
+    fe = !: reset && git-foreach
     # log [A..B same as ^A B] [A...B same as A B ^(merge-base A B)]
     l = log --boundary --graph
     la = l --all

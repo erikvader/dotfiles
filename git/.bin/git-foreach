@@ -1,45 +1,87 @@
 #!/bin/bash
 
-# Runs a command in all submodules and, unlike `git submodule foreach --recursive`, also in the top-level repo.
-
 set -e
+
+TEMP=$(getopt -s bash -n git-foreach -o +bdiaGh -l not-detached,branch,is-detached,ignore-fail,all,no-git,help -- "$@")
+eval set -- "$TEMP"
+unset TEMP
+
+print_help() {
+    echo 'Usage:'
+    echo ' git-foreach [options] [--] <command>...'
+    echo
+    echo 'Runs a command in all submodules and, unlike "git submodule foreach --recursive", also in the containing repo.'
+    echo
+    echo 'Options:'
+    echo ' -b, --branch, --not-detached    The submodule must have a branch checked out for the command to run'
+    echo ' -d, --is-detached               The submodule must be in detached head for the command to run'
+    echo ' -i, --ignore-fail               Dont abort if the command fails'
+    echo ' -a, --all                       Dont limit to only submodules in the current directory'
+    echo ' -G, --no-git                    Do not prepend an implicit "git" to the command'
+    echo ' -h, --help                      Print this help message'
+}
 
 notdetached=false
 isdetached=false
 ignorestatus=false
 doall=false
+implicitgit=true
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        # The submodule must have a branch checked out for the command to run
         --not-detached|--branch|-b)
             notdetached=true
             ;;
-        # The submodule must be in detached head for the command to run
         --is-detached|-d)
             isdetached=true
             ;;
-        # Don't abort if the command fails
         --ignore-fail|-i)
             ignorestatus=true
             ;;
-        # Don't limit to only submodules in the current directory
         --all|-a)
             doall=true
             ;;
-        *) break ;;
+        --no-git|-G)
+            implicitgit=false
+            ;;
+        --help|-h)
+            print_help
+            exit
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo internal error >&2
+            exit 1
+            ;;
     esac
     shift
 done
 
+if [[ $# -eq 0 ]]; then
+    echo no command given >&2
+    exit 1
+fi
+
 cmd=$*
+if $implicitgit; then
+    cmd="git-display $cmd"
+fi
+
 if $ignorestatus; then
     cmd="$cmd || true"
 fi
-if $notdetached; then
+
+if $notdetached && $isdetached; then
+    echo incompatible options given about detached head status >&2
+    exit 1
+elif $notdetached; then
     cmd="if git-not-detached; then $cmd; fi"
 elif $isdetached; then
     cmd="if ! git-not-detached; then $cmd; fi"
 fi
+
 if ! $doall; then
     cmd='case "$displaypath" in ../*) true ;; *) '"$cmd"' ;; esac'
 fi
