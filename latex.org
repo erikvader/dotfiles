@@ -1,0 +1,809 @@
+#+STARTUP: overview entitiesplain
+
+* counters
+** auto reset counters
+[[https://tex.stackexchange.com/questions/35782/how-to-split-a-latex-document-using-parts-and-chapters][stackoverflow]] refers to [[https://texfaq.org/FAQ-addtoreset][texfaq]]
+or just
+#+BEGIN_EXPORT latex
+\setcounter{section}{0}
+#+END_EXPORT
+** change how sections are shown
+#+BEGIN_EXPORT latex
+\renewcommand{\thepart}{\arabic{part}}
+\renewcommand{\thesection}{\Alph{section}}
+#+END_EXPORT
+* figures
+** floatbarrier
+#+BEGIN_SRC latex
+\usepackage{placeins}
+\FloatBarrier
+#+END_SRC
+** paragraphs in captions
+https://tex.stackexchange.com/a/48313
+Om en caption innehåller flera paragrafer måste optional-argumentet
+specificeras så att ~\listoffigures~ inte blir förvirrad.
+#+BEGIN_SRC latex
+\caption[asd]{asd
+
+asd}
+#+END_SRC
+* graphics
+** cropping
+#+BEGIN_EXPORT latex
+\includegraphics[trim=left bottom right up,clip]{file.jpg}
+#+END_EXPORT
+* titlesec
+** Change title formatting
+
+#+BEGIN_SRC latex
+\usepackage{titlesec}
+% label is the section numbering and sep is the space between this and the section body
+\titleformat{command}[shape]{format}{label}{sep}{before-code}[after-code]
+\titlespacing{command}{left}{before}{after}[right-sep]
+#+END_SRC
+
+example
+#+BEGIN_SRC latex
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}[{\titlerule[0.8pt]}]
+\titleformat{\subsection}{\normalfont\bfseries\large}{\thesection}{1em}{}
+\titlespacing{\subsection}{-2em}{*4}{*1} % * is some package special thing. *1 = 1ex ??
+#+END_SRC
+
+simple form
+#+BEGIN_EXPORT latex
+\titleformat*{\section}{\LARGE}
+#+END_EXPORT
+
+** newpage on every section
+#+BEGIN_EXPORT latex
+\newcommand{\sectionbreak}{\newpage}
+#+END_EXPORT
+* hyphenation and margins
+** hyphenation manually
+What breaks lines and what can't is decided by babel.
+To show where latex has problems with hyphenation (overfull boxes?):
+#+BEGIN_SRC latex
+\overfullrule=20pt
+#+END_SRC
+can use soft hyphenations with \- and more options with
+#+BEGIN_SRC latex
+\babelhyphen{nobreak}
+\babelhyphen{soft}
+#+END_SRC
+etc.
+
+Hyphenation for a word globally can be set with:
+#+BEGIN_SRC latex
+\babelhyphenation[english]{Mini-Zinc}
+% or
+\hyphenation{every-where} % non-babel?
+#+END_SRC
+** prevent hyphenation
+Prevent hypenation and make stuff be together with \mbox.
+
+Also with this from amsmath:
+#+BEGIN_EXPORT latex
+\nobreakdash-
+#+END_EXPORT
+
+A better solution:
+#+BEGIN_EXPORT latex
+\useshorthands{"}
+\defineshorthand{"-}{\babelhyphen{nobreak}}
+#+END_EXPORT
+The first line says that user-defined shorthands are to be defined and that they will start with a ~"~.
+The second line says that ~"-~ should be replaced with a hyphen that can not be broken.
+It is also totally possible to just do a ~\newcommand~ that expands to babelhyphen.
+** prevent putting outside of margin
+[[https://tex.stackexchange.com/questions/241343/what-is-the-meaning-of-fussy-sloppy-emergencystretch-tolerance-hbadness/241355#241355][source]]
+Prevent latex putting stuff outside of margins by giving it more slack
+when it can't typeset withing tolerances
+#+BEGIN_SRC latex
+\emergencystretch 5em
+#+END_SRC
+It will still warn though, so set
+#+BEGIN_SRC latex
+\hbadness=10000
+#+END_SRC
+to remove warnings
+
+Making paragraphs =\sloppy= is an alternative, it sets the tolerance
+to more relaxed values. =\fussy= resets everything to normal.
+#+BEGIN_SRC latex
+\begin{sloppypar}
+text text text
+\end{sloppypar}
+#+END_SRC
+** urls
+#+BEGIN_SRC latex
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+#+END_SRC
+* titlepage
+** UU
+#+BEGIN_SRC latex
+\begin{titlepage}
+
+  \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+  \center
+
+  \textsc{\LARGE Uppsala University}\\[1.5cm]
+  \includegraphics[scale=.1]{Uppsala_University_seal_svg.png}\\[1cm]
+  \textsc{\Large Course name}\\[0.5cm]
+  \textsc{\large course code}\\[0.5cm]
+
+  \HRule \\[0.4cm]
+  { \huge \bfseries Title}\\[0.4cm]
+  \HRule \\[1.5cm]
+
+  \begin{minipage}{0.4\textwidth}
+    \begin{flushleft} \large
+      \emph{Author:}\\
+      first name \textsc{last name}\\
+    \end{flushleft}
+  \end{minipage}\\[2cm]
+
+  {\large \today}\\[2cm]
+
+  \vfill
+
+\end{titlepage}
+#+END_SRC
+** min fula
+#+BEGIN_SRC latex
+\begin{titlepage}
+  \centering
+  %\vspace*{.5in}
+  {\LARGE \textbf{en title}} \rule[2mm]{\textwidth}{1pt}\par\vspace{1.5cm}
+  {\large namn1, namn2 \par \texttt{email1} \par \texttt{email2}}
+  \par\vspace{2cm}
+  %\vfill
+  {\Large \textsc{\today}}
+  \vspace{1cm}
+\end{titlepage}
+#+END_SRC
+** staffans fula
+#+BEGIN_EXPORT latex
+\large
+\begin{center}
+   \textbf{Automata and Logic in IT System Modelling}\\
+   \textbf{Home Assignment 3}
+\end{center}
+\normalsize
+Erik Rimskog       \hfill Uppsala University\\
+Björn Thomsson     \hfill \today\\
+Patrik Johansson\\
+#+END_EXPORT
+* math
+** calligraphy
+Add fancy letters for math
+
+#+BEGIN_SRC latex
+\usepackage{calrsfs}
+\DeclareMathAlphabet{\pazocal}{OMS}{zplm}{m}{n}
+\newcommand{\LL}{\pazocal{L}}
+\newcommand{\LLI}{\LL^{-1}}
+#+END_SRC
+** vertical padding
+Space between lines in environments like align*
+#+BEGIN_SRC latex
+\addtolength{\jot}{0.5em}
+#+END_SRC
+** vdots without extra spacing
+[[https://tex.stackexchange.com/questions/207056/wrong-too-much-vertical-space-above-vdots-in-small-matrix][src]]
+#+BEGIN_SRC latex
+$\vphantom{\int^0}\smash[t]{\vdots}$
+#+END_SRC
+* tables
+** booktabs
+#+BEGIN_EXPORT latex
+\toprule
+\midrule
+\cmidrule
+\bottomrule
+#+END_EXPORT
+** different kinds
+- tabularx för fixed size table. Kan använda =X= för att få kolumner jämnt utspridda
+- tabulary för minimum size
+** column specifiers
+#+BEGIN_EXPORT latex
+\begin{tabular}{l@{stuff emellan}l}
+\begin{tabular}{>{inserted before}l<{inserted after}} % package array??
+\begin{tabular}{>{inserted before}l<{inserted after}@{stuff emellan}l}
+\begin{tabular}{*{8}{c}} % array??
+#+END_EXPORT
+
+Skapa en egen specifier. (Behöva array??)
+~\arraybackslash~ är för att återställa saker efter ~\centering~,  ~\raggedright~ etc.
+#+BEGIN_EXPORT latex
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+#+END_EXPORT
+** padding
+horizontal padding
+#+BEGIN_SRC latex
+\addtolength{\tabcolsep}{1em}
+#+END_SRC
+
+vertical padding
+#+BEGIN_SRC latex
+\renewcommand{\arraystretch}{1}
+#+END_SRC
+** colors
+*** alternating
+Place right before a tabular.
+The arguments are something like: {start column}{odd colors}{even colors}
+#+BEGIN_EXPORT latex
+\usepackage[table]{xcolor}
+\rowcolors{1}{white}{lightgray}
+
+\definecolor{lightergray}{gray}{0.9} % nice color
+#+END_EXPORT
+* listings
+** font
+#+BEGIN_SRC latex
+\begin{lstlisting}[basicstyle=\ttfamily]
+code and stuff
+\end{lstlisting}
+#+END_SRC
+** float, caption, title and label
+finns title för att skriva en caption utan att inkludera en "Listing"
+#+BEGIN_SRC latex
+\begin{lstlisting}[float=ht,caption={cap},label={lab},captionpos=b]
+code and stuff
+\end{lstlisting}
+#+END_SRC
+** nice linebreak arrow
+Placera i en style elr nåt.
+Från Pierres mall.
+#+BEGIN_SRC latex
+postbreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\textcolor{black}{\hookrightarrow\space}}}
+#+END_SRC
+** escaping
+#+BEGIN_SRC latex
+escapeinside={<@}{@>}
+#+END_SRC
+** non-breaking environment (minipage)
+A listings environment automatically put in a minipage. The ~\par~ could not be added directly for some reason.
+And ~\newenvironment~ can't be used since listings looks for ~\end{lstlisting}~ in a special way.
+#+BEGIN_SRC latex
+\lstnewenvironment{nonbreak}[1][]{\noindent\lstset{#1}\minipage{\textwidth}}{\endminipage}
+\BeforeBeginEnvironment{nonbreak}{\par}
+\AfterEndEnvironment{nonbreak}{\par}
+#+END_SRC
+** spacing and parskip
+Listing introduce a par before and after (or something), and since the parskip package modifies ~\parskip~, ~\partopskip~ and stuff it messes
+with listings. Listings in brödtext get an extra ~\parskip~ below it. This can be compensated for by modifying ~belowskip~ and ~aboveskip~ in ~lstset~.
+Setting above to parskip and below to 0pt makes the spacing kinda even.
+[[https://tex.stackexchange.com/questions/40863/parskip-inserts-extra-space-after-floats-and-listings][discussions]]
+* minipage
+** avoid braking over pages
+prevent stuff from breaking a page boundaries.
+just a minipage with the indentation from parskip removed
+#+BEGIN_SRC latex
+\newenvironment{gruppa}
+{\begingroup\setlength{\parfillskip}{0pt}\noindent\begin{minipage}{\linewidth}}
+{\end{minipage}\par\endgroup}
+#+END_SRC
+** side-by-side
+A hack to make minipages align at top when they don't want to from ~[t]~ alone.
+#+BEGIN_SRC latex
+\vspace{0pt}
+#+END_SRC
+[[https://tex.stackexchange.com/questions/81955/align-text-in-minipage-at-same-height#comment1206175_81956][source]]
+* Tikz
+** inline squares
+#+BEGIN_SRC latex
+\newcommand{\tsquare}[1]{\tikz \draw[draw=#1, line width=1.5ex] (0,0) -- (1.5ex,0);}
+#+END_SRC
+** offset arrows
+*** with tikz-cd
+#+BEGIN_SRC latex
+\usepackage{tikz-cd}
+\tikzset{
+  shift left/.style ={commutative diagrams/shift left={#1}},
+  shift right/.style={commutative diagrams/shift right={#1}}
+}
+\draw[->,shift left=1ex] (NDJS) edge (SQL)
+                         (SQL) edge (NDJS);
+#+END_SRC
+*** with calc
+#+BEGIN_SRC latex
+\usetikzlibrary{calc}
+\newcommand{\doublearrow}[4][0]{%
+\draw ($#2 + (-#4, -#1)$) edge[->] ($#3 + (-#4, -#1)$)
+      ($#3 + (#4, #1)$)   edge[->] ($#2 + (#4, #1)$);
+}
+#+END_SRC
+
+example usage
+#+BEGIN_SRC latex
+\doublearrow{(CLNT.north)}{(NDJS.south) + (-0.3, 0)}{0.3}
+#+END_SRC
+** snake lines
+#+BEGIN_SRC latex
+\usetikzlibrary{decorations.pathmorphing}
+\draw[<->,decorate,decoration=snake] (NDJS) -- (IBW);
+#+END_SRC
+** clouds
+#+BEGIN_SRC latex
+\usetikzlibrary{shapes}
+\node (IBW) at (3, 4)
+        [cloud,
+         cloud puffs=15.7,
+         cloud ignores aspect,
+         minimum width=50pt,
+         minimum height=0pt,
+         draw
+        ] {IBM Services};
+#+END_SRC
+** arrows
+*** old way
+#+BEGIN_SRC latex
+\usetikzlibrary{arrows}
+\tikzset{>=stealth'}
+#+END_SRC
+*** don't touch target
+rita pilarna 1pt ifrån sitt target.
+gäller för vanliga streck också sadge
+#+BEGIN_EXPORT latex
+\tikzset{shorten >=1pt}
+#+END_EXPORT
+*** arrows meta
+#+BEGIN_SRC latex
+\usetikzlibrary{arrows.meta}
+\draw[-{Stealth[scale=1.5]}] % ->
+\draw[{Stealth[scale=1.5, red]}-] % <-
+#+END_SRC
+*** arrows globally
+#+BEGIN_SRC latex
+\begin{tikzpicture}[-{Stealth[scale=1.2]}]
+\begin{tikzpicture}[-stealth]
+\begin{tikzpicture}[->]
+#+END_SRC
+** curvy line
+#+BEGIN_SRC latex
+\draw[-{Straight Barb[scale=1.3]},dashed] plot [smooth] coordinates {(X.south) ($(X.south) + (3, -0.3)$) ($(VX.west) + (-1.2, -0.5)$) (VX.west)};
+#+END_SRC
+** between nodes
+place a node in the middle between two others
+#+BEGIN_SRC latex
+\usetikzlibrary{calc}
+\node (N1) at ($(N2)!0.5!(N3)$) {text};
+#+END_SRC
+** position nodes
+#+BEGIN_SRC latex
+\usetikzlibrary{positioning}
+\node[state] (keyc2) [above right=20pt and 100pt of keyc1] {};
+\node[state] (keyc2) [above right=20pt of keyc1] {};
+\node[state] (keyc2) [above right=of keyc1] {}; % uses node distance
+\node[state] (keyc2) [above right=2 of keyc1] {}; % double node distance (I think)
+#+END_SRC
+
+To make all positions be relative to node centers instead of borders.
+#+BEGIN_SRC latex
+\tikzset{on grid}
+#+END_SRC
+
+There exist a =\matrix= to place stuff in a grid like latex tables.
+** draw many lines
+=\graph=
+** labels on nodes
+#+BEGIN_SRC latex
+\node [label=below:hejsan] {a node};
+\node [label={[red]69:hejsan}] {a node};
+#+END_SRC
+** fit
+#+BEGIN_SRC latex
+\usetikzlibrary{fit}
+\node [fit=(a) (1, 0), draw, rectangle] {};
+#+END_SRC
+** close paths
+This closes the path properly
+[[https://tex.stackexchange.com/questions/375295/two-methods-of-specifying-a-closed-path-by-repeating-the-starting-coordinate-at/375303][relevant question]]
+#+BEGIN_SRC latex
+\draw (0, 0) -- (1, 0) -- (1, 1) -- cycle;
+#+END_SRC
+** perpendicular coordinates
+The second coordinate is the x-value of BKN2.west and the y-value of ELI.
+#+BEGIN_SRC latex
+\draw[dashed,->] ($(FZN)!0.5!(BKN)$) |- (BKN2.west|-ELI);
+#+END_SRC
+** vertical lines across picture
+my own creation!
+Uses projection from calc. Needs to be at the end as the current bounding box is always changing.
+#+BEGIN_SRC latex
+\newcommand{\verticalline}[2]{\draw[#1]
+($(current bounding box.north west)!#2!(current bounding box.north east)$)
+--
+($(current bounding box.south west)!#2!(current bounding box.south east)$)}
+#+END_SRC
+** copy shadow
+#+BEGIN_SRC latex
+\usetikzlibrary{shadows}
+\node [copy shadow, fill=white] {hej};
+#+END_SRC
+** Examples
+*** tree
+A tree datastructure
+#+BEGIN_SRC latex
+\usetikzlibrary{calc}
+\begin{tikzpicture}[
+  rekt/.style={rectangle,draw,inner sep=6pt,anchor=north west,align=left}
+  ]
+  \node (N0) at (0,0) [rekt] {\textbf{Welcome}\\\textbf{Svar:} Fråga mig vad som helst};
+  \node (N1) at ($(N0.south west) + (0, -0.3)$) [rekt] {\textbf{Intent:} Hjälp\\\textbf{Svar:} Vad vill du ha hjälp med?};
+  \node (N11) at ($(N1.south west) +(1, -0.3)$) [rekt] {\textbf{Entity:} Bilmärken\\\textbf{Svar:} Du frågade efter hjälp på \texttt{@bilmärke}};
+  \node (ROOT) at ($(N0.west) + (-0.5,1.3)$) {root};
+  \draw let 
+      \p1 = (N1.west),
+      \p2 = (N11.south)
+    in
+      node [rekt] (N2) at ($(\x1,\y2) + (0,-0.3)$) {\textbf{Everything else}\\\textbf{Svar:} Jag förstod inte vad du sade};
+  
+  \draw[->] (ROOT) |- (N0.west);
+  \draw[->] (ROOT) |- (N1.west);
+  \draw[->] (N1.south west) +(0.4, 0) |- (N11.west);
+  \draw[->] (ROOT) |- (N2.west);
+\end{tikzpicture}
+#+END_SRC
+*** system structure
+squares with arrows and stuff
+#+BEGIN_EXPORT latex
+\usepackage{tikz-cd} % for offsetting arrows
+\tikzset{
+  shift left/.style ={commutative diagrams/shift left={#1}},
+  shift right/.style={commutative diagrams/shift right={#1}}
+}
+\usetikzlibrary{shapes,decorations.pathmorphing}
+\begin{tikzpicture}[rekt/.style={rectangle,draw,inner sep=6pt, minimum width=50pt}]
+  \node (CLNT) at (0,0) [rekt] {Klient};
+  \node (NDJS) at (0,2) [rekt] {Server};
+  \node (SQL)  at (-3, 2) [rekt] {MySQL};
+  \draw[->,shift left=1em]
+      (CLNT) edge (NDJS) 
+      (NDJS) edge (CLNT);
+  \draw[->,shift left=1ex] 
+      (NDJS) edge (SQL) 
+      (SQL) edge (NDJS);
+      
+  \node at (-1.5, 2)
+      [ellipse,
+       minimum width=200pt,
+       minimum height=60pt,
+       inner sep=0pt,
+       draw=black!50,
+       label={[black!50,rotate=3,label distance=-3ex]110:server}
+      ] {};
+      
+  \node (IBW) at (3, 4)
+      [cloud,
+       cloud puffs=15.7,
+       cloud ignores aspect,
+       minimum width=50pt,
+       minimum height=0pt,
+       draw
+      ] {IBM-tjänster};
+      
+  \draw[<->,decorate,decoration=snake]
+      (NDJS) -- (IBW);
+\end{tikzpicture}
+#+END_EXPORT
+*** AST
+#+BEGIN_SRC latex
+\begin{tikzpicture}[
+  on grid,
+  node distance=40pt,
+  minimum size=15pt,
+  inner sep=0pt,
+  every node/.style={circle, align=center}
+]
+  \node (P1) at (0, 0) {*};
+  \node (N1) [below left=of P1] {1} edge (P1);
+  \node (M1) [below right=of P1] {+} edge (P1);
+  \node (N2) [below left=of M1] {2} edge (M1);
+  \node (F1) [below right=of M1] {$f$} edge (M1);
+  \node (N3) [below=of F1] {3} edge (F1);
+\end{tikzpicture}
+#+END_SRC
+
+or even better:
+#+BEGIN_SRC latex
+\node at (0, 0) {*}
+  child {node {1}}
+  child {node {+}
+    child {node {2}}
+    child {node {$f$}
+      child {node {3}}}};
+#+END_SRC
+=level distance= and =sibling distance= are cool options.
+* pgfplots
+~\usepackage{pgfplots}~
+** plots from tables
+#+BEGIN_SRC latex
+\begin{figure}[htb]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+      title=mixed,
+      xlabel=threads,
+      ylabel=thousands of operations,
+      xmode=log,
+      ymode=log,
+      xtick=data, % only display numbers explicit from data
+      width=0.7\textwidth,
+      grid=major,
+      % ymajorgrids
+      tick label style={/pgf/number format/fixed}, % all (?) numbers in fixed point
+      log ticks with fixed point, % log axis numbers in fixed point
+      legend style={at={(0.03, 0.03)},anchor=south west,cells={anchor=west}}, %formatting of legend
+      % legend pos=outer north east, % shorter legend style
+      legend entries={{coarse, std}, {fine, std}, {coarse, TATAS}, {fine, TATAS}, {fine, CLH}}
+      ]
+      \addplot table [x=threads, y=ops, col sep=comma] {benches/benchmark_mixed_1.csv}; \label{asd}
+      \addplot table [x=threads, y=ops, col sep=comma] {benches/benchmark_mixed_2.csv};
+      \addplot table [x=threads, y=ops, col sep=comma] {benches/benchmark_mixed_3.csv};
+      \addplot table [x=threads, y=ops, col sep=comma] {benches/benchmark_mixed_4.csv};
+      \addplot table [x=threads, y=ops, col sep=comma] {benches/benchmark_mixed_5.csv};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Plot of running time with different max values.}
+  \label{fig:plot:bench:mixed}
+\end{figure}
+
+\ref{asd}
+#+END_SRC
+** bar plots
+#+BEGIN_EXPORT latex
+\begin{tikzpicture}
+  \begin{axis}[
+  ybar,
+  symbolic x coords={den,denna,denne,det,han,hon},
+  xtick=data,
+  ylabel={percentage},
+  ymin=0, % minimum y value to show
+  x tick label style={rotate=45,anchor=east} % rotate labels nicely
+
+  % does not belong to this one
+  enlarge x limits=0.03, % pad xmin and xmax
+  bar width=5pt,
+  width=\textwidth,
+  ]
+    \addplot[fill=blue] coordinates {
+      (den,0.51802908894304991892)
+      (denna,0.00907422647215957450)
+      (denne,0.00158739174496503851)
+      (det,0.20467018594733378402)
+      (han,0.31492323335939838835)
+      (hon,0.14559119772700193075)
+    };
+    % does not belong to this one
+    \addlegendentry{Constant Value}
+  \end{axis}
+\end{tikzpicture}
+#+END_EXPORT
+** axis options
+*** line styles
+no markers on the lines
+#+BEGIN_EXPORT latex
+no markers
+#+END_EXPORT
+
+Change thickness on all
+#+BEGIN_EXPORT latex
+every axis plot/.append style={ultra thick}
+#+END_EXPORT
+
+Change line join
+#+BEGIN_EXPORT latex
+every axis plot/.append style={line join=round}
+#+END_EXPORT
+
+Tick distances, i.e. tick intervals
+#+BEGIN_EXPORT latex
+xtick distance=1
+ytick distance=0.5
+#+END_EXPORT
+
+Add more ticks that aren't shown
+#+BEGIN_SRC latex
+extra x ticks={3}
+#+END_SRC
+
+which side tiks appear at
+#+BEGIN_SRC latex
+tick pos=left
+#+END_SRC
+
+change limits, i.e. extra padding around the plotted content
+#+BEGIN_EXPORT latex
+enlargelimits=false % no padding
+enlarge x limits=0.3 % change limits in x direction
+xmin=0
+xmax=10000
+ymin=0
+ymax=2 % set limits in absolute values
+#+END_EXPORT
+*** cycle list
+Define custom color list. This is currently identical to the standard
+~color list~.
+#+BEGIN_EXPORT latex
+\pgfplotscreateplotcyclelist{color list}{
+  red,blue,black,yellow,brown,teal,orange,violet,cyan,green!70!black,magenta,gray
+}
+
+% in axis options
+cycle list name=color list
+#+END_EXPORT
+*** legend
+left align text and set position
+#+BEGIN_EXPORT latex
+legend style={cells={anchor=west}, legend pos=south east}
+#+END_EXPORT
+* csvsimple
+** example
+#+BEGIN_SRC latex
+\begin{table}[ht]
+    \centering
+    \csvreader[
+        tabular=rrrrrrr,
+        table head=\toprule \multicolumn{1}{c}{N} & \multicolumn{1}{c}{M} & \multicolumn{1}{c}{Score} & \multicolumn{1}{c}{$t$} & \multicolumn{1}{c}{$t_{nh}$} & \multicolumn{1}{c}{$t_{tb}$} & \multicolumn{1}{c}{$t_z$} \\\midrule,
+        late after line=\\,
+        separator=semicolon,
+        head to column names,
+        table foot=\bottomrule
+    ]{mondrian5_run.csv}{}{\N & \M & \score & \time & \timenh & \timetb & \timez}
+    \caption{$t$ is the time using the latest model with a search hint that that minimizes score first. $t_{nh}$ is the same as the previous, but without the hint. $t_{tb}$ is the same as the previous, but uses tighter upper bounds (\href{https://oeis.org/A050501}{\textcolor{blue}{mha denna + 3}}). $t_z$ is the same as the previous except that the score variable has a lower bound of 0 instead of 1 (as it should have).}
+    \label{tab:my_label}
+\end{table}
+#+END_SRC
+** skip some input lines
+There is some nicer syntax in newer versions i think
+#+BEGIN_SRC latex
+filter={\(\thecsvinputline>14\) \and \(\not \thecsvinputline=20\)}
+filter={\(\thecsvinputline>3\)}
+#+END_SRC
+** if
+#+BEGIN_SRC latex
+\newcommand{\asd}[1]{\ifcsvstrcmp{#1}{N/A}{\asdd{#1}}{\ifdim #1 pt>1.0pt \asdd{#1} \else #1 \fi}}
+#+END_SRC
+* Examples
+** chat conversation
+#+BEGIN_SRC latex
+\begin{minipage}{0.7\textwidth}%
+  \newcommand{\talktalk}[3]{
+      \stepcounter{conversationCounter}
+      #1
+      \framebox[0.4\linewidth][l]{
+          \parbox{0.37\linewidth}{
+              {\footnotesize\bfseries #2}\hfill\textcolor{darkgray}{\#\arabic{conversationCounter}}\\#3
+          }
+      }\par
+  }%
+  \newcommand{\bottalk}[1]{\talktalk{}{Watson}{#1}}%
+  \newcommand{\usertalk}[1]{\talktalk{\hfill}{Användaren}{#1}}%
+  \newcounter{conversationCounter}
+  \bottalk{Fråga mig vad som helst}
+  \usertalk{hjälp}
+  \bottalk{Vad vill du ha hjälp med?}
+  \usertalk{Volvo}
+  \bottalk{Du frågade efter hjälp på en Volvo}
+  \usertalk{kan du några skämt?}
+  \bottalk{Jag förstod inte vad du sade}
+\end{minipage}
+#+END_SRC
+** jsx listings
+#+BEGIN_SRC latex
+\usepackage{listings}
+\lstdefinelanguage{jsx}{
+  keywords={const, class, extends, typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
+  keywordstyle=\color{blue}\bfseries,
+  keywords=[2]{export, boolean, throw, implements, import, this, document, ReactDOM, console},
+  keywordstyle=[2]\color{YellowGreen}\bfseries,
+  keywords=[3]{<div>, </div>, <p>, </p>, />},
+  keywordstyle=[3]\color{Plum},
+  alsoletter={<>/},
+  identifierstyle=\color{black},
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{purple}\ttfamily,
+  stringstyle=\color{red}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
+
+\lstset{
+   backgroundcolor=\color{background},
+   %extendedchars=true,
+   basicstyle=\footnotesize\ttfamily,
+   numbers=left,
+   numberstyle=\footnotesize,
+   captionpos=b,
+   escapechar=|
+}
+#+END_SRC
+* my custom things
+** cool terminal prompt
+#+BEGIN_SRC latex
+\newcommand{\bash}[1]{{\setlength\fboxsep{1.5pt}\colorbox{black}{\ttfamily\textcolor{green}{\$}\hspace{0.3em}\textcolor{white}{#1}}}}
+#+END_SRC
+
+v2
+#+BEGIN_SRC latex
+\newcommand{\bash}[1]{{\setlength\fboxsep{1.5pt}\par\noindent\colorbox{black}{\rlap{\bfseries\ttfamily\textcolor{green}{\$}\hspace{0.3em}\textcolor{white}{#1}}\hspace{\linewidth}\hspace{-2\fboxsep}}}}
+#+END_SRC
+* lists
+** inline
+#+BEGIN_SRC latex
+\usepackage[inline]{enumitem}
+\begin{description*}
+\begin{itemize*}
+\begin{enumerate*}[mode=unboxed]
+#+END_SRC
+~mode=unboxed~ might be required to fix weird issues with spacing
+** spacing
+#+BEGIN_SRC latex
+\usepackage{enumitem}
+\begin{enumerate}[noitemsep]
+#+END_SRC
+** changing labels
+#+BEGIN_SRC latex
+\usepackage{enumitem}
+\begin{enumerate}[label=a)]
+#+END_SRC
+or
+#+BEGIN_SRC latex
+\usepackage{enumerate}
+\begin{enumerate}[a)]
+#+END_SRC
+* empty page
+An empty page must contain something
+#+BEGIN_SRC latex
+\clearpage
+\thispagestyle{plain}
+\addcounter{page}{-1} % I think
+\null
+\clearpage
+#+END_SRC
+* fonts
+#+BEGIN_SRC latex
+\usepackage{courier} % texttt blir finare
+\fontfamily{pcr}\selectfont % sätt fonten manuellt till den finare (behövs courier för denna??)
+#+END_SRC
+
+* footnotes
+Reset counter on every page.
+Always forces two passes??
+#+BEGIN_SRC latex
+\usepackage[perpage]{footmisc}
+#+END_SRC
+
+* toggle parts of document
+** latex if
+Defining and using an if
+#+BEGIN_SRC latex
+\newif\ifnamn
+\namntrue
+\namnfalse
+\ifnamn \fi
+\ifnamn \else \fi
+#+END_SRC
+** ignore environment
+#+BEGIN_SRC latex
+\usepackage{verbatim}
+\newenvironment{tikzpicture}[1]{\comment}{\endcomment}
+#+END_SRC
+
+* SI
+Correct letter for liter
+#+BEGIN_SRC latex
+\DeclareSIUnit\liter{l}
+#+END_SRC
+
+Nicer range
+#+BEGIN_SRC latex
+\sisetup{
+  range-phrase={\,--\,},
+  range-units=single,
+}
+#+END_SRC

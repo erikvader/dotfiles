@@ -1,3 +1,85 @@
+#+STARTUP: overview
+
+* Programming
+** binary search
+[[https://stackoverflow.com/a/33463489][stackoverflow]]
+
+Easy way to find e.g. largest value smaller than some given value in a
+sorted list.
+
+Define both limits l and r to be inclusive.
+Let A be the array and N some number to search for.
+A[i] < N for all i < l and
+A[i] >= N for all i > r.
+Equal sign can be on either side, depending on desired outcome.
+* git
+** pruning branches
+Remove remote branches that no longer exists:
+#+BEGIN_SRC sh
+git remote prune origin
+git fetch --prune
+#+END_SRC
+
+List branches that have been merged:
+#+BEGIN_SRC sh
+git branch --merged
+#+END_SRC
+** merge strategies
+*** ignore others
+[[https://git-scm.com/docs/merge-strategies][docs]]
+To rebase unto master and solve all merge conflicts by taking our changes.
+The role of ours and theirs switch places in rebases.
+#+BEGIN_SRC sh
+git rebase -X theirs master
+#+END_SRC
+*** similarity index
+To specify how similar two files has to be to be considered a rename
+instead of two additions or something. Default is 50%.
+#+BEGIN_SRC sh
+git merge -Xrename-threshold=10% master
+#+END_SRC
+** move a branch
+Move BRANCH to START-POINT, or in other words create BRANCH at
+START-POINT while overriding BRANCH if it already exists.
+#+BEGIN_SRC sh
+git branch -f BRANCH START-POINT
+#+END_SRC
+** log
+#+BEGIN_SRC sh
+git log branch1 branch2 branch3
+git log --date-order
+git log --topo-order # default in --graph
+git log A...B # commits reachable from either branch but not both
+git log A..B # reachable from B but not A
+#+END_SRC
+
+--topo-order
+#+begin_quote
+Show no parents before all of its children are shown, and avoid
+showing commits on multiple lines of history intermixed.
+#+end_quote
+
+*** first parent
+Reveal "true history" of master by ignoring feature branch commits, if
+no fast-forwarding on the master has occured (I think).
+#+BEGIN_SRC sh
+git log --first-parent
+#+END_SRC
+** diff
+#+BEGIN_SRC sh
+git diff A...B
+# <=>
+git diff $(git-merge-base A B) B
+#+END_SRC
+** local gitignore
+~.git/info/exclude~
+samma syntax som vanliga .gitignore
+
+** fast-forward branch without checking out
+[[https://stackoverflow.com/a/17722977][src]]
+#+BEGIN_SRC bash
+git fetch origin master:master
+#+END_SRC
 * swapfiles
 ** show available
 To show available swap
@@ -130,4 +212,15 @@ install -dm0 ~/.dropbox-dist
 [[https://github.com/saber-nyan/kernel-modules-hook][github]]
 #+BEGIN_SRC sh
 pacman -Syu kernel-modules-hook
+#+END_SRC
+
+
+* Bash
+** Nice script options
+#+BEGIN_SRC bash
+set -e # exit on first command failure
+set -u # exit when an unset variable is used
+set -x # print every command that is run prefixed with PS4
+set -o pipefail # the whole pipe contributes to the exit status, not only the last command
+shopt -s lastpipe # the last thing in a pipe doesn't run in a subshell
 #+END_SRC
