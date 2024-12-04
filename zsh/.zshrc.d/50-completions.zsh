@@ -22,3 +22,6 @@ zstyle ':completion:*' special-dirs true
 
 # set colors for completion
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+
+# don't make these characters remove the auto completed space when inserted
+ZLE_SPACE_SUFFIX_CHARS=$'&|'
