@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Simply running `git rm` on an initialized submodule doesn't remove every trace of it,
+# but running a deinit before does the trick, and that's what this script does.
+# See `man 7 gitsubmodules` for more details.
+
+set -e
+
+# Deinitialize a submodule, emptying the dir in the worktree and removing the entry in
+# .git/config
+echo + submodule deinit "$@"
+git submodule deinit "$@"
+
+# Remove deinit flags, leaving submodule paths
+while true; do
+    case $1 in
+        --) shift; break ;;
+        -*) shift ;;
+        *) break ;;
+    esac
+done
+
+# Remove the entry in .gitmodules and the gitlink, staging those changes.
+echo + rm -- "$@"
+git rm -- "$@"
+
+# The git dir is kept in .git/modules to preserve the history, and can be removed if
+# desired. It's nice to have when checking out a previous commit where the module is not
+# removed.

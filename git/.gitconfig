@@ -63,9 +63,9 @@
     # status
     s = status
     ss = s --short --branch
-    sr = !git-foreach --no-git git-status-brief # [branch-for-git-ahead]
+    sr = !git-foreach --no-git git-status-brief # [<branch-for-git-ahead>]
     sa = s --untracked-files=all
-    # fetch
+    # fetch [origin master:master to fast-forward, add + to force]
     f = fetch
     fr = f --recurse-submodules=yes
     # pull
@@ -81,8 +81,9 @@
     m = submodule
     mu = m update --init --checkout
     mur = mu --recursive
+    mr = !git-submodule-rm # [--force|-f] [--] <path>...
     # foreach
-    fe = !: reset && git-foreach
+    fe = !: reset && git-foreach # [options] [--] <command>...
     # log [A..B same as ^A B] [A...B same as A B ^(merge-base A B)]
     l = log --boundary --graph
     la = l --all
