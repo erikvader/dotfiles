@@ -41,9 +41,5 @@ alias tvpoweroff='ssh -t tv@TV "sudo poweroff"'
 alias tvsuspend='ssh -t tv@TV "sudo systemctl suspend"'
 alias tvwakeup='wol 3c:97:0e:b1:53:44'
 
-alias g=git
-alias gup='cd "$(git rev-parse --show-cdup)"'
-alias gsuper='cd "$(git rev-parse --show-superproject-working-tree)"'
-
 alias SS='sudo systemctl'
 alias SU='systemctl --user'

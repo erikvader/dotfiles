@@ -18,8 +18,8 @@
     quotepath = off
 [diff]
     algorithm = histogram
-[format]
-    pretty = %C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset
+[pretty]
+    oneline2 = format:%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset
 [alias]
     # alias
     alias = !git-alias
@@ -84,8 +84,9 @@
     mr = !git-submodule-rm # [--force|-f] [--] <path>...
     # foreach
     fe = !: reset && git-foreach # [options] [--] <command>...
+    feh = !git-foreach --help
     # log [A..B same as ^A B] [A...B same as A B ^(merge-base A B)]
-    l = log --boundary --graph
+    l = log --boundary --graph --pretty=oneline2 --date=human
     la = l --all
     # worktree
     wt = worktree
