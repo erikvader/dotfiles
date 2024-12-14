@@ -11,6 +11,7 @@ alias sssp='sss -p'
 
 alias pg='pgrep -li'
 alias pga='pg -a'
+alias pkill='pkill -e'
 
 alias cclip="xclip -selection clipboard"
 
@@ -26,11 +27,12 @@ alias yrd='yr -s'
 alias yru='yr -c'
 alias yrdu='yr -sc'
 alias yrud=yrdu
-alias ylibc="yay -S --aur --mflags '--nocheck' libc++ libc++abi libc++experimental"
 alias yo='yay -Qdt'
 alias yor='yo -q | yr -'
 
 alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
 alias l='ls -Av'
 alias ll='els -s'
 alias lle='els -se'
