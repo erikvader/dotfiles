@@ -1,0 +1,4 @@
+#!/bin/sh
+
+export GTK_THEME=:light
+exec /usr/bin/libreoffice "$@"
