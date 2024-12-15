@@ -214,13 +214,13 @@ install -dm0 ~/.dropbox-dist
 pacman -Syu kernel-modules-hook
 #+END_SRC
 
-
 * Bash
 ** Nice script options
 #+BEGIN_SRC bash
 set -e # exit on first command failure
 set -u # exit when an unset variable is used
-set -x # print every command that is run prefixed with PS4
+set -x # print every command that is run, prefixed with PS4
 set -o pipefail # the whole pipe contributes to the exit status, not only the last command
 shopt -s lastpipe # the last thing in a pipe doesn't run in a subshell
+shopt -s failglob # globs that doesn't match fail the command
 #+END_SRC
