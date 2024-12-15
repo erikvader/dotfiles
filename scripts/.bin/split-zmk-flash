@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# Script to flash a split keyboard that runs zmk. Its not easy to operate the process
+# without a second keyboard.
+
+set -eu
+shopt -s failglob
+
+label=NICENANO
+firmware=firmware.zip
+
+flip=false
+if [[ $# -gt 0 && $1 == --flip ]]; then
+    flip=true
+    shift
+fi
+
+if [[ $# -ne 0 ]]; then
+    echo invalid usage >&2
+    exit 1
+fi
+
+# Unzips into a temporary directory since i don't know how the auto mounting of the
+# keyboard works, unzip might create temporary files when extracting or something, so a
+# simple `mv` is used instead.
+tempdir=$(mktemp -d --tmpdir zmk.XXXXXXXXX)
+trap 'echo removing tempdir; rm -vrf "$tempdir"' EXIT
+echo Unzipping the firmware to a tempdir at "$tempdir"
+unzip "$firmware" -d "$tempdir"
+
+flash() {
+    local side=$1
+    local dev
+
+    echo Flashing the "$side" side
+    echo -n .
+    while true; do
+        if dev=$(blkid --label "$label"); then
+            echo
+            echo Found the keybord at "$dev"
+            break
+        else
+            echo -n .
+            sleep 1
+        fi
+    done
+
+    if ! udisksctl mount --no-user-interaction -b "$dev"; then
+        echo Failed to mount >&2
+        return 1
+    fi
+
+    local mount
+    mount=$(findmnt -no target "$dev")
+    mv -vt "$mount" "$tempdir"/*"$side"*.uf2
+}
+
+first=left
+second=right
+if $flip; then
+    first=right
+    second=left
+fi
+
+flash "$first"
+# Give the keybord a chance to unmount itself, it takes a while to move the cable anyway
+sleep 3
+flash "$second"
+
+echo Jobs done!
