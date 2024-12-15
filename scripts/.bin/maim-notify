@@ -6,7 +6,7 @@ TEMP_DIRECTORY="${TMPDIR:-/tmp}"
 LOW="$TEMP_DIRECTORY/screenshot.jpg"
 
 if maim "$@" "$HIGH"; then
-    notify-send 'screenshot' "saved at $HIGH"
+    notify-send 'screenshot' "fullres saved at $HIGH"
 else
     notify-send 'screenshot' 'failed or was aborted'
     exit 1
@@ -22,4 +22,6 @@ fi
 TYPE=$(file -b --mime-type "$LOW")
 if ! xclip -selection clipboard -t "$TYPE" -i "$LOW"; then
     notify-send 'screenshot' 'xclip failed to put the screenshot in the clipboard'
+else
+    notify-send 'screenshot' 'compressed is in the clipboard'
 fi
