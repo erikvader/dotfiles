@@ -20,6 +20,8 @@
     algorithm = histogram
 [pretty]
     oneline2 = format:%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset
+[log]
+    date = iso
 [alias]
     # alias
     alias = !git-alias
