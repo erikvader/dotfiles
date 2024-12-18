@@ -90,7 +90,7 @@
     fe = !: reset && git-foreach # [options] [--] <command>...
     feh = !git-foreach --help
     # log [A..B same as ^A B] [A...B same as A B ^(merge-base A B)]
-    l = log --boundary --graph --pretty=oneline2 --date=human
+    l = log --boundary --graph --pretty=oneline2 --date=relative
     la = l --all
     # worktree
     wt = worktree
