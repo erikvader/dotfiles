@@ -3,6 +3,8 @@
     email = erik.rimskog@gmail.com
 [pull]
     ff = only
+[push]
+    autoSetupRemote = true
 [fetch]
     recurseSubmodules = on-demand
     parallel = 0
@@ -11,7 +13,7 @@
 [merge]
     conflictstyle = diff3
 [rerere]
-    enabled = 1
+    enabled = true
 [init]
     defaultBranch = master
 [core]
