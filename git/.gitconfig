@@ -33,6 +33,10 @@
     a = add
     aa = a --all
     au = a --update
+    # branch
+    br = branch
+    brsu = br -u # --set-upstream-to
+    bruu = br --unset-upstream
     # rebase
     rb = rebase
     rbc = rb --continue
