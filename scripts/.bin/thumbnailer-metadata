@@ -22,7 +22,7 @@ row3="Duration: $(date -ud "@${data[3]}" +%T)"
 row4="FPS: ${data[4]}"
 
 mogrify -background black -gravity north -splice 0x75 \
-        -font helvetica -pointsize 25 -fill white -gravity NorthWest \
+        -family 'Liberation Serif' -pointsize 27 -fill white -gravity NorthWest \
         -annotate +10+10 "$row1" \
         -annotate +10+40 "$row2" \
         -annotate +350+10 "$row3" \

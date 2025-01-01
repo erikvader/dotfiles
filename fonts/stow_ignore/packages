@@ -1,8 +1,10 @@
 # statusbar
 ttf-bitstream-vera
 
-# note sure
+# not sure
 ttf-droid
+
+# used by at least one script that uses mogrify
 ttf-liberation
 
 # good base + japanese
