@@ -2,7 +2,7 @@
 
 set -e
 
-dotfiles=$(ralpath "${BASH_SOURCE[0]}")
+dotfiles=$(realpath "${BASH_SOURCE[0]}")
 
 pyfile=$(realpath -ms "$dotfiles"/../../stow_ignore/deluge_manager.py)
 
