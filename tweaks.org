@@ -153,9 +153,21 @@ To control how many login attempts is needed for locking an account
 and the timeout, edit: ~/etc/security/faillock.conf~. Can reset
 manually with the ~faillock~ command.
 * keyboard
+** layout
 Sets the keyboard layout permanently in xorg.
 #+BEGIN_SRC sh
 localectl set-x11-keymap se '' nodeadkeys
+localectl set-keymap sv-latin1
+#+END_SRC
+** repeat speed
+Place this file at ~/etc/X11/xorg.conf.d/10-my-keyboard.conf~
+Repeat delay of 300ms and repeat rate of =1000/40 = 25hz=.
+#+BEGIN_SRC
+Section "InputClass"
+ Identifier "my-keyboard"
+ MatchIsKeyboard "on"
+ Option "AutoRepeat" "300 40"
+EndSection
 #+END_SRC
 * mouse
 ** speed
@@ -185,7 +197,6 @@ Section "InputClass"
   Option "Tapping" "on"
 EndSection
 #+END_SRC
-
 * DNS
 ändra i ~/etc/resolvconf.conf~ för att skriva över med nya dnser.
 ändra med =nm-applet= för att lägga till backups.
