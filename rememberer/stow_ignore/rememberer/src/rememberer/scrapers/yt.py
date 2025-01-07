@@ -39,7 +39,9 @@ def current_video(soup: Soup, url: ParseResult) -> List[Thing]:
 def current_short(soup: Soup, url: ParseResult) -> List[Thing]:
     key = short_key_from_url(url.path)
 
-    title = soup.select_one("ytd-reel-video-renderer[is-active] h2.title")
+    title = soup.select_one(
+        "ytd-reel-video-renderer[is-active] .yt-core-attributed-string"
+    )
     if not title:
         raise ParseException("couldn't find video title")
     name = scrape_text(title, recursive=True)
@@ -65,7 +67,7 @@ def current_page(soup: Soup, url: ParseResult) -> List[Thing]:
 def findall(soup: Soup, url: ParseResult) -> List[Thing]:
     things = ignore_user_error(current_page, soup, url)
 
-    others = soup.select("a.yt-simple-endpoint")
+    others = soup.select("a.yt-simple-endpoint, a.reel-item-endpoint")
     for video in others:
         if "href" not in video.attrs:
             continue
@@ -78,13 +80,15 @@ def findall(soup: Soup, url: ParseResult) -> List[Thing]:
         else:
             continue
 
-        name = scrape_text(video, recursive=True, allow_empty=True)
+        parent = video.parent
+        name = scrape_text(parent, recursive=True)
+
         things.append(
             Thing(
                 name=name,
                 key=key,
                 jsmark=change_color_on(
-                    video, "lime", fuzzy_body=True, style="background"
+                    parent, "lime", fuzzy_body=True, style="background"
                 ),
             )
         )
