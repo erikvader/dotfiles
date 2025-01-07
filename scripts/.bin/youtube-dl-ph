@@ -1,3 +1,8 @@
 #!/bin/sh
 
-exec youtube-dl -o '%(title)s-%(uploader)s-%(extractor_key)s-%(id)s.%(ext)s' --no-playlist "$@"
+exec yt-dlp \
+    -o '%(title)s-%(uploader)s-%(extractor_key)s-%(id)s.%(ext)s' \
+    --no-playlist \
+    --prefer-free-formats \
+    --format-sort +hdr \
+    "$@"
