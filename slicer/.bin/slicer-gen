@@ -1,0 +1,140 @@
+#!/bin/python
+
+"""
+Script to generate user configs for bambu slicer and orca slicer.
+"""
+
+import sys
+import itertools
+from pathlib import Path
+import json
+from functools import cache
+from decimal import Decimal
+import re
+
+gen_prefix = "!"
+output_dir = Path("user", "default", "process")
+source_dir = Path("generation")
+include_dir = source_dir / "Include"
+steps_dir = source_dir / "Steps"
+base_file = source_dir / "Base Profiles.txt"
+
+
+@cache
+def read_json(path):
+    with path.open() as f:
+        return json.load(f)
+
+
+def config_name(base, *crumbs):
+    basename = base["name"]
+    basename = re.sub(r" @\w+ \w+", "", basename, count=1)
+    middle = " ".join([basename] + [c.stem for c in crumbs if c.name != ".json"])
+    return f"{gen_prefix}{middle}"
+
+
+def insert_eval_json(base, cur, new):
+    expr_prefix = "!"
+
+    cur_key = None
+
+    def parent(default):
+        for dic in [cur, base]:
+            if (val := dic.get(cur_key)) is not None:
+                return val
+        return default
+
+    def cap(num):
+        return min(Decimal(num), Decimal(parent(num)))
+
+    def atleast(num):
+        return max(Decimal(num), Decimal(parent(num)))
+
+    for k, v in new.items():
+        cur_key = k
+        # TODO: merge notes instead of overwriting?
+        if v.startswith(expr_prefix):
+            v = v.removeprefix(expr_prefix)
+            v = eval(v)
+            v = str(v)
+        cur[k] = v
+
+
+def merge(base, *crumbs):
+    config = {}
+    for c in crumbs:
+        insert_eval_json(base, config, read_json(c))
+
+    name = config_name(base, *crumbs)
+    config.update(
+        {
+            "from": "User",
+            "name": name,
+            "print_settings_id": name,
+            "inherits": base["name"],
+            "is_custom_defined": "0",  # NOTE: Not sure what this means, but user created presets has this
+            "version": "1.10.0.0",  # TODO: get the current version somehow? Or why does this matter?
+        }
+    )
+
+    return config
+
+
+def read_bases():
+    with base_file.open() as f:
+        return [
+            filename
+            for line in f
+            for glob in line.splitlines()
+            for filename in include_dir.glob(glob)
+            if glob
+        ]
+
+
+def flatten_base(path):
+    cont = read_json(path)
+    inherits = cont.get("inherits")
+    if inherits is not None:
+        parent = include_dir / (inherits + ".json")
+        if not parent.is_file():
+            raise FileNotFoundError(f"parent of {path} doesn't exist: {parent}")
+        cont = flatten_base(parent) | cont
+    return cont
+
+
+def delete_generated():
+    for f in output_dir.glob(gen_prefix + "*.json"):
+        print(f"Removing {f}")
+        f.unlink()
+
+
+def write_generated(merged):
+    for data in merged:
+        name = data["name"]
+        fullname = output_dir / (name + ".json")
+        with fullname.open(mode="w") as f:
+            print(f"Writing {fullname}")
+            json.dump(data, f, sort_keys=True)
+
+
+def main():
+    if not output_dir.is_dir() or not source_dir.is_dir():
+        print("Could not find the expected directiories here", file=sys.stderr)
+        sys.exit(1)
+
+    base_files = read_bases()
+
+    steps = sorted(steps_dir.iterdir())
+    substeps = [[flatten_base(f) for f in base_files]] + [
+        sorted(s.iterdir()) for s in steps
+    ]
+
+    basecrumbs = list(itertools.product(*substeps))
+    merged = [merge(*c) for c in basecrumbs]
+
+    delete_generated()
+    write_generated(merged)
+
+
+if __name__ == "__main__":
+    main()

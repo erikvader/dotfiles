@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -ue
+
+if [[ $# -ne 2 ]]; then
+    echo wrong number of flags >&2
+    exit 1
+fi
+
+config=$1
+exe=$2
+
+if [[ -n "$config" ]]; then
+    cd "$config"
+    slicer-gen
+fi
+
+cd
+
+path=$(find "$HOME"/Games/slicers -name "${exe}*.AppImage")
+netfilter=$(realpath "$HOME"/.config/slicer-firejail-netfilter.net)
+
+exec firejail --noprofile --net=enp4s0 --netfilter="$netfilter" --appimage "$path"
