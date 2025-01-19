@@ -8,7 +8,7 @@ PIPINSTALL := pipx install
 ALLPIP := /tmp/dotfiles_make_all_pip
 
 IGNOREDIR := stow_ignore
-STOWFLAGS := --ignore='^$(IGNOREDIR)$$' --no-folding
+STOWFLAGS := --ignore='^$(IGNOREDIR)$$' --ignore='\.dir-locals\.el$$' --no-folding
 
 export INSTALLDIR := $(HOME)/.bin
 
