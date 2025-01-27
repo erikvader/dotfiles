@@ -11,15 +11,17 @@
 [submodule]
     fetchJobs = 0
 [merge]
-    conflictstyle = diff3
+    conflictstyle = zdiff3
 [rerere]
     enabled = true
 [init]
     defaultBranch = master
 [core]
+    autocrlf = input
     quotepath = off
 [diff]
     algorithm = histogram
+    colorMoved = default
 [pretty]
     oneline2 = format:%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset
 [log]
