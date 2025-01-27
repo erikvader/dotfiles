@@ -12,7 +12,8 @@ from functools import cache
 from decimal import Decimal
 import re
 
-gen_prefix = "!"
+comment_key = "_COMMENT_"
+gen_prefix = "~"
 output_dir = Path("user", "default", "process")
 source_dir = Path("generation")
 include_dir = source_dir / "Include"
@@ -23,7 +24,9 @@ base_file = source_dir / "Base Profiles.txt"
 @cache
 def read_json(path):
     with path.open() as f:
-        return json.load(f)
+        data = json.load(f)
+        data.pop(comment_key, None)
+        return data
 
 
 def config_name(base, *crumbs):
