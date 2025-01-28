@@ -16,6 +16,7 @@ from .ehentai import ehentaiScraper
 from .nhentai import nhentaiScraper
 from .hanime import hanimeScraper
 from .torrentgalaxy import torrentgalaxyScraper
+from .rutube import rutubeScraper
 
 
 def get_scraper(hostname: SiteName) -> Optional[Scraper]:
@@ -36,4 +37,5 @@ def get_scraper(hostname: SiteName) -> Optional[Scraper]:
         "e-hentai": ehentaiScraper,
         "nhentai": nhentaiScraper,
         "hanime": hanimeScraper,
+        "rutube": rutubeScraper,
     }.get(hostname)
