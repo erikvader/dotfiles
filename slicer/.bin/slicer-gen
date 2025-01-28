@@ -117,7 +117,7 @@ def write_generated(merged):
         fullname = output_dir / (name + ".json")
         with fullname.open(mode="w") as f:
             print(f"Writing {fullname}")
-            json.dump(data, f, sort_keys=True)
+            json.dump(data, f, sort_keys=True, indent=4)
 
 
 def main():
