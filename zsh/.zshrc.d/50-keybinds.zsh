@@ -48,3 +48,6 @@ bindkey "${terminfo[kcud1]}" down-line-or-beginning-search
 
 # expand alias similarly to bash
 bindkey '^[^e' _expand_alias
+
+# make the delete key work as expected
+bindkey "${terminfo[kdch1]}" delete-char
