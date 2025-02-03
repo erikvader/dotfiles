@@ -24,6 +24,8 @@
     diffFilter = delta --color-only
 [delta]
     diff-highlight = true
+    navigate = true
+    navigate-regex = "^@@ [-0-9,+ ]+ @@"
 [diff]
     algorithm = histogram
     colorMoved = default
