@@ -4,6 +4,14 @@
 Script to generate user configs for bambu slicer and orca slicer.
 """
 
+# TODO: user bases
+# generation -> slicergen
+# base profiles -> system bases
+# user bases: ny mapp
+# output link
+# slicergen har fler undermappar för flera olika genereringar
+# klass för en bas: vilken system den ärver, dict med modifieringar, dict med system-värdena
+
 import sys
 import itertools
 from pathlib import Path
@@ -19,6 +27,10 @@ source_dir = Path("generation")
 include_dir = source_dir / "Include"
 steps_dir = source_dir / "Steps"
 base_file = source_dir / "Base Profiles.txt"
+
+
+class SlicerGenException(Exception):
+    pass
 
 
 @cache
@@ -41,17 +53,21 @@ def insert_eval_json(base, cur, new):
 
     cur_key = None
 
-    def parent(default):
+    def parent(default=None, key=None):
+        key = key or cur_key
         for dic in [cur, base]:
-            if (val := dic.get(cur_key)) is not None:
+            if (val := dic.get(key)) is not None:
                 return val
+
+        if not default:
+            raise SlicerGenException(f"no value for parent with key '{key}'")
         return default
 
     def cap(num):
-        return min(Decimal(num), Decimal(parent(num)))
+        return min(Decimal(num), Decimal(parent(default=num)))
 
     def atleast(num):
-        return max(Decimal(num), Decimal(parent(num)))
+        return max(Decimal(num), Decimal(parent(default=num)))
 
     for k, v in new.items():
         cur_key = k
