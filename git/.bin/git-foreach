@@ -64,7 +64,7 @@ if [[ $# -eq 0 ]]; then
     exit 1
 fi
 
-cmd=$*
+cmd=${*@Q}
 if $implicitgit; then
     cmd="git-display $cmd"
 fi
@@ -91,7 +91,7 @@ displaypath=${displaypath:-.}
 export displaypath
 # TODO: also add name, sm_path, sha1 and toplevel
 
-(cd "$displaypath" && exec sh -c "$cmd" "$cmd")
+(cd "$displaypath" && exec sh -c "$cmd")
 
 export -n displaypath
 
