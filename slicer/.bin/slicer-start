@@ -12,7 +12,9 @@ exe=$2
 
 if [[ -n "$config" ]]; then
     cd "$config"
-    slicer-gen
+    if ! slicer-gen; then
+        notify-send 'Slicer-gen' 'Failed'
+    fi
 fi
 
 cd
