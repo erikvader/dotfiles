@@ -50,7 +50,8 @@
     rb = rebase
     rbc = rb --continue
     rba = rb --abort
-    rbm = rb --interactive --keep-base
+    rbi = rb --interactive
+    rbm = rbi --keep-base
     # restore
     re = restore
     res = re --staged
