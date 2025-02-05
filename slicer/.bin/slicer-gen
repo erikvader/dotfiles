@@ -4,29 +4,81 @@
 Script to generate user configs for bambu slicer and orca slicer.
 """
 
-# TODO: user bases
-# generation -> slicergen
-# base profiles -> system bases
-# user bases: ny mapp
-# output link
-# slicergen har fler undermappar för flera olika genereringar
-# klass för en bas: vilken system den ärver, dict med modifieringar, dict med system-värdena
-
 import sys
 import itertools
 from pathlib import Path
 import json
-from functools import cache
+from functools import cache, cached_property
 from decimal import Decimal
 import re
+from types import MappingProxyType
+from enum import Enum
 
+# TODO: nested lists and objects aren't protected
+read_only_dict = MappingProxyType
+
+expr_prefix = "!"
 comment_key = "_COMMENT_"
 gen_prefix = "~"
-output_dir = Path("user", "default", "process")
-source_dir = Path("generation")
-include_dir = source_dir / "Include"
-steps_dir = source_dir / "Steps"
-base_file = source_dir / "Base Profiles.txt"
+slicer_gen_dir = Path("slicer-gen")
+
+include_dir = lambda uni: uni / Path("Include")
+output_dir = lambda uni: uni / Path("Output")
+steps_dir = lambda uni: uni / Path("Steps")
+sys_base_file = lambda uni: uni / Path("System Bases")
+usr_base_dir = lambda uni: uni / Path("User Bases")
+type_filament_file = lambda uni: uni / Path("Type is Filament")
+type_process_file = lambda uni: uni / Path("Type is Process")
+
+
+class UniverseType(Enum):
+    FILAMENT = 0
+    PROCESS = 1
+
+
+class Base:
+    def __init__(self, sys_file, usr_file=None):
+        # TODO: assert both arguments are Path and ends in .json
+        self.sys_file = sys_file
+        self.usr_file = usr_file
+        self.include_dir = sys_file.parent
+
+    def __repr__(self):
+        return f"Base(sys={self.sys_file}, usr={self.usr_file})"
+
+    def base_name(self):
+        return self.usr_data.get("name") or self.usr_data["inherits"]
+
+    @cached_property
+    def usr_data(self):
+        default = {
+            "inherits": self.sys_data["name"],
+            "from": "User",
+            "is_custom_defined": "0",  # NOTE: Not sure what this means, but user created presets has this
+            "version": "1.10.0.0",  # TODO: get the current version somehow? Or why does this matter?
+        }
+
+        if self.usr_file is not None:
+            usr = read_json(self.usr_file)
+            assert "name" in usr
+            assert usr.get("inherits") == default["inherits"]
+            default |= usr
+
+        return default
+
+    @cached_property
+    def sys_data(self):
+        def flatten(path):
+            cont = read_json(path)
+            inherits = cont.get("inherits")
+            if inherits is not None:
+                parent = self.include_dir / (inherits + ".json")
+                if not parent.is_file():
+                    raise FileNotFoundError(f"parent of {path} doesn't exist: {parent}")
+                cont = flatten(parent) | cont
+            return cont
+
+        return read_only_dict(flatten(self.sys_file))
 
 
 class SlicerGenException(Exception):
@@ -38,121 +90,151 @@ def read_json(path):
     with path.open() as f:
         data = json.load(f)
         data.pop(comment_key, None)
-        return data
+        return read_only_dict(data)
 
 
 def config_name(base, *crumbs):
-    basename = base["name"]
+    basename = base.base_name()
     basename = re.sub(r" @\w+ \w+", "", basename, count=1)
     middle = " ".join([basename] + [c.stem for c in crumbs if c.name != ".json"])
     return f"{gen_prefix}{middle}"
 
 
-def insert_eval_json(base, cur, new):
-    expr_prefix = "!"
-
+def eval_step(effective, new):
     cur_key = None
+    evaluated = {}
 
+    # pylint: disable=unused-variable
     def parent(default=None, key=None):
         key = key or cur_key
-        for dic in [cur, base]:
-            if (val := dic.get(key)) is not None:
-                return val
+        if (val := effective.get(key)) is not None:
+            return val
 
         if not default:
             raise SlicerGenException(f"no value for parent with key '{key}'")
         return default
 
+    # pylint: disable=unused-variable
     def cap(num):
         return min(Decimal(num), Decimal(parent(default=num)))
 
+    # pylint: disable=unused-variable
     def atleast(num):
         return max(Decimal(num), Decimal(parent(default=num)))
+
+    # pylint: disable=unused-variable
+    def dec(num):
+        return Decimal(num)
 
     for k, v in new.items():
         cur_key = k
         # TODO: merge notes instead of overwriting?
-        if v.startswith(expr_prefix):
+        # TODO: support nested structures, like lists
+        if isinstance(v, str) and v.startswith(expr_prefix):
             v = v.removeprefix(expr_prefix)
+            # pylint: disable=eval-used
             v = eval(v)
             v = str(v)
-        cur[k] = v
+        evaluated[k] = v
+
+    return evaluated
 
 
-def merge(base, *crumbs):
-    config = {}
-    for c in crumbs:
-        insert_eval_json(base, config, read_json(c))
+def merge(unitype, base, *crumbs):
+    config = base.usr_data.copy()
+    effective = base.sys_data | config
+    for step in crumbs:
+        evaluated = eval_step(effective, read_json(step))
+        effective |= evaluated
+        config |= evaluated
 
     name = config_name(base, *crumbs)
-    config.update(
-        {
-            "from": "User",
-            "name": name,
-            "print_settings_id": name,
-            "inherits": base["name"],
-            "is_custom_defined": "0",  # NOTE: Not sure what this means, but user created presets has this
-            "version": "1.10.0.0",  # TODO: get the current version somehow? Or why does this matter?
-        }
-    )
+    config["name"] = name
+
+    match unitype:
+        case UniverseType.PROCESS:
+            config["print_settings_id"] = name
+        case UniverseType.FILAMENT:
+            config["filament_settings_id"] = name
+        case _:
+            raise AssertionError(f"missed unitype case {unitype}")
 
     return config
 
 
-def read_bases():
-    with base_file.open() as f:
-        return [
-            filename
-            for line in f
-            for glob in line.splitlines()
-            for filename in include_dir.glob(glob)
-            if glob
-        ]
+def read_uni_type(universe):
+    if type_process_file(universe).is_file():
+        return UniverseType.PROCESS
+    if type_filament_file(universe).is_file():
+        return UniverseType.FILAMENT
+    return None
 
 
-def flatten_base(path):
-    cont = read_json(path)
-    inherits = cont.get("inherits")
-    if inherits is not None:
-        parent = include_dir / (inherits + ".json")
-        if not parent.is_file():
-            raise FileNotFoundError(f"parent of {path} doesn't exist: {parent}")
-        cont = flatten_base(parent) | cont
-    return cont
+def read_bases(universe):
+    bases = []
+
+    if sys_base_file(universe).is_file():
+        with sys_base_file(universe).open() as f:
+            bases += [
+                Base(filename)
+                for line in f
+                for glob in line.splitlines()
+                for filename in include_dir(universe).glob(glob)
+                if glob
+            ]
+
+    if usr_base_dir(universe).is_dir():
+        for usr in usr_base_dir(universe).iterdir():
+            parent = read_json(usr)["inherits"] + ".json"
+            bases.append(Base(include_dir(universe) / parent, usr))
+
+    return bases
 
 
-def delete_generated():
-    for f in output_dir.glob(gen_prefix + "*.json"):
+def delete_generated(universe):
+    for f in output_dir(universe).glob(gen_prefix + "*.json"):
         print(f"Removing {f}")
         f.unlink()
 
 
-def write_generated(merged):
+def write_generated(universe, merged):
     for data in merged:
         name = data["name"]
-        fullname = output_dir / (name + ".json")
+        fullname = output_dir(universe) / (name + ".json")
         with fullname.open(mode="w") as f:
             print(f"Writing {fullname}")
             json.dump(data, f, sort_keys=True, indent=4)
 
 
-def main():
-    if not output_dir.is_dir() or not source_dir.is_dir():
-        print("Could not find the expected directiories here", file=sys.stderr)
-        sys.exit(1)
+def generate(universe):
+    print(f"Processing {universe}")
 
-    base_files = read_bases()
+    unitype = read_uni_type(universe)
+    if unitype is None:
+        raise SlicerGenException("No universe type found")
 
-    steps = sorted(steps_dir.iterdir())
-    substeps = [[flatten_base(f) for f in base_files]] + [
-        sorted(s.iterdir()) for s in steps
-    ]
+    bases = read_bases(universe)
+    steps = sorted(steps_dir(universe).iterdir())
+    substeps = [bases] + [sorted(s.iterdir()) for s in steps]
 
     basecrumbs = list(itertools.product(*substeps))
-    merged = [merge(*c) for c in basecrumbs]
+    merged = [merge(unitype, *c) for c in basecrumbs]
 
-    delete_generated()
-    write_generated(merged)
+    write_generated(universe, merged)
+
+
+def main():
+    if not slicer_gen_dir.is_dir():
+        print("Could not find the expected directories here", file=sys.stderr)
+        sys.exit(1)
+
+    universes = list(slicer_gen_dir.iterdir())
+
+    for universe in universes:
+        delete_generated(universe)
+
+    for universe in universes:
+        generate(universe)
 
 
 if __name__ == "__main__":
