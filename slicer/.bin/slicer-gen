@@ -14,7 +14,7 @@ import re
 from types import MappingProxyType
 from enum import Enum
 
-# TODO: nested lists and objects aren't protected
+# TODO: nested lists and objects aren't protected. Should probably use some custom made class?
 read_only_dict = MappingProxyType
 
 expr_prefix = "!"
@@ -100,14 +100,14 @@ def config_name(base, *crumbs):
     return f"{gen_prefix}{middle}"
 
 
-def eval_step(effective, new):
-    cur_key = None
-    evaluated = {}
-
+def eval_value(effective, cur_key, value, cur_index=None):
     # pylint: disable=unused-variable
-    def parent(default=None, key=None):
+    def parent(*, default=None, key=None, index=cur_index):
         key = key or cur_key
+
         if (val := effective.get(key)) is not None:
+            if isinstance(val, list) and index is not None:
+                return val[index]
             return val
 
         if not default:
@@ -126,17 +126,31 @@ def eval_step(effective, new):
     def dec(num):
         return Decimal(num)
 
-    for k, v in new.items():
-        cur_key = k
-        # TODO: merge notes instead of overwriting?
-        # TODO: support nested structures, like lists
-        if isinstance(v, str) and v.startswith(expr_prefix):
-            v = v.removeprefix(expr_prefix)
-            # pylint: disable=eval-used
-            v = eval(v)
-            v = str(v)
-        evaluated[k] = v
+    # pylint: disable=unused-variable
+    def nonzero(x):
+        return x if parent(default="not 0") != "0" else "0"
 
+    # TODO: merge notes instead of overwriting?
+
+    if value.startswith(expr_prefix):
+        value = value.removeprefix(expr_prefix)
+        # pylint: disable=eval-used
+        value = eval(value)
+        value = str(value)
+
+    return value
+
+
+def eval_step(effective, new):
+    evaluated = {}
+    for k, v in new.items():
+        if isinstance(v, str):
+            v = eval_value(effective, k, v)
+        elif isinstance(v, list):
+            v = [eval_value(effective, k, x, cur_index=i) for i, x in enumerate(v)]
+        else:
+            raise SlicerGenException(f"Unsupported value found in config: {k}={v}")
+        evaluated[k] = v
     return evaluated
 
 
