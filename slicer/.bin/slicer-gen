@@ -13,6 +13,7 @@ from decimal import Decimal
 import re
 from types import MappingProxyType
 from enum import Enum
+import tomllib
 
 # TODO: nested lists and objects aren't protected. Should probably use some custom made class?
 read_only_dict = MappingProxyType
@@ -38,7 +39,8 @@ class UniverseType(Enum):
 
 class Base:
     def __init__(self, sys_file, usr_file=None):
-        # TODO: assert both arguments are Path and ends in .json
+        assert isinstance(sys_file, Path)
+        assert isinstance(usr_file, Path) or usr_file is None
         self.sys_file = sys_file
         self.usr_file = usr_file
         self.include_dir = sys_file.parent
@@ -87,16 +89,23 @@ class SlicerGenException(Exception):
 
 @cache
 def read_json(path):
-    with path.open() as f:
-        data = json.load(f)
-        data.pop(comment_key, None)
+    with path.open("rb") as f:
+        if ".json" in [path.name, path.suffix]:
+            data = json.load(f)
+            data.pop(comment_key, None)
+        elif ".toml" in [path.name, path.suffix]:
+            data = tomllib.load(f, parse_float=str)
+        else:
+            raise SlicerGenException(f"Unsupported file: {path}")
         return read_only_dict(data)
 
 
 def config_name(base, *crumbs):
     basename = base.base_name()
     basename = re.sub(r" @\w+ \w+", "", basename, count=1)
-    middle = " ".join([basename] + [c.stem for c in crumbs if c.name != ".json"])
+    middle = " ".join(
+        [basename] + [c.stem for c in crumbs if not c.name.startswith(".")]
+    )
     return f"{gen_prefix}{middle}"
 
 
