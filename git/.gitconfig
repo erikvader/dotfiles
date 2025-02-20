@@ -111,3 +111,5 @@
     wta = wt add
     wtl = wt list
     wtr = wt remove
+    # rm
+    rmc = rm --cached
