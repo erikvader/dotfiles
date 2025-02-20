@@ -119,7 +119,7 @@ def eval_value(effective, cur_key, value, cur_index=None):
                 return val[index]
             return val
 
-        if not default:
+        if default is None:
             raise SlicerGenException(f"no value for parent with key '{key}'")
         return default
 
@@ -139,13 +139,14 @@ def eval_value(effective, cur_key, value, cur_index=None):
     def nonzero(x):
         return x if parent(default="not 0") != "0" else "0"
 
-    # TODO: merge notes instead of overwriting?
-
     if value.startswith(expr_prefix):
         value = value.removeprefix(expr_prefix)
         # pylint: disable=eval-used
         value = eval(value)
         value = str(value)
+
+    if cur_key == "description" or cur_key == "filament_notes":
+        value = "\n\n".join(s for s in [effective.get(cur_key), value] if s)
 
     return value
 
@@ -215,9 +216,10 @@ def read_bases(universe):
 
 
 def delete_generated(universe):
-    for f in output_dir(universe).glob(gen_prefix + "*.json"):
-        print(f"Removing {f}")
-        f.unlink()
+    for f in output_dir(universe).iterdir():
+        if f.name.startswith(gen_prefix) and f.suffix in [".json", ".info"]:
+            print(f"Removing {f}")
+            f.unlink()
 
 
 def write_generated(universe, merged):
