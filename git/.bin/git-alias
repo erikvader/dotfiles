@@ -3,6 +3,6 @@
 sed -E \
     -e '1,/\[alias\]/d' \
     -e 's/^ +//' \
-    -e 's/^#(.*)$/'"$(tput setaf 4)"'#\1'"$(tput sgr0)"'/' \
+    -e 's/#(.*)$/'"$(tput setaf 4)"'#\1'"$(tput sgr0)"'/' \
     "$HOME"/.gitconfig \
     | less --quit-if-one-screen --RAW-CONTROL-CHARS --no-init
