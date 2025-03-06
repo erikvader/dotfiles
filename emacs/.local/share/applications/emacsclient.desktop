@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.5
+Type=Application
+Exec=emacsclient --no-wait --create-frame %F
+Name=Emacs Client
+GenericName=Text Editor
+Comment=Start an emacs client frame
+Icon=emacs
+Categories=Development;Programming;TextEditor;
+Keywords=Text;Editor;
+MimeType=text/plain;
+Terminal=false
+StartupWMClass=Emacs
