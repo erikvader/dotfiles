@@ -46,13 +46,13 @@
     br = branch
     brsu = br -u # --set-upstream-to
     bruu = br --unset-upstream
-    # rebase [--onto A:-B] B [C:-HEAD] [switch to C -> take (log) B..C -> place on A]
+    # rebase [--onto A:-B] B [C:-HEAD] {switch to C -> take (log) B..C -> place on A}
     rb = rebase
     rbc = rb --continue
     rba = rb --abort
     rbs = rb --show-current-patch
     rbi = rb --interactive
-    rbm = rbi --keep-base # = --onto (log) B...C
+    rbm = rbi --keep-base # {= --onto (log) B...C}
     # restore
     re = restore
     res = re --staged
