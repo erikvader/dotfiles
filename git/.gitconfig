@@ -46,12 +46,13 @@
     br = branch
     brsu = br -u # --set-upstream-to
     bruu = br --unset-upstream
-    # rebase
+    # rebase [--onto A:-B] B [C:-HEAD] [switch to C -> take (log) B..C -> place on A]
     rb = rebase
     rbc = rb --continue
     rba = rb --abort
+    rbs = rb --show-current-patch
     rbi = rb --interactive
-    rbm = rbi --keep-base
+    rbm = rbi --keep-base # = --onto (log) B...C
     # restore
     re = restore
     res = re --staged
@@ -71,7 +72,7 @@
     co = commit
     coa = co --amend
     coan = coa --no-edit
-    # diff [A..B same as A B] [A...B same as (merge-base A B) B]
+    # diff [A..B {same as A B} | A...B {same as (merge-base A B) B}]
     d = diff
     dr = d --submodule=diff
     dm = d --submodule=log
@@ -83,7 +84,7 @@
     ss = s --short --branch
     sr = !git-foreach --no-git git-status-brief # [<branch-for-git-ahead>]
     sa = s --untracked-files=all
-    # fetch [origin master:master to fast-forward, add + to force]
+    # fetch {pull A without switch: origin [+]A:A, + to force fast-forward}
     f = fetch
     fr = f --recurse-submodules=yes
     # pull
@@ -103,7 +104,7 @@
     # foreach
     fe = !: reset && git-foreach # [options] [--] <command>...
     feh = !git-foreach --help
-    # log [A..B same as ^A B] [A...B same as A B ^(merge-base A B)]
+    # log [A..B {same as ^A B} | A...B {same as A B ^(merge-base A B)}]
     l = log --boundary --graph --pretty=oneline2 --date=relative
     la = l --all
     # worktree
