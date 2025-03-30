@@ -1,4 +1,4 @@
 #!/bin/bash
 
-exec slicer-start "$HOME"/.config/BambuStudio Bambu_Studio
+exec slicer-start "$HOME"/.config/BambuStudio Bambu_Studio yes
 
