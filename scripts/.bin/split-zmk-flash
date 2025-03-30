@@ -45,6 +45,10 @@ flash() {
         fi
     done
 
+    # NOTE: The mounting can fail in rare cases, probably because it is too quick, so do a
+    # short sleep here. Should probably have a retry instead
+    sleep 3
+
     if ! udisksctl mount --no-user-interaction -b "$dev"; then
         echo Failed to mount >&2
         return 1
