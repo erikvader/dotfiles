@@ -38,6 +38,7 @@
     alias = !git-alias
     # clone
     cloner = clone --recurse-submodules
+    clones = clone --depth=1
     # add
     a = add
     aa = a --all

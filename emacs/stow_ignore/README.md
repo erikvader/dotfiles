@@ -16,7 +16,7 @@ There are several optional modifications that can be made.
 Remove the other calls to `make` and `configure` in the
 same function, keep the nativecomp ones. Add `-jN` to the nativecomp
 `make` call where `N` is the number of cores on your system. Also
-remove the bodies of the package functions, except for nativecomp.
+remove all variants, except for nativecomp, in the `pkgname` header.
 
 ## Add desired customizations
 Add the flag `--without-toolkit-scroll-bars` to the nativecomp step in

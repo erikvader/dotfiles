@@ -43,5 +43,6 @@ alias tvpoweroff='ssh -t tv@TV "sudo poweroff"'
 alias tvsuspend='ssh -t tv@TV "sudo systemctl suspend"'
 alias tvwakeup='wol 3c:97:0e:b1:53:44'
 
+# TODO: gör en funktion som tar emot kryptiska argument som alias
 alias SS='sudo systemctl'
 alias SU='systemctl --user'
