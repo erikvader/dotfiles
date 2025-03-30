@@ -30,11 +30,13 @@ sys_base_file = lambda uni: uni / Path("System Bases")
 usr_base_dir = lambda uni: uni / Path("User Bases")
 type_filament_file = lambda uni: uni / Path("Type is Filament")
 type_process_file = lambda uni: uni / Path("Type is Process")
+type_printer_file = lambda uni: uni / Path("Type is Printer")
 
 
 class UniverseType(Enum):
     FILAMENT = 0
     PROCESS = 1
+    PRINTER = 2
 
 
 class Base:
@@ -63,6 +65,9 @@ class Base:
         if self.usr_file is not None:
             usr = read_json(self.usr_file)
             assert "name" in usr
+            assert (
+                usr["name"] == self.usr_file.stem
+            ), f"The filename of {self.usr_file} does not match its name"
             assert usr.get("inherits") == default["inherits"]
             default |= usr
 
@@ -146,6 +151,7 @@ def eval_value(effective, cur_key, value, cur_index=None):
         value = str(value)
 
     if cur_key == "description" or cur_key == "filament_notes":
+        # TODO: prepend with step name
         value = "\n\n".join(s for s in [effective.get(cur_key), value] if s)
 
     return value
@@ -180,6 +186,8 @@ def merge(unitype, base, *crumbs):
             config["print_settings_id"] = name
         case UniverseType.FILAMENT:
             config["filament_settings_id"] = name
+        case UniverseType.PRINTER:
+            config["printer_settings_id"] = name
         case _:
             raise AssertionError(f"missed unitype case {unitype}")
 
@@ -191,6 +199,8 @@ def read_uni_type(universe):
         return UniverseType.PROCESS
     if type_filament_file(universe).is_file():
         return UniverseType.FILAMENT
+    if type_printer_file(universe).is_file():
+        return UniverseType.PRINTER
     return None
 
 
