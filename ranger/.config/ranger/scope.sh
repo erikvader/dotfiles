@@ -212,6 +212,13 @@ handle_image() {
     }
 
     case "${FILE_EXTENSION_LOWER}" in
+        3mf)
+            # https://github.com/themanyone/3mfthumb
+            3mfthumb "${FILE_PATH}" "${IMAGE_CACHE_PATH}" && exit 6
+            ;;
+    esac
+
+    case "${FILE_EXTENSION_LOWER}" in
     #     ## 3D models
     #     ## OpenSCAD only supports png image output, and ${IMAGE_CACHE_PATH}
     #     ## is hardcoded as jpeg. So we make a tempfile.png and just
@@ -220,13 +227,13 @@ handle_image() {
         csg|scad)
             openscad_image "${FILE_PATH}" && exit 6
             ;;
-        3mf|amf|dxf|off|stl)
+        amf|dxf|off|stl)
             openscad_image <(echo "import(\"${FILE_PATH}\");") && exit 6
             ;;
 
         ## Preview archives using the first image inside.
         ## (Very useful for comic book collections for example.)
-        cbr|cbz)
+        3mf|cbr|cbz)
             local fn=""; local fe=""
             local zip=""; local rar=""; local tar=""; local bsd=""
             case "${mimetype}" in
