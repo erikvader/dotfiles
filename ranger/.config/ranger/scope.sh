@@ -213,7 +213,6 @@ handle_image() {
 
     case "${FILE_EXTENSION_LOWER}" in
         3mf)
-            # https://github.com/themanyone/3mfthumb
             3mfthumb "${FILE_PATH}" "${IMAGE_CACHE_PATH}" && exit 6
             ;;
     esac

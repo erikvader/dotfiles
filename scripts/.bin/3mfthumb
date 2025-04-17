@@ -1,0 +1,30 @@
+#!/bin/python
+
+# Writes the contained thumbnail of a 3mf. The first argument is the 3mf, the second the
+# output image.
+
+# Inspired by https://github.com/themanyone/3mfthumb
+
+import lib3mf
+import sys
+import os
+
+if len(sys.argv) != 3:
+    raise Exception("wrong amount of arguments")
+
+srcFile = sys.argv[1]
+dstFile = sys.argv[2]
+
+sopath = os.path.join(os.path.dirname(lib3mf.__file__), "lib3mf")
+
+wrapper = lib3mf.Wrapper(libraryName = sopath)
+model = wrapper.CreateModel()
+
+reader = model.QueryReader("3mf")
+reader.ReadFromFile(srcFile)
+
+if not model.HasPackageThumbnailAttachment():
+    raise Exception("no thumbnail in the file")
+
+thumbnail = model.GetPackageThumbnailAttachment()
+thumbnail.WriteToFile(dstFile)

@@ -27,3 +27,6 @@ waifu2x-ncnn-vulkan
 
 # manga
 fuse-zip
+
+# 3mfthumb
+python-lib3mf
