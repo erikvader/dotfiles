@@ -2,7 +2,7 @@
 
 # Squashes the current feature branch into a single commit
 
-set -e
+set -eu -o pipefail
 
 preview=false
 if [[ $1 == --preview || $1 == -p ]]; then
