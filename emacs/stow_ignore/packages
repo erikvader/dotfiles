@@ -1,0 +1,7 @@
+# duuh
+emacs
+
+# for image previews in dirvish
+libvips
+# for recursive file search in dirvish
+fd
