@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -eu
+
+outfile=$(mktemp --tmpdir start-XXXXXX.log)
+echo Logging "'$*'" to "$outfile"
+
+{
+    echo "$@"
+    date
+    echo "-----"
+} >> "$outfile"
+
+exec setsid --fork "$@" >>"$outfile" 2>&1 </dev/null
