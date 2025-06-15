@@ -15,9 +15,11 @@ alias pkill='pkill -e'
 
 alias cclip="xclip -selection clipboard"
 
-alias rsd='rsync -avhs --dry-run --delete'
-alias rs='rsync -avhs --delete --progress'
-alias rc='rsync -avhs --progress'
+alias ip="ip --color=auto"
+
+alias rsd='rsync -avh --dry-run --delete'
+alias rs='rsync -avh --delete --progress'
+alias rc='rsync -avh --progress'
 
 alias y='yay'
 alias ys='yay -S'
@@ -33,10 +35,9 @@ alias yor='yo -q | yr -'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
-alias l='ls -Av'
-alias ll='els -s'
-alias lle='els -se'
-alias lll='ls -lAhv'
+alias l='ls -avh --quoting-style=literal'
+alias ll='els'
+alias lll="l -l --time-style=$'+%d/%m  %Y\n%d/%m %H:%M'"
 
 alias naspoweroff='umount /media/NAS && ssh -t nas "sudo poweroff"'
 alias tvpoweroff='ssh -t tv@TV "sudo poweroff"'
