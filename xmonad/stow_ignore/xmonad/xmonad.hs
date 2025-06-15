@@ -36,10 +36,11 @@ import XMonad.Hooks.WorkspaceHistory (workspaceHistoryHook)
 
 import XMonad.Layout.MultiToggle (mkToggle,single,Toggle(Toggle))
 import XMonad.Layout.MultiToggle.Instances (StdTransformers(FULL))
-import XMonad.Layout.Renamed (renamed,Rename(CutWordsLeft))
+import XMonad.Layout.Renamed (renamed,Rename(CutWordsLeft,PrependWords))
 import XMonad.Layout.Spacing (spacingRaw,Border(Border))
 import XMonad.Layout.SimplestFloat (simplestFloat)
 import XMonad.Layout.MultiColumns
+import XMonad.Layout.LimitWindows (limitSelect)
 
 import Erik.MyStuff
 import Erik.IndiPP
@@ -85,10 +86,6 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
     -- screenshots
     ((modm, xK_p), spawn "maim-notify -su"), -- screenshot selection
     ((shift modm, xK_p), spawn "maim-current-window"),
-
-    -- toggle prog mode
-    ((shift modm, xK_m), spawn "prog_mode_toggle"),
-    ((modm, xK_m), spawn "prog_mode_toggle swetoggle"),
 
     -- display stuff
     ((modm, xK_plus), spawn "display_updater all"),
@@ -270,10 +267,13 @@ myLayoutHook =
   renamed [CutWordsLeft 1] $ -- remove smartspacing text
   spacingRaw True (Border 3 3 3 3) True (Border 3 3 3 3) True $
   mkToggle (single FULL) $
-  ifVertical vertical tall ||| simplestFloat
+  --TODO: byt mellan dessa med en annan binding som byter till en specifik? eller toggle för masterlimit
+  standard ||| masterLimit standard ||| simplestFloat
   where
     tall = Tall 1 (3/100) (1/2)
     vertical = Mirror $ multiCol [1] 1 0.01 0.5
+    standard = ifVertical vertical tall
+    masterLimit = renamed [PrependWords "Limited"] . limitSelect 1 2
 
 myConfig = def {
   modMask = superMask,
