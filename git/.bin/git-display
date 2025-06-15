@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Runs git with a nice header displaying the current submodule
+# A helper script that prints the current submodule
 
 set -e
 
@@ -9,8 +9,3 @@ tput bold
 tput setaf 4
 echo " ${displaypath:-.}"
 tput sgr0
-
-# This is not a valid first argument to git, so its fine to use it as a special value.
-if [[ $1 != -- ]]; then
-    exec git "$@"
-fi

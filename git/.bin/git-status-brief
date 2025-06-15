@@ -18,7 +18,7 @@ DETACHED=true
 git-not-detached && DETACHED=false
 
 if [[ "$NUM_LINES" -gt $HEADERS ]] || ! $DETACHED; then
-    git-display --
+    git-display
     head -n $HEADERS <<< "$STATUS"
     if [[ $# -eq 1 ]] && ! $DETACHED; then
         git-ahead --blank "$1"
