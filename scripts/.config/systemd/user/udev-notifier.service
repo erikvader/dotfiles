@@ -1,0 +1,10 @@
+[Unit]
+Description=Send notifications on hardware changes
+PartOf=graphical-session.target
+
+[Service]
+Type=exec
+ExecStart=sh -c udev_notifier
+
+[Install]
+WantedBy=graphical-session.target

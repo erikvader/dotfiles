@@ -4,29 +4,31 @@ maim
 # cclip
 xclip
 
-# ecolor
-python-colorama
-
 # udev_notifier
 python-pyudev
 
-# speeds
-python-psutil
-
-# a lot
+# fzf_dmenu
 fzf
 
 # swisch
 python-networkx
-
-# flasher
-transset-df
 
 # waifu2x
 waifu2x-ncnn-vulkan
 
 # manga
 fuse-zip
+lftp
 
 # 3mfthumb
 python-lib3mf
+
+# youtube-dl
+yt-dlp
+
+# thumbnailer-metadata
+ffmpegthumbnailer
+mediainfo
+
+# For scripts that mount USB and stuff
+udisks2

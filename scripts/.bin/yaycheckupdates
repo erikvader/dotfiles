@@ -1,6 +1,0 @@
-#!/bin/sh
-
-# Same as pacman's checkupdates except that every occurence of pacman
-# in that script is replaced with yay to support AUR packages.
-sed -E 's/ pacman / yay /g; s/^pacman /yay /g' "$(command -v checkupdates)" | bash -s
-exit $?

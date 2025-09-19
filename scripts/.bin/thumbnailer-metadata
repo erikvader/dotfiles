@@ -16,6 +16,10 @@ ffmpegthumbnailer -i "$input" -o "$output" -s 1024
 readarray -t data < <(mediainfo --Output=JSON -- "$input" \
                           | jq -r '.media.track[] | select(.["@type"] == "Video") | .Width, .Height, .Format, .Duration, .FrameRate')
 
+if [[ ${#data[@]} -le 0 ]]; then
+    exit 1
+fi
+
 row1="Resolution: ${data[0]}x${data[1]}"
 row2="Codec: ${data[2]}"
 row3="Duration: $(date -ud "@${data[3]}" +%T)"

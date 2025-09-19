@@ -2,33 +2,17 @@
 
 declare -A scripts
 
-scripts["Switch to speakers"]='speakers speakers'
-scripts["Switch to headphones"]='speakers headphones'
+# TODO: vore nice ifall varje grej lade in sina egna entries här
 scripts["Clipboard history"]='CM_LAUNCHER=rofi-script clipmenu "$(CM_LAUNCHER=rofi-script clipmenu | fzf_dmenu)"'
-scripts["Invert colors"]="xrandr-invert-colors"
-scripts["Enable redshift"]="pkill -f -USR1 redshift-manual-daemon"
-scripts["Disable redshift"]="pkill -f -USR2 redshift-manual-daemon"
-scripts["Audio powersave toggle"]="gksudo toggle_audio_powersave"
-scripts["Manjaro i3 menu"]="morc_menu"
-scripts["Manjaro Settings Manager"]="manjaro-settings-manager"
 scripts["PulseAudio Volume Control"]="pavucontrol"
-scripts["bmenu"]="terminal -e bmenu"
 scripts["Kill picom"]="pkill picom"
-scripts["Start/restart compton"]="display_updater compton"
-scripts["Program mode toggle"]="prog_mode_toggle"
-scripts["Program mode swedish toggle"]="prog_mode_toggle swetoggle"
-scripts["Show xtitle"]='notify-send "$(xtitle)"'
 scripts["Change theme"]="theme_selector"
-scripts["Lock and turn off screen"]="screenmng lock"
-scripts["Lock"]='screenmng lock_only'
-scripts["Display Updater"]="display_updater_rofi"
+scripts["Power off/save monitors"]="xset dpms force off"
 scripts["Open Downloaded PDF"]='open_downloaded_pdf'
 scripts["Suspend"]='systemctl suspend'
-scripts['Presentation Mode toggle']='screenmng toggle'
-scripts['Org Agenda']='emacsclient -n -c -e '"'"'(same-buffer (org-agenda))'"'"
 scripts['Emacs Calc']='emacsclient -n -c -e "(progn (full-calc) (calc-trail-display t))"'
-scripts['Org quick todo']="fzf_dmenu -- 'Add TODO: ' | sed -E 's/^/* TODO /' >> $HOME/Dropbox/org/keep.org"
-scripts['Org open keep.org']="emacsclient -c -n $HOME/Dropbox/org/keep.org"
+scripts['Org quick todo']="fzf_dmenu -- 'Add TODO: ' | sed -E 's/^/* TODO /' >> $HOME/Documents/org/keep.org"
+scripts['Org open keep.org']="emacsclient -c -n $HOME/Documents/org/keep.org"
 scripts['Man']="rofi_man"
 scripts['Emoji selector']='rofi_iconfont emoji "$HOME/.emoji"'
 scripts['Font Awesome 4.7 selector']='rofi_iconfont awesome "$HOME/.awesome47"'
@@ -36,12 +20,8 @@ scripts['Emotion selector']='rofi_emoticon'
 scripts['Mount USB drive']='usbmounter mount'
 scripts['Unmount USB drive']='usbmounter unmount'
 scripts['Power off USB drive']='usbmounter poweroff'
-scripts['Watch Movie']='watch_movie'
-scripts['Watch Movie Rebuild Index']='watch_movie -r'
 scripts['Restart Trayer']='fifoecho /tmp/statusbar_fifo TRAY'
 scripts['Mount NAS']='if mount /media/NAS; then notify-send NAS nice; else notify-send NAS failed; fi'
-scripts['Connect Bluetooth Headset']='blåtand on'
-scripts['Disable Bluetooth']='blåtand off'
 
 choice=$(printf '%s\n' "${!scripts[@]}" | sort | fzf_dmenu)
 

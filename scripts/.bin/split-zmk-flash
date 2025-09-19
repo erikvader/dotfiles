@@ -47,6 +47,7 @@ flash() {
 
     # NOTE: The mounting can fail in rare cases, probably because it is too quick, so do a
     # short sleep here. Should probably have a retry instead
+    echo Short delay before mounting...
     sleep 3
 
     if ! udisksctl mount --no-user-interaction -b "$dev"; then
@@ -57,6 +58,8 @@ flash() {
     local mount
     mount=$(findmnt -no target "$dev")
     mv -vt "$mount" "$tempdir"/*"$side"*.uf2
+
+    # TODO: wait for the keyboard to unmount itself instead of (or aswell as?) a sleep
 }
 
 first=left
