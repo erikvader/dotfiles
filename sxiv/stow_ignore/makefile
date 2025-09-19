@@ -2,8 +2,12 @@
 # make install force=t
 # force=t make install
 
+ifndef INSTALLDIR
+$(error INSTALLDIR is not set)
+endif
+
 BUILDDIR := /tmp/sxiv-build
-TARGET := /usr/local/bin/sxiv
+TARGET := $(INSTALLDIR)/sxiv
 
 .PHONY: install
 install: $(TARGET) xdg
@@ -13,21 +17,18 @@ ifdef force
 endif
 
 $(TARGET): config.h
-	@echo 'creating a new build dir'
+	@echo 'Creating a new build dir'
 	rm -rf $(BUILDDIR)
 	mkdir -p $(BUILDDIR)
-	@echo 'curling...'
+	@echo 'Curling...'
 	curl -L https://github.com/muennich/sxiv/archive/master.tar.gz | tar -C $(BUILDDIR) -xz --strip-components 1
-	@echo 'uninstalling...'
-	sudo $(MAKE) -C $(BUILDDIR) uninstall
-	@echo 'linking in config'
+	@echo 'Adding my config'
 	cp -t $(BUILDDIR) config.h
-	@echo 'building...'
+	@echo 'Building...'
 	$(MAKE) -C $(BUILDDIR)
 	@echo 'installing...'
-	sudo $(MAKE) -C $(BUILDDIR) install
-	@echo 'removing build dir'
-	rm -rf $(BUILDDIR)
+	cp -v $(BUILDDIR)/sxiv $(TARGET)
+	@echo Not installing manpage since I dont read it anyway
 
 .PHONY: xdg
 xdg:
