@@ -1,6 +1,13 @@
 qutebrowser
+
 # required if style platform `export QT_QPA_PLATFORMTHEME=gtk2` is used
 # qt5-styleplugins
+
 # needed by userscripts/torrentdownload
 jq
+
+# for adblocking
 python-adblock
+
+# displaying pdfs directly in the browser
+pdfjs-legacy
