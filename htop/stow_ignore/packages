@@ -1,0 +1,11 @@
+# The program itself
+htop
+
+# For temperatures
+lm_sensors
+
+# Showing files opened by process
+lsof
+
+# Attach
+strace
