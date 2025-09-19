@@ -43,6 +43,13 @@
     a = add
     aa = a --all
     au = a --update
+    ai = a --intent-to-add
+    # clean
+    cl = clean -d
+    cli = cl -x
+    # listing
+    lsti = ls-files --cached --ignored --exclude-standard # {ignored & tracked}
+    lst = ls-tree --abbrev HEAD # {tracked}
     # branch
     br = branch
     brsu = br -u # --set-upstream-to
@@ -55,9 +62,9 @@
     rbi = rb --interactive
     rbm = rbi --keep-base # {= --onto (log) B...C}
     # restore
-    re = restore
-    res = re --staged
-    resw = res --worktree
+    re = restore # {tree <- index/HEAD, aka discard changes}
+    rei = re --staged # {index <- HEAD, aka unstage}
+    reiw = rei --worktree # {tree,index <- HEAD}
     # merge
     me = merge
     mec = me --no-ff
@@ -77,11 +84,12 @@
     d = diff
     dr = d --submodule=diff
     dm = d --submodule=log
-    ds = d --staged
+    di = d --staged
     # ahead
     ah = !: diff && git-ahead
     # status
     s = status
+    si = s --ignored
     ss = s --short --branch
     sr = !git-foreach --no-git git-status-brief # [<branch-for-git-ahead>]
     sa = s --untracked-files=all

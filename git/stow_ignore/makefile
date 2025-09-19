@@ -1,6 +1,7 @@
 FPATH := $(HOME)/.zshfpath.d
 GITCOMP := $(FPATH)/_git
 
+.PHONY: install
 install: $(GITCOMP)
 
 ifdef force
