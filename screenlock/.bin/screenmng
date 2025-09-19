@@ -50,7 +50,6 @@ case "$1" in
         else
             on
         fi
-        pkill -f -USR1 screenmng_polybar.sh
         ;;
     startup)
         on
