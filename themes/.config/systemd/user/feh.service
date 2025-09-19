@@ -1,0 +1,9 @@
+[Unit]
+Description=Applies the last set background image
+
+[Service]
+Type=oneshot
+ExecStart=%h/.fehbg
+
+[Install]
+WantedBy=graphical-session.target
