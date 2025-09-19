@@ -12,6 +12,7 @@ ifdef force
 endif
 
 $(TARGET):
+	mkdir -p $(TARGETDIR)
 	@echo downloading Font awesome 4...
 	curl -L https://fontawesome.com/v4.7.0/assets/font-awesome-4.7.0.zip > '$(TARGET).zip'
 	@echo removing potentially existing old folder...
