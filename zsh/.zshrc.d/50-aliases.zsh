@@ -22,28 +22,28 @@ alias rs='rsync -avh --delete --progress'
 alias rc='rsync -avh --progress'
 
 alias y='yay'
-alias ys='yay -S'
-alias yc='yay -Sc'
-alias yr='yay -Rn'
+alias ys='y -Sy'
+alias yc='y -Sc'
+alias yr='y -Rn'
 alias yrd='yr -s'
 alias yru='yr -c'
 alias yrdu='yr -sc'
 alias yrud=yrdu
-alias yo='yay -Qdt'
+alias yo='y -Qdt'
 alias yor='yo -q | yr -'
 
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
-alias l='ls -avh --quoting-style=literal'
-alias ll='els'
-alias lll="l -l --time-style=$'+%d/%m  %Y\n%d/%m %H:%M'"
+alias l='ls -FAvhw80 --quoting-style=shell-escape'
+alias ll="l -la --time-style=long-iso"
 
-alias naspoweroff='umount /media/NAS && ssh -t nas "sudo poweroff"'
-alias tvpoweroff='ssh -t tv@TV "sudo poweroff"'
-alias tvsuspend='ssh -t tv@TV "sudo systemctl suspend"'
+# TODO: 
+alias naspoweroff='umount /media/NAS && ssh -t nas.local "sudo poweroff"'
+alias naswakeup='echo TODO'
+alias tvpoweroff='ssh -t tv@TV.local "sudo poweroff"'
 alias tvwakeup='wol 3c:97:0e:b1:53:44'
 
-# TODO: gör en funktion som tar emot kryptiska argument som alias
 alias SS='sudo systemctl'
 alias SU='systemctl --user'
+alias JU='journalctl --user --pager-end'

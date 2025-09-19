@@ -1,13 +1,15 @@
 # Needed to make the terminal change mode to recognize the codes from terminfo
 # https://invisible-island.net/xterm/xterm.faq.html#xterm_arrows
-function zle-line-init() {
-    echoti smkx
-}
-function zle-line-finish() {
-    echoti rmkx
-}
-zle -N zle-line-init
-zle -N zle-line-finish
+if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
+    function zle-line-init() {
+        echoti smkx
+    }
+    function zle-line-finish() {
+        echoti rmkx
+    }
+    zle -N zle-line-init
+    zle -N zle-line-finish
+fi
 
 # use word instead of WORDS, basically
 WORDCHARS=
@@ -51,3 +53,9 @@ bindkey '^[^e' _expand_alias
 
 # make the delete key work as expected
 bindkey "${terminfo[kdch1]}" delete-char
+
+# edit the current cmdline in $EDITOR
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey '\C-x\C-e' edit-command-line
+
