@@ -2,9 +2,13 @@
 # make install force=t
 # force=t make install
 
+ifndef INSTALLDIR
+$(error INSTALLDIR not set)
+endif
+
 BRANCH := build3
 BUILDDIR := /tmp/st-build
-TARGET := /usr/local/bin/st
+TARGET := $(INSTALLDIR)/st
 
 .PHONY: install
 install: $(TARGET)
@@ -14,16 +18,14 @@ ifdef force
 endif
 
 $(TARGET):
-	@echo 'creating a new build dir'
+	@echo Creating a new build dir
 	rm -rf $(BUILDDIR)
 	mkdir -p $(BUILDDIR)
-	@echo 'curling...'
+	@echo Curling...
 	curl -L https://github.com/erikvader/st/archive/$(BRANCH).tar.gz | tar -C $(BUILDDIR) -xz --strip-components 1
-	@echo 'uninstalling...'
-	sudo $(MAKE) -C $(BUILDDIR) uninstall
-	@echo 'building...'
+	@echo 'Building...'
 	$(MAKE) -C $(BUILDDIR)
-	@echo 'installing...'
-	sudo $(MAKE) -C $(BUILDDIR) install
-	@echo 'removing build dir'
-	rm -rf $(BUILDDIR)
+	@echo Installing...
+	cp -v $(BUILDDIR)/st $(TARGET)
+	@echo Not installing the manpage since I dont read it anyway
+

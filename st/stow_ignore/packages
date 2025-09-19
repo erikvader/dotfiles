@@ -1,0 +1,4 @@
+# The terminfo files are stored in this package nowadays, so the 'tic' step in
+# the makefile is not needed. See the 'README.terminfo.rst' file in the AUR
+# package 'st' for more info.
+ncurses
