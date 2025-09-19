@@ -1,0 +1,12 @@
+# Adding links to the config files in this repo
+stow
+
+# Python executable installer
+uv
+
+# For setting default programs for different mime-types
+xdg-utils
+
+# Build tools to compile stuff
+base-devel
+make
