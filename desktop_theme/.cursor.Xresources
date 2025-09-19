@@ -1,3 +1,3 @@
 ! The cursor size can be incorrectly detected...
-Xcursor.size: 16
-Xcursor.theme: xcursor-breeze-snow
+Xcursor.size: 32
+Xcursor.theme: Breeze_Light

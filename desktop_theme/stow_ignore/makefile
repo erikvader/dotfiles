@@ -1,5 +1,5 @@
-LINK := $(HOME)/.local/share/icons/default/cursors
-TARGET := /usr/share/icons/xcursor-breeze-snow/cursors
+LINK := $(HOME)/.local/share/icons/default
+TARGET := /usr/share/icons/Breeze_Light
 
 .PHONY: install
 install: $(LINK)
@@ -7,4 +7,5 @@ install: $(LINK)
 #NOTE: stow doesn't like to stow absolute symlinks
 #https://github.com/aspiers/stow/issues/51
 $(LINK):
-	ln -s $(TARGET) $(LINK)
+	mkdir -p $(@D)
+	ln -vsf $(TARGET) $(LINK)
