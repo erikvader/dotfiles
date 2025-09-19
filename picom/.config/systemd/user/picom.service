@@ -1,0 +1,10 @@
+[Unit]
+Description=The X compositor Picom
+PartOf=graphical-session.target
+
+[Service]
+Type=exec
+ExecStart=picom
+
+[Install]
+WantedBy=graphical-session.target
