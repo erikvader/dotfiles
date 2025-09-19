@@ -1,2 +1,23 @@
+# For building xmonad
 stack
-ghc-libs
+
+# For running xmonad. Installing the whole 'xorg' group is recommended
+xorg-server
+
+# Dependency for compiling xmonad
+libxss
+
+# For the startx command
+xorg-xinit
+
+# Backup terminal
+xterm
+
+# For a graphical polkit authentication
+polkit-gnome
+
+# For the media keys
+playerctl
+
+# Install some pulseaudio package for pactl
+# pipewire-pulse or pulseaudio

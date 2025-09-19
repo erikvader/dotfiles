@@ -1,7 +1,6 @@
-import System.Posix.Types (CMode(..))
-import System.Posix.IO (dupTo,closeFd,createFile,stdError,openFd,fdWrite,OpenMode(WriteOnly),defaultFileFlags,OpenFileFlags(nonBlock))
-import Control.Exception (catch,bracket,SomeException,IOException)
-import System.Directory (doesFileExist,removeFile,executable,getPermissions,getHomeDirectory)
+import System.Posix.IO (closeFd,openFd,fdWrite,OpenMode(WriteOnly),defaultFileFlags,OpenFileFlags(nonBlock))
+import Control.Exception (catch,bracket,IOException)
+import System.Directory (doesFileExist,executable,getPermissions,getHomeDirectory)
 import System.FilePath ((</>))
 import System.Exit (exitSuccess)
 import Control.Monad (when,void)
@@ -51,6 +50,9 @@ myXPConfig = def {
   font = "xft:DejaVu Sans:pixelsize=12"
   }
 
+startSystemdSession :: X ()
+startSystemdSession = spawnOnce "systemctl --user --no-block start xmonad-session.target"
+
 runXmonadStartupOnce :: X ()
 runXmonadStartupOnce = do
   home <- io getHomeDirectory
@@ -89,7 +91,6 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
 
     -- display stuff
     ((modm, xK_plus), spawn "display_updater all"),
-    ((modm, xK_apostrophe), spawn "xrandr-invert-colors"),
     ((modm, xK_asciicircum), spawn "pkill picom"),
 
     -- theme
@@ -97,15 +98,20 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
     ((shift modm, xK_minus), spawn "theme_select multi-random"),
 
     -- brightness
-    ((modm, xK_Left), spawn "i3_brightness -steps 1 -dec 1"),
-    ((modm, xK_Right), spawn "i3_brightness -steps 1 -inc 1"),
-    ((0, xF86XK_MonBrightnessUp), spawn "i3_brightness -steps 1 -inc 10"),
-    ((0, xF86XK_MonBrightnessDown), spawn "i3_brightness -steps 1 -dec 10"),
+    ((modm, xK_Left), spawn "xbacklight -steps 1 -dec 1"),
+    ((modm, xK_Right), spawn "xbacklight -steps 1 -inc 1"),
+    ((0, xF86XK_MonBrightnessUp), spawn "xbacklight -steps 1 -inc 10"),
+    ((0, xF86XK_MonBrightnessDown), spawn "xbacklight -steps 1 -dec 10"),
 
     -- media buttons
     ((0, xF86XK_AudioPlay), spawn "playerctl play-pause"),
     ((0, xF86XK_AudioNext), spawn "playerctl next"),
     ((0, xF86XK_AudioPrev), spawn "playerctl previous"),
+
+    -- volume buttons
+    ((0, xF86XK_AudioRaiseVolume), spawn "pactl set-sink-volume @DEFAULT_SINK@ +5%"),
+    ((0, xF86XK_AudioLowerVolume), spawn "pactl set-sink-volume @DEFAULT_SINK@ -5%"),
+    ((0, xF86XK_AudioMute), spawn "pactl set-sink-mute @DEFAULT_SINK@ toggle"),
 
     -- launch a terminal
     ((modm, xK_Return), spawn "st-tmux"),
@@ -163,6 +169,11 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
     ((shift modm, xK_n), spawn "dunstctl history-pop"),
 
     -- Quit xmonad
+    --TODO: This logout should do something more than simply exiting. It should at the
+    --very least stop xmonad-session, but that is apparently not enough to guarantee that
+    --all services actually exit according to
+    --https://github.com/alebastr/sway-systemd/tree/main?tab=readme-ov-file#session-targets.
+    --But I don't want to support proper logout, it seems complicated.
     ((shift modm, xK_0), confirmPrompt myXPConfig "logout?" $ io exitSuccess),
     ((modm, xK_0), confirmPrompt myXPConfig "power off?" $ spawn "poweroff")
     ]
@@ -257,7 +268,7 @@ multiPrepare output focused = do
 
     statusbarOutput :: String -> IO ()
     statusbarOutput str =
-      catch (bracket (openFd statusbarFifo WriteOnly Nothing defaultFileFlags{nonBlock = True})
+      catch (bracket (openFd statusbarFifo WriteOnly defaultFileFlags{nonBlock = True})
                      closeFd
                      (\fd -> void $ fdWrite fd $ toUtfStr str))
             (\e ->
@@ -284,30 +295,15 @@ myConfig = def {
   mouseBindings = myMouseBindings <+> mouseBindings def,
   workspaces = ["C", "V", "X", "B", "Z"],
   manageHook = centerFloatMH <+> manageHook def,
-  startupHook = startupHook def <+> runXmonadStartupOnce <+> setDefaultCursor xC_left_ptr,
+  startupHook = startupHook def <+> runXmonadStartupOnce <+> startSystemdSession <+> setDefaultCursor xC_left_ptr,
   layoutHook = avoidStruts myLayoutHook,
   logHook = logHook def <+> myUpdatePointer <+> workspaceHistoryHook
   }
   where
     centerFloatMH = composeAll [ appName =? "URxvtFZF" --> doCenterFloat, isDialog --> doFloat ]
 
-setStderr :: IO ()
-setStderr =
-  catch
-    (do fs <- doesFileExist errorFile
-        when fs $ removeFile errorFile
-        fd <- createFile errorFile (CMode 0o666)
-        _ <- dupTo fd stdError
-        when (fd /= stdError) $ closeFd fd)
-    (\e -> trace (show (e :: SomeException)))
-  where
-    errorFile :: FilePath
-    errorFile = "/tmp/xmonad-error"
-
-
 main :: IO ()
 main = do
-  setStderr
   xmonad . indiPP format . withUrgencyHook NoUrgencyHook . ewmhstuff . docks $ myConfig
   where
     format = multiPP multiPrepare

@@ -3,6 +3,10 @@ SRCDIR := ./xmonad
 SRCS := $(SRCDIR)/xmonad.hs
 STACKYAML := $(SRCDIR)/stack.yaml
 
+ifndef INSTALLDIR
+$(error INSTALLDIR not set)
+endif
+
 .PHONY: install
 install: $(XMONAD)
 
@@ -12,11 +16,3 @@ endif
 
 $(XMONAD): $(SRCS)
 	stack --stack-yaml $(STACKYAML) --local-bin-path $(INSTALLDIR) install
-
-.PHONY: restart
-restart: $(XMONAD)
-	xmonad --restart
-
-.PHONY: install-devtools
-install-devtools:
-	stack --stack-yaml $(STACKYAML) install hlint ShellCheck hindent

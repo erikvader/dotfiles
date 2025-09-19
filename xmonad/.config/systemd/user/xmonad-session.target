@@ -1,0 +1,12 @@
+# Copied and adapted from https://github.com/alebastr/sway-systemd/blob/main/units/sway-session.target
+# TODO: I didn't copy the things to enable a clean logout, but I don't need that on single user systems.
+[Unit]
+Description=XMonad session
+Documentation=man:systemd.special(7)
+BindsTo=graphical-session.target
+Wants=graphical-session-pre.target
+After=graphical-session-pre.target
+
+# Not sure if I want this...
+#Wants=xdg-desktop-autostart.target
+

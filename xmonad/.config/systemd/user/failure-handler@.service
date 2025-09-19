@@ -1,0 +1,7 @@
+[Unit]
+Description=Failure handler for %i
+
+[Service]
+Type=oneshot
+ExecStart=notify-send 'Systemd unit failed' %i
+
