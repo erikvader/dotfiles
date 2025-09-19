@@ -1,8 +1,11 @@
 * ISOs
 - [[https://www.hirensbootcd.org/download/][Hirens boot CD]]
 - [[https://archlinux.org/download/][Arch Linux]]
-- [[https://www.kali.org/get-kali/#kali-live][Kali linux]]
 - [[https://www.system-rescue.org/Download/][System Rescue]]
+- Puppy Linux
+- rescatux
+- supergrub2
+- Arch Linux
 * ventoy
 ** Download
 - [[https://www.ventoy.net/en/index.html][Ventoy Homepage]]

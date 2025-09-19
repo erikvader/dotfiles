@@ -12,7 +12,13 @@ Let A be the array and N some number to search for.
 A[i] < N for all i < l and
 A[i] >= N for all i > r.
 Equal sign can be on either side, depending on desired outcome.
-* git
+** calculate the lexicographically next bit permutation
+[[http://graphics.stanford.edu/~seander/bithacks.html#NextBitPermutation][link]]
+** linking
+When building, ~ld~ will use flags and ~LD_RUN_PATH~.
+When executing, ~ld.so~ will look at ~LD_LIBRARY_PATH~, ~LD_PRELOAD~ and the included ~rpath~.
+See ~man ld.so~.
+* Tips for git
 ** pruning branches
 Remove remote branches that no longer exists:
 #+BEGIN_SRC sh
@@ -72,7 +78,7 @@ git diff A...B
 git diff $(git-merge-base A B) B
 #+END_SRC
 ** local gitignore
-~.git/info/exclude~
+=.git/info/exclude=
 samma syntax som vanliga .gitignore
 
 ** fast-forward branch without checking out
@@ -80,14 +86,15 @@ samma syntax som vanliga .gitignore
 #+BEGIN_SRC bash
 git fetch origin master:master
 #+END_SRC
-* swapfiles
-** show available
+* Installing arch linux
+** swapfiles
+*** show available
 To show available swap
 #+BEGIN_SRC bash
 free
 swapon --show
 #+END_SRC
-** create one
+*** create one
 [[https://wiki.archlinux.org/index.php/Swap#Swap_file_creation][archwiki]]
 
 #+BEGIN_SRC bash
@@ -98,18 +105,18 @@ swapon /swapfile
 #+END_SRC
 Good to have the owner as root?
 
-Add the following to ~/etc/fstab~
+Add the following to =/etc/fstab=
 #+BEGIN_SRC
 /swapfile none swap defaults 0 0
 #+END_SRC
 
-** reduce swappiness
+*** reduce swappiness
 [[https://wiki.archlinux.org/index.php/Swap#Swappiness][archwiki]]
-Add a file ~/etc/sysctl.d/99-swappiness.conf~ and add:
+Add a file =/etc/sysctl.d/99-swappiness.conf= and add:
 #+BEGIN_SRC 
 vm.swappiness=0
 #+END_SRC
-Check the current value with =sysctl vm.swappiness=.
+Check the current value with ~sysctl vm.swappiness~.
 
 This sets the kernel's preference to swap file-backed pages (basically
 the filesystem cache) and anonymous pages. A value of 0 signals a
@@ -121,17 +128,15 @@ Swapping is only performed when RAM is pretty much full (I think).
 A low value will increase application responsiveness because the
 kernel is not swapping out code ([[https://rudd-o.com/linux-and-free-software/tales-from-responsivenessland-why-linux-feels-slow-and-how-to-fix-that][source]]).
 
-* GTK-theme
-[[https://www.gnome-look.org/p/1247600/][Adwaita-dark]]
-* clipmenud
-clipmenud will poll the X server (?) if ~clipnotify~ is not installed.
-* systemd
-** /etc/systemd/journald.conf
+** clipmenud
+clipmenud will poll the X server (?) if =clipnotify= is not installed.
+** systemd
+*** /etc/systemd/journald.conf
 Limit log size:
 #+BEGIN_SRC
 SystemMaxUse=500M
 #+END_SRC
-** /etc/systemd/logind.conf
+*** /etc/systemd/logind.conf
 Kill all processes in session when logging out:
 #+BEGIN_SRC
 KillUserProcesses=yes
@@ -148,19 +153,20 @@ Don't do anyhting on =power= key
 #+BEGIN_SRC
 HandlePowerKey=ignore
 #+END_SRC
-* faillock
+** faillock
 To control how many login attempts is needed for locking an account
-and the timeout, edit: ~/etc/security/faillock.conf~. Can reset
+and the timeout, edit: =/etc/security/faillock.conf=. Can reset
 manually with the ~faillock~ command.
-* keyboard
-** layout
+** Configure Xorg
+*** keyboard
+**** layout
 Sets the keyboard layout permanently in xorg.
 #+BEGIN_SRC sh
 localectl set-x11-keymap se '' nodeadkeys
 localectl set-keymap sv-latin1
 #+END_SRC
-** repeat speed
-Place this file at ~/etc/X11/xorg.conf.d/10-my-keyboard.conf~
+**** repeat speed
+Place this file at =/etc/X11/xorg.conf.d/10-my-keyboard.conf=
 Repeat delay of 300ms and repeat rate of =1000/40 = 25hz=.
 #+BEGIN_SRC
 Section "InputClass"
@@ -169,9 +175,8 @@ Section "InputClass"
  Option "AutoRepeat" "300 40"
 EndSection
 #+END_SRC
-* mouse
-** speed
-Place these in ~/etc/X11/xorg.conf.d/~
+*** mouse
+Place these in =/etc/X11/xorg.conf.d/=
 Set mouse to flat profile and max speed.
 #+BEGIN_SRC
 Section "InputClass"
@@ -197,18 +202,44 @@ Section "InputClass"
   Option "Tapping" "on"
 EndSection
 #+END_SRC
-* DNS
-ändra i ~/etc/resolvconf.conf~ för att skriva över med nya dnser.
-ändra med =nm-applet= för att lägga till backups.
+*** monitors
+To set resolution and orientations:
+#+BEGIN_SRC
+Section "Monitor"
+    Identifier "DisplayPort-0"
+    Option "Primary" "true"
+    Option "PreferredMode" "2560x1440"
+EndSection
 
-* Graphical sudo
+Section "Monitor"
+    Identifier "DisplayPort-2"
+    Option "RightOf" "DisplayPort-0"
+    Option "Rotate" "left"
+    Option "PreferredMode" "2560x1440"
+EndSection
+#+END_SRC
+*** DPMS
+Increase the screensaver timeout to 20 mins
+#+BEGIN_SRC
+Section "ServerFlags"
+    Option "StandbyTime" "20"
+    Option "SuspendTime" "20"
+    Option "OffTime" "20"
+    Option "BlankTime" "20"
+EndSection
+#+END_SRC
+** DNS
+ändra i =/etc/resolvconf.conf= för att skriva över med nya dnser.
+ändra med ~nm-applet~ för att lägga till backups.
+
+** Graphical sudo
 Vissa GUI-program vill autentisera för att göra något sudo.
 Görs via polkit elr nåt. Starta denna vid startup:
 #+BEGIN_SRC sh
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 #+END_SRC
 
-* Dropbox
+** Dropbox
 fixa så att systemd-servicen inte startar om dropbox i en oändlig loop:
 https://wiki.archlinux.org/title/dropbox#Prevent_automatic_updates
 
@@ -219,12 +250,100 @@ rm -rf ~/.dropbox-dist
 install -dm0 ~/.dropbox-dist
 #+END_SRC
 
-* Kernel upgrades and modules
+** Kernel upgrades and modules
 [[https://github.com/saber-nyan/kernel-modules-hook][github]]
 #+BEGIN_SRC sh
 pacman -Syu kernel-modules-hook
 #+END_SRC
 
+** ext4
+By default is 5% of the filesystem reserved for the super user, but that is not necessary
+on a non-root partition imho. It can be changed on creation with the =-m= flag on
+~mkfs.ext4~ or changed afterward with ~tune2fs~ (I think it is called).
+** XDG dirs
+Install =xdg-user-dirs= to create the documents folder and the like in home folders.
+** Reflector
+[[https://wiki.archlinux.org/title/Reflector][archwiki]]
+Can start a timer to update the mirrors weekly.
+** systemd-boot
+[[https://wiki.archlinux.org/title/Systemd-boot][archwiki]]
+Need to create entries manually.
+** NFS
+*** server
+Add this to =/etc/exports=
+#+BEGIN_SRC
+/home/erik/Videos/anime_cache 192.168.10.0/24(ro,insecure,all_squash)
+#+END_SRC
+and enable with ~systemctl enable nfs-server~.
+*** client
+in =/etc/fstab=
+#+BEGIN_SRC
+nas:/mnt/min-pool/data  /media/NAS      nfs     _netdev,defaults,users,relatime,exec,noauto,timeo=14    0 0
+miu.local:/home/erik/Videos/anime_cache /media/miu      nfs     defaults,ro,soft,timeo=14,users,noauto,noatime,_netdev,x-systemd.automount,x-systemd.mount-timeout=10,x-systemd.idle-timeout=1min   0 0
+nas.local:/mnt/min-pool/data    /media/nas      nfs     defaults,ro,soft,timeo=14,users,noauto,noatime,_netdev,x-systemd.automount,x-systemd.mount-timeout=3,x-systemd.idle-timeout=1min    0 0
+
+#+END_SRC
+** Systemd-networkd
+*** Configure ethernet
+Config files are placed in: =/etc/systemd/network=, the default ones are in =/usr/lib/systemd/network=.
+To enable an ethernet port with DHCP and mDNS, create a file =50-hemma.network= or something:
+#+BEGIN_SRC
+[Match]
+Name=eno1
+
+[Network]
+DHCP=yes
+MulticastDNS=yes
+
+[Link]
+Multicast=yes
+#+END_SRC
+
+A static IP can be added with:
+#+BEGIN_SRC
+[Network]
+DHCP=no
+Address=192.168.10.42/24
+Gateway=192.168.10.1
+DNS=192.168.10.1
+MulticastDNS=yes
+#+END_SRC
+*** Wake-on-LAN
+Copy paste =99-default.link= and add ~WakeOnLan=magic~ in the link section and add a match
+for a mac address in the match section. [[https://wiki.archlinux.org/title/Wake-on-LAN#systemd.link][archwiki]]
+*** Disable ipv6
+[[https://wiki.archlinux.org/title/IPv6#systemd-networkd_4][archwiki]]
+#+BEGIN_SRC
+[Network]
+LinkLocalAddressing=ipv4
+IPv6AcceptRA=no
+#+END_SRC
+** Add a user
+No home directory will be created unless =-m= is given.
+#+BEGIN_SRC bash
+useradd -m -G wheel -s /usr/bin/zsh erik
+#+END_SRC
+** fsck
+Mkinitcpio will run fsck on the root file system through its =fsck= hook. I don't think it
+runs on the other filesystems, like home, so a 2 needs to be added in fstab for those, and
+a 0 for the root system so it doesn't get checked twice. I think that is how it works.
+** PC speaker as bell
+Disable it by blacklisting it in =/etc/modprobe.d/nobeep.conf=
+#+BEGIN_SRC
+blacklist pcspkr
+#+END_SRC
+Unload it immediately with ~rmmod pcspkr~.
+** Systemd-resolved
+Simply enable the service AFTER creating a symlink:
+#+BEGIN_SRC bash
+ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+#+END_SRC
+** SSD trim
+Simply enable the systemd fstrim timer.
+** NTP
+#+BEGIN_SRC sh
+timedatectl set-ntp true
+#+END_SRC
 * Bash
 ** Nice script options
 #+BEGIN_SRC bash
