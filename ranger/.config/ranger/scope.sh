@@ -296,7 +296,7 @@ handle_mime() {
             exit 1;;
 
         ## Text
-        text/* | */xml | */json | */x-ndjson)
+        text/* | */xml | */json | */x-ndjson | message/rfc822)
             ## Syntax highlight
             if [[ "$( stat --printf='%s' -- "${FILE_PATH}" )" -gt "${HIGHLIGHT_SIZE_MAX}" ]]; then
                 exit 2

@@ -19,3 +19,4 @@ $(QUTEDIR):
 .PHONY: xdg
 xdg:
 	xdg-settings set default-web-browser $(QUTE_DESKTOP)
+	xdg-mime default $(QUTE_DESKTOP) message/rfc822
