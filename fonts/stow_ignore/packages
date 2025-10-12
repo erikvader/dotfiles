@@ -1,8 +1,7 @@
 # statusbar
+# Looks the same as dejavu and doesn't have problems with colored emojis
+# https://www.codejam.info/2020/05/arch-linux-bulletproof-no-config-color-emoji.html
 ttf-bitstream-vera
-
-# not sure
-ttf-droid
 
 # used by at least one script that uses mogrify
 ttf-liberation
@@ -16,9 +15,3 @@ ttf-ubuntu-font-family
 
 # color emojis
 noto-fonts-emoji
-
-# dejavu without emojis to make sure colored ones are always used
-ttf-dejavu-emojiless
-
-# used by conky metro, probably nice to have
-ttf-opensans
