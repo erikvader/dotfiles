@@ -21,6 +21,8 @@ alias rsd='rsync -avh --dry-run --delete'
 alias rs='rsync -avh --delete --progress'
 alias rc='rsync -avh --progress'
 
+alias pc='paccache -rv'
+alias pcu='pc -uk0'
 alias y='yay'
 alias ys='y -Sy'
 alias yc='y -Sc'
@@ -35,7 +37,7 @@ alias yor='yo -q | yr -'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
-alias l='ls -FAvhw80 --quoting-style=shell-escape'
+alias l='ls -Avhw80 --quoting-style=shell-escape'
 alias ll="l -la --time-style=long-iso"
 
 # TODO: 
