@@ -207,7 +207,10 @@ class fzf_select(Command):
 
         fzf = self.fm.execute_command(command, universal_newlines=True, stdout=subprocess.PIPE)
         stdout, _ = fzf.communicate()
+        # TODO: print message if aborted
         if fzf.returncode == 0:
+            # TODO: this removes symlinks in the path, which is annoying if you have
+            # navigated to a folder through a symlink
             fzf_file = os.path.abspath(stdout.rstrip('\n'))
             self.fm.select_file(fzf_file)
             if self.EXECUTE in self.flags:
