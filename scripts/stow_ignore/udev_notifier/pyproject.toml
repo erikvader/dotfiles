@@ -1,0 +1,17 @@
+[project]
+name = "udev-notifier"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "eriklibs>=0.1.0,<0.2.0",
+    "pyudev>=0.24.3,<0.25.0",
+]
+
+[project.scripts]
+udev_notifier = "udev_notifier.udev_notifier:main"
+
+[build-system]
+requires = ["uv_build>=0.8.15,<0.9.0"]
+build-backend = "uv_build"
+

@@ -2,7 +2,7 @@
 
 import pyudev
 import subprocess as S
-from notify_send import notify_send
+from eriklibs.notify_send import notify_send
 
 def safe_get(device, *names):
    for n in names:

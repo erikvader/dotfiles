@@ -6,4 +6,4 @@ def notify_send(summary, body="", icon=None):
    args = []
    if icon:
       args.append("--icon={}".format(icon))
-   S.Popen(["notify-send"] + args + [summary, body])
+   S.run(["notify-send"] + args + [summary, body])

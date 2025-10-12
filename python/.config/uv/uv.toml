@@ -1,0 +1,15 @@
+# Never download additional python stuff, always use from the system
+python-downloads = "never"
+python-preference = "system"
+
+# Use cargo style semver semantics by default
+add-bounds = "major"
+
+# NOTE: uv 0.8.15 can only handle relative paths in dependencies, which is inconvenient
+# when the dependency is far away. So I am using a local index where built wheels and
+# stuff can be copied to. The downside is the projects can't be published here as
+# editable.
+[[index]]
+name = "eriks-pypi"
+url = "../../.local/share/eriks-pypi"
+format = "flat"

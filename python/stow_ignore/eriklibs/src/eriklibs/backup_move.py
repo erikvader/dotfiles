@@ -41,7 +41,7 @@ def move_file(src, dst):
          move(src, d_path)
          return d_path
 
-# find all possible duplicates of the file `path` in it's current directory
+# find all possible duplicates of the file `path` in its current directory
 def find_duplicates(path):
    assert(os.path.exists(path))
    file_name = os.path.basename(path)
@@ -60,3 +60,8 @@ def _remove_leading_number(s):
       return m[1]
    else:
       return s
+
+def main():
+   # TODO: 
+   print("hej")
+   pass

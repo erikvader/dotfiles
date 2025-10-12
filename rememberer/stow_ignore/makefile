@@ -1,3 +1,3 @@
 .PHONY: install
 install:
-	pipx install --force ./rememberer
+	uv tool install --editable ./rememberer
