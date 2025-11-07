@@ -1,5 +1,6 @@
 # package manager commands
 PAC := yay
+#TODO: include the first words of pacman -Qg to support groups?
 PACLIST := $(PAC) -Qq
 PACINSTALL := $(PAC) -S
 ALLPAC := /tmp/dotfiles_make_all_pac
