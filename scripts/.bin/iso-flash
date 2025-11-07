@@ -15,8 +15,9 @@ fi
 #   1. The whole ISO will most likely all end up in the cache in RAM, the command finishes
 #      and the kernel is slowly writing them out to the slow drive.
 #   2. I can't find any documentation that states that sync will affect direct writes to a
-#      block device, the man pages only mention that it flushes filesystems. But I could very
-#      well simply not understand what exactly that means.
+#      block device, the man pages only mention that it flushes filesystems. But the
+#      kernel does treat the block device as any other file, and that file is on a
+#      filesystem, so it probably still applies.
 #   3. No progress information.
 #
 # So I use an approach of dd and udisksctl that both should address the above issues.
@@ -29,7 +30,8 @@ fi
 #      can have, and those are probably not flushed by dd. So a power-off from udisksctl is
 #      issued to flush those caches and power off the drive, so everything should be on
 #      persistent storage after this! This power-off is what GUI file managers use to eject
-#      drives btw.
+#      drives btw. The man page for fsync(2) states that it will write through disk caches
+#      if present, so the power off is maybe not strictly needed.
 #   3. status=progress and oflag=dsync will make sure actual progress is displayed.
 
 set -x
