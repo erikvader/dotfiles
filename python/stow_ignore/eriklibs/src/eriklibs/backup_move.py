@@ -36,7 +36,9 @@ def move_file(src, dst):
 
    for d_name in _file_gen(src_basename):
       d_path = os.path.join(dst, d_name)
-      # TODO: race condition, open with exclusive flag instead
+      # TODO: race condition! use RENAME_NOREPLACE of rename instead
+      # https://man7.org/linux/man-pages/man2/rename.2.html. It seems that mv uses that
+      # https://github.com/coreutils/gnulib/blob/6c99ec373c1ecd531b0ffedfdfce7979db63a0e8/lib/backupfile.c#L375
       if not os.path.exists(d_path):
          move(src, d_path)
          return d_path
@@ -60,8 +62,3 @@ def _remove_leading_number(s):
       return m[1]
    else:
       return s
-
-def main():
-   # TODO: 
-   print("hej")
-   pass
