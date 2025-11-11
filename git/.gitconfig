@@ -52,7 +52,7 @@
     lst = ls-tree --abbrev HEAD # {tracked}
     # branch
     br = branch
-    brsu = br -u # --set-upstream-to
+    brsu = br -u # {--set-upstream-to}
     bruu = br --unset-upstream
     # rebase [--onto A:-B] B [C:-HEAD] {switch to C -> take (log) B..C -> place on A}
     rb = rebase
@@ -101,10 +101,12 @@
     plr = pl --rebase
     # push
     ps = push
+    psd = ps --delete
     psforce = ps --force-with-lease
     # switch
     sw = switch
     swd = sw --detach
+    swc = sw --create
     # submodule
     m = submodule
     mu = m update --init --checkout
