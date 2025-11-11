@@ -42,8 +42,7 @@ alias ....='cd ../../..'
 alias l='ls -Avhw80 --quoting-style=shell-escape'
 alias ll="l -la --time-style=long-iso"
 
-# TODO: byt ut jp description
-alias naspoweroff='umount /media/NAS && ssh -t nas.local "sudo midclt call -jp description system.shutdown reason"'
+alias naspoweroff='umount /media/NAS && ssh -t nas.local "sudo midclt call -j system.shutdown reason"'
 alias naswakeup='echo TODO'
 alias tvpoweroff='ssh -t tv@TV.local "sudo poweroff"'
 alias tvwakeup='wol 3c:97:0e:b1:53:44'
