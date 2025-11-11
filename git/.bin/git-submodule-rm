@@ -6,6 +6,11 @@
 
 set -e
 
+# NOTE: When run as a git alias, the current working directory is changed to repo top
+# level and this env var is set to where the script was actually called from.
+# See man 1 git-config
+cd "${GIT_PREFIX:-.}"
+
 # Deinitialize a submodule, emptying the dir in the worktree and removing the entry in
 # .git/config
 echo + submodule deinit "$@"

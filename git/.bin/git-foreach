@@ -2,6 +2,13 @@
 
 set -e
 
+# NOTE: When run as a git alias, the current working directory is changed to repo top
+# level and this env var is set to where the script was actually called from.
+# See man 1 git-config
+cd "${GIT_PREFIX:-.}"
+# NOTE: I also unset it here so further commands don't try to compensate for this too
+unset -v GIT_PREFIX
+
 TEMP=$(getopt -s bash -n git-foreach -o +bdiaGh -l not-detached,branch,is-detached,ignore-fail,all,no-git,help -- "$@")
 eval set -- "$TEMP"
 unset TEMP

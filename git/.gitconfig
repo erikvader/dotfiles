@@ -91,7 +91,7 @@
     s = status
     si = s --ignored
     ss = s --short --branch
-    sr = !git-foreach --no-git git-status-brief # [<branch-for-git-ahead>]
+    sr = !git-foreach --all --no-git git-status-brief # [<branch-for-git-ahead>]
     sa = s --untracked-files=all
     # fetch {pull A without switch: origin [+]A:A, + to force fast-forward}
     f = fetch
