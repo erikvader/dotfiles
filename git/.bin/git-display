@@ -5,7 +5,7 @@
 set -e
 
 echo -n '#'
-tput bold
-tput setaf 4
+tput bold || true
+tput setaf 4 || true
 echo " ${displaypath:-.}"
-tput sgr0
+tput sgr0 || true

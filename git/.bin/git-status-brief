@@ -10,7 +10,12 @@ if [[ $# -ne 0 && $# -ne 1 ]]; then
     exit 1
 fi
 
-STATUS=$(git -c color.ui=always status --short --branch --ignore-submodules=dirty)
+STATUS_ARGS=
+if tput setaf 1 >/dev/null 2>&1; then
+    STATUS_ARGS="-c color.ui=always"
+fi
+
+STATUS=$(git $STATUS_ARGS status --short --branch --ignore-submodules=dirty)
 NUM_LINES=$(wc -l <<< "$STATUS")
 HEADERS=1
 

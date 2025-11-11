@@ -23,9 +23,9 @@ else
     exit 1
 fi
 
-aheadcol=$(tput setaf 2)
-behindcol=$(tput setaf 1)
-reset=$(tput sgr0)
+aheadcol=$(tput setaf 2 || true)
+behindcol=$(tput setaf 1 || true)
+reset=$(tput sgr0 || true)
 
 #TODO: show equal commits with --cherry-mark?
 read -r ahead behind < <(git rev-list --count --left-right "$LEFT"..."$RIGHT")
