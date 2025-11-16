@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# NOTE: this term doesn't include the ^O sequence in sgr0 that less doesn't process
+export TERM=ansi
+
 sed -E \
     -e '1,/\[alias\]/d' \
     -e 's/^ +//' \
