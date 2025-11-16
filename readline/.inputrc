@@ -1,5 +1,14 @@
-# up and down arrow behave like zsh
+# up and down arrow match against the history
 "\e[A": history-search-backward
 "\eOA": history-search-backward
 "\e[B": history-search-forward
 "\eOB": history-search-forward
+
+# make autocomplete nicer
+TAB: menu-complete
+"\e[Z": menu-complete-backward
+set show-all-if-ambiguous on
+set menu-complete-display-prefix on
+
+# make it case insensitive
+set completion-ignore-case on
