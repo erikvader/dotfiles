@@ -1,2 +1,2 @@
 [MESSAGES CONTROL]
-disable=R,C,bad-indentation,global-statement,trailing-newlines,C0303
+disable=R,C,bad-indentation,global-statement,trailing-newlines,C0303,fixme
