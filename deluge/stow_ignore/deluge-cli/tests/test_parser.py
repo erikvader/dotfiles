@@ -1,8 +1,18 @@
 # pylint: disable=redefined-outer-name
 
-from deluge_cli.parser import Tokens, Parser, Assoc, Tree, ParseError
-from pytest import fixture, raises
-from typing import Any
+from deluge_cli.parser import (
+    Tokens,
+    Token,
+    Parser,
+    Assoc,
+    Tree,
+    ParseError,
+    arg_semicolon,
+    arg1,
+    arg3,
+)
+from pytest import fixture, raises, mark
+from typing import Any, Annotated
 
 
 def test_tokens() -> None:
@@ -129,12 +139,12 @@ def multi_arg_parser() -> Parser[list[int], None]:
     def op_func(num: int):
         return lambda ctx, *_rest: ctx.append(num)
 
-    def mapper(arg: str) -> tuple[int]:
+    def mapper(arg: Token) -> tuple[int]:
         if arg != "omg":
             raise ValueError("arg is not omg")
         return (1,)
 
-    def mapper_var(*_arg: str) -> tuple[int]:
+    def mapper_var(*_arg: Annotated[Token, ";"]) -> tuple[int]:
         return (2,)
 
     def int_func(ctx: list[int], num: int) -> None:
@@ -143,11 +153,11 @@ def multi_arg_parser() -> Parser[list[int], None]:
     parser = (
         Parser()
         .atom("op0", op_func(0))
-        .atom("op1", op_func(1), 1)
-        .atom("op3", op_func(3), 3)
-        .atom("op4", op_func(4), ";")
-        .atom("op5", int_func, 1, mapper)
-        .atom("op6", int_func, ";", mapper_var)
+        .atom("op1", op_func(1), arg1)
+        .atom("op3", op_func(3), arg3)
+        .atom("op4", op_func(4), arg_semicolon)
+        .atom("op5", int_func, mapper)
+        .atom("op6", int_func, mapper_var)
     )
 
     return parser
@@ -212,8 +222,8 @@ def bool_parser() -> Parser:
 
     parser = (
         Parser()
-        .atom("true", true_func, 1)
-        .atom("false", false_func, 1)
+        .atom("true", true_func, arg1)
+        .atom("false", false_func, arg1)
         .operator("and", Assoc.LEFT, 2, and_func)
         .operator("or", Assoc.LEFT, 1, or_func)
         .set_parens("(", ")")
@@ -222,69 +232,25 @@ def bool_parser() -> Parser:
     return parser
 
 
-def test_eval_order_and(bool_parser: Parser) -> None:
-    parsed = bool_parser.parse(Tokens.split("true 1 and true 2"))
+@mark.parametrize(
+    "inp,res,odr",
+    [
+        ("true 1 and true 2", True, [1, 2]),
+        ("true 1 and true 2 and true 3 and true 4", True, [1, 2, 3, 4]),
+        ("true 1 and true 2 and false 3 and true 4", False, [1, 2, 3]),
+        ("false 1 and true 2 and false 3 and true 4", False, [1]),
+        ("true 1 or true 2 or true 3", True, [1]),
+        ("false 1 or true 2 or true 3", True, [1, 2]),
+        ("false 1 or true 2 and false 3", False, [1, 2, 3]),
+        ("false 1 or false 2 and true 3", False, [1, 2]),
+        ("( true 1 or false 2 ) and true 3", True, [1, 3]),
+    ],
+)
+def test_bool_parser(bool_parser: Parser, inp: str, res: bool, odr: list[int]) -> None:
+    parsed = bool_parser.parse(Tokens.split(inp))
     order = []
-    assert parsed(order)
-    assert order == [1, 2]
-
-
-def test_eval_order_and2(bool_parser: Parser) -> None:
-    parsed = bool_parser.parse(Tokens.split("true 1 and true 2 and true 3 and true 4"))
-    order = []
-    assert parsed(order)
-    assert order == [1, 2, 3, 4]
-
-
-def test_eval_order_and_with_false(bool_parser: Parser) -> None:
-    parsed = bool_parser.parse(Tokens.split("true 1 and true 2 and false 3 and true 4"))
-    order = []
-    assert not parsed(order)
-    assert order == [1, 2, 3]
-
-
-def test_eval_order_and_with_false_beginning(bool_parser: Parser) -> None:
-    parsed = bool_parser.parse(
-        Tokens.split("false 1 and true 2 and false 3 and true 4")
-    )
-    order = []
-    assert not parsed(order)
-    assert order == [1]
-
-
-def test_eval_order_or(bool_parser: Parser) -> None:
-    parsed = bool_parser.parse(Tokens.split("true 1 or true 2 or true 3"))
-    order = []
-    assert parsed(order)
-    assert order == [1]
-
-
-def test_eval_order_or_false(bool_parser: Parser) -> None:
-    parsed = bool_parser.parse(Tokens.split("false 1 or true 2 or true 3"))
-    order = []
-    assert parsed(order)
-    assert order == [1, 2]
-
-
-def test_eval_order_complex(bool_parser: Parser) -> None:
-    parsed = bool_parser.parse(Tokens.split("false 1 or true 2 and false 3"))
-    order = []
-    assert not parsed(order)
-    assert order == [1, 2, 3]
-
-
-def test_eval_order_complex2(bool_parser: Parser) -> None:
-    parsed = bool_parser.parse(Tokens.split("false 1 or false 2 and true 3"))
-    order = []
-    assert not parsed(order)
-    assert order == [1, 2]
-
-
-def test_eval_order_parens(bool_parser: Parser) -> None:
-    parsed = bool_parser.parse(Tokens.split("( true 1 or false 2 ) and true 3"))
-    order = []
-    assert parsed(order)
-    assert order == [1, 3]
+    assert parsed(order) == res
+    assert order == odr
 
 
 @fixture

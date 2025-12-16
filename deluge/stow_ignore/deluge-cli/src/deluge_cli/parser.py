@@ -1,7 +1,18 @@
 # pyright: strict
 
 from enum import Enum, auto
-from typing import Callable, Iterable, Self, NewType, Any, assert_never
+from typing import (
+    Callable,
+    Iterable,
+    Self,
+    NewType,
+    Any,
+    assert_never,
+    Annotated,
+    get_origin,
+    get_args,
+    override,
+)
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from inspect import signature, Parameter
@@ -37,6 +48,7 @@ class Tokens:
     def is_empty(self) -> bool:
         return not self.tokens
 
+    @override
     def __repr__(self):
         return repr((self.popped, self.tokens[::-1]))
 
@@ -44,6 +56,26 @@ class Tokens:
 class Assoc(Enum):
     LEFT = auto()
     RIGHT = auto()
+
+
+def arg0() -> tuple[()]:
+    return ()
+
+
+def arg1(a1: Token) -> tuple[str]:
+    return (a1,)
+
+
+def arg2(a1: Token, a2: Token) -> tuple[str, str]:
+    return (a1, a2)
+
+
+def arg3(a1: Token, a2: Token, a3: Token) -> tuple[str, str, str]:
+    return (a1, a2, a3)
+
+
+def arg_semicolon(*args: Annotated[Token, ";"]) -> tuple[str, ...]:
+    return tuple(args)
 
 
 # NOTE: there is no way to specify that the number of arguments must be the same as the
@@ -74,12 +106,15 @@ class Atom[C, T](Tree[C, T]):
     tokens: list[Token]
     func: Callable[[C], T]
 
+    @override
     def eval(self, context: C) -> T:
         return self.func(context)
 
+    @override
     def __repr__(self):
         return f"A[{self.token!r},{self.tokens!r}]"
 
+    @override
     def __str__(self):
         if self.tokens:
             commas = " ".join([self.token, *self.tokens])
@@ -93,12 +128,15 @@ class Binary[C, T](Tree[C, T]):
     right: Tree[C, T]
     func: BinaryCallable[C, T]
 
+    @override
     def eval(self, context: C) -> T:
         return self.func(context, self.left, self.right)
 
+    @override
     def __repr__(self):
         return f"B[{self.token!r},{self.left!r},{self.right!r}]"
 
+    @override
     def __str__(self):
         return f"({self.left} {self.token} {self.right})"
 
@@ -108,12 +146,15 @@ class Unary[C, T](Tree[C, T]):
     inner: Tree[C, T]
     func: UnaryCallable[C, T]
 
+    @override
     def eval(self, context: C) -> T:
         return self.func(context, self.inner)
 
+    @override
     def __repr__(self):
         return f"U[{self.token!r},{self.inner!r}]"
 
+    @override
     def __str__(self):
         return f"({self.token} {self.inner})"
 
@@ -123,12 +164,15 @@ class Sub[C, T](Tree[C, T]):
     inner: Tree[Any, Any]
     func: SubCallable[C, Any, T, Any]
 
+    @override
     def eval(self, context: C) -> T:
         return self.func(context, self.inner)
 
+    @override
     def __repr__(self):
         return f"S[{self.token!r},{self.inner!r}]"
 
+    @override
     def __str__(self):
         return f"({self.token} {self.inner})"
 
@@ -148,7 +192,7 @@ class ParseError(Exception):
         self.tokens = tokens
 
 
-class Parser[T, C]:
+class Parser[C, T]:
     parens = None
     binaries: dict[Token, tuple[Assoc, Prec, BinaryCallable[C, T]]] = {}
     unaries: dict[Token, UnaryCallable[C, T]] = {}
@@ -176,48 +220,46 @@ class Parser[T, C]:
         self,
         name: str,
         func: AtomCallable[C, T, *As],
-        numargs: int | str = 0,
-        mapper: ArgMapper[*As] | None = None,
+        mapper: ArgMapper[*As] = arg0,
+        *,
+        # TODO: add? Or retrieve docstring from func? extra?
+        help: str = "",
     ) -> Self:
-        """Add an atom.
-
-        The argument mapper takes as many str arguments as numargs is equal to. If it
-        instead is a str, then the mapper should accept a variable amount of str
-        arguments. There is no way to type check this statically, so it is checked during
-        runtime.
-
-        """
+        """Add an atom."""
         assert name
+        sig = signature(mapper)
+        match list(sig.parameters.values()):
+            case [p] if p.kind == Parameter.VAR_POSITIONAL:
+                typ = p.annotation
+                if get_origin(typ) is not Annotated:
+                    raise ValueError(
+                        f"A single varargs must be annotated with end token: {p}"
+                    )
 
-        if isinstance(numargs, str):
-            tokenized = Token(numargs)
-            assert tokenized
-            if mapper is not None:
-                sig = signature(mapper)
-                assert list(p.kind for p in sig.parameters.values()) == [
-                    Parameter.VAR_POSITIONAL
-                ], "Mapper must only accept a single *args"
-        else:
-            tokenized = numargs
-            assert tokenized >= 0
-            if mapper is not None:
-                sig = signature(mapper)
-                assert all(
-                    p.kind == Parameter.POSITIONAL_ONLY
-                    or p.kind == Parameter.POSITIONAL_OR_KEYWORD
-                    and p.default == Parameter.empty
-                    for p in sig.parameters.values()
-                ), "Mapper function must only take positional arguments"
-                assert (
-                    len(sig.parameters) == tokenized
-                ), "Mapper must take the specified number of arguments"
+                match get_args(typ):
+                    case [contained, terminator]:
+                        if contained is not Token:
+                            raise ValueError(f"The type should be Token: {typ}")
+                        if not isinstance(terminator, str):
+                            raise ValueError(f"Terminator should be a str: {typ}")
+                        numargs = Token(terminator)
+                    case _:
+                        raise ValueError(f"Invalid Annotated: {typ}")
+            case [*ps] if all(
+                p.kind == Parameter.POSITIONAL_ONLY
+                or p.kind == Parameter.POSITIONAL_OR_KEYWORD
+                and p.default == Parameter.empty
+                for p in ps
+            ):
+                if not all(p.annotation is Token for p in ps):
+                    raise ValueError(f"All params should have type Token: {ps}")
+                numargs = len(ps)
+            case _:
+                raise ValueError(
+                    f"Not a valid mapper signature in terms of number of parameters: {mapper}"
+                )
 
-        def noop(*args: Any) -> Iterable[Any]:
-            return tuple(args)
-
-        some_mapper = mapper if mapper is not None else noop
-
-        self.atoms[Token(name)] = (tokenized, func, some_mapper)
+        self.atoms[Token(name)] = (numargs, func, mapper)
         return self
 
     # NOTE: pylint gets confused
