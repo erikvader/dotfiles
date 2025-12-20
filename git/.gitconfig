@@ -96,6 +96,7 @@
     # fetch {pull A without switch: origin [+]A:A, + to force fast-forward}
     f = fetch
     fr = f --recurse-submodules=yes
+    ft = fetch --tags
     # pull
     pl = pull
     plr = pl --rebase
