@@ -7,9 +7,9 @@ from deluge_cli.parser import (
     Assoc,
     Tree,
     ParseError,
-    arg_semicolon,
-    arg1,
-    arg3,
+    semicolon,
+    str1,
+    str3,
 )
 from pytest import fixture, raises, mark
 from typing import Any, Annotated
@@ -39,6 +39,13 @@ def simple_math_parser() -> Parser[None, int]:
         return left(ctx) + right(ctx)
 
     def multiply_func(ctx: None, left: Tree, right: Tree) -> int:
+        """Summary line.
+        Yippie.
+
+        Details
+        paragraph.
+
+        """
         return left(ctx) * right(ctx)
 
     parser = (
@@ -54,6 +61,16 @@ def simple_math_parser() -> Parser[None, int]:
     )
 
     return parser
+
+
+def test_math_docs(simple_math_parser: Parser) -> None:
+    doc = simple_math_parser.docs()
+    for prec, xs in doc.binary_operators:
+        if prec == 2:
+            assert xs[0].description == "Summary line. Yippie. Details paragraph."
+            break
+    else:
+        assert False, "The multiply is not found"
 
 
 def test_single_atom(simple_math_parser: Parser) -> None:
@@ -153,9 +170,9 @@ def multi_arg_parser() -> Parser[list[int], None]:
     parser = (
         Parser()
         .atom("op0", op_func(0))
-        .atom("op1", op_func(1), arg1)
-        .atom("op3", op_func(3), arg3)
-        .atom("op4", op_func(4), arg_semicolon)
+        .atom("op1", op_func(1), str1)
+        .atom("op3", op_func(3), str3)
+        .atom("op4", op_func(4), semicolon)
         .atom("op5", int_func, mapper)
         .atom("op6", int_func, mapper_var)
     )
@@ -222,8 +239,8 @@ def bool_parser() -> Parser:
 
     parser = (
         Parser()
-        .atom("true", true_func, arg1)
-        .atom("false", false_func, arg1)
+        .atom("true", true_func, str1)
+        .atom("false", false_func, str1)
         .operator("and", Assoc.LEFT, 2, and_func)
         .operator("or", Assoc.LEFT, 1, or_func)
         .set_parens("(", ")")

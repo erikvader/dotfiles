@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 subcommand = "add"
 
 
+# TODO: auto download everything that hits clipboard? Use clipnotify if available, poll
+# otherwise.
 def argparse_add_subcommand(add_parser: Callable[..., argparse.ArgumentParser]):
     parser = add_parser(
         subcommand,
@@ -18,20 +20,29 @@ def argparse_add_subcommand(add_parser: Callable[..., argparse.ArgumentParser]):
     )
 
     def magnet(x: str) -> str:
-        if not x.startswith("magnet://"):
+        if not x.startswith("magnet:"):
             raise ValueError("Magnet link expected")
         return x
 
     parser.add_argument("magnet", type=magnet, help="Magnet link to add")
-    parser.add_argument("--location", "-l", type=Path, help="Download location")
+    parser.add_argument(
+        "--download-dir",
+        "-d",
+        type=Path,
+        help="Download location. A default directory is used if this is not specified.",
+    )
     parser.add_argument("--paused", "-p", action="store_true", help="Add it paused")
 
 
-def run(*, url: str, download_location: Path | None, paused: bool):
-    logger.info("Adding torrent from: %s", url)
+def run(args: argparse.Namespace):
+    magnet: str = args.magnet
+    download_dir: Path | None = args.download_dir
+    paused: bool = args.paused
+
+    logger.info("Adding torrent from: %s", args.magnet)
 
     with Deluge() as deluge:
         new_hash = deluge.add_magnet(
-            url, download_location=download_location, paused=paused
+            magnet, download_location=download_dir, paused=paused
         )
         print(new_hash)

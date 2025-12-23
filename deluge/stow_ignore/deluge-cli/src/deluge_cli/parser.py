@@ -1,6 +1,8 @@
 # pyright: strict
 
+import textwrap
 from enum import Enum, auto
+from itertools import groupby
 from typing import (
     Callable,
     Iterable,
@@ -15,9 +17,18 @@ from typing import (
 )
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from inspect import signature, Parameter
+from inspect import signature, Parameter, getdoc
 
 Token = NewType("Token", str)
+
+
+def shortdoc(obj: Any) -> str:
+    """Returns the the whole doc of the given object as a single line."""
+    if (doc := getdoc(obj)) is None:
+        return ""
+    if not (lines := doc.splitlines()):
+        return ""
+    return " ".join(l for l in lines if l and not l.isspace())
 
 
 class Tokens:
@@ -62,19 +73,19 @@ def arg0() -> tuple[()]:
     return ()
 
 
-def arg1(a1: Token) -> tuple[str]:
+def str1(a1: Token) -> tuple[str]:
     return (a1,)
 
 
-def arg2(a1: Token, a2: Token) -> tuple[str, str]:
+def str2(a1: Token, a2: Token) -> tuple[str, str]:
     return (a1, a2)
 
 
-def arg3(a1: Token, a2: Token, a3: Token) -> tuple[str, str, str]:
+def str3(a1: Token, a2: Token, a3: Token) -> tuple[str, str, str]:
     return (a1, a2, a3)
 
 
-def arg_semicolon(*args: Annotated[Token, ";"]) -> tuple[str, ...]:
+def semicolon(*args: Annotated[Token, ";"]) -> tuple[str, ...]:
     return tuple(args)
 
 
@@ -192,20 +203,136 @@ class ParseError(Exception):
         self.tokens = tokens
 
 
+@dataclass(frozen=True)
+class BinaryDoc:
+    name: str
+    associativity: str
+    description: str
+    is_implicit: bool
+
+
+@dataclass(frozen=True)
+class UnaryDoc:
+    name: str
+    description: str
+
+
+@dataclass(frozen=True)
+class AtomDoc:
+    name: str
+    args: str
+    description: str
+
+    def name_with_args(self) -> str:
+        return " ".join(n for n in [self.name, self.args] if n)
+
+
+@dataclass(frozen=True)
+class SubDoc:
+    name: str
+    args: str
+    description: str
+    subparser: "ParserDoc"
+
+
+@dataclass(frozen=True)
+class ParserDoc:
+    name: str
+    description: str
+    parenthesis: str | None
+    atoms: list[AtomDoc]
+    subparsers: list[SubDoc]
+    unary_operators: list[UnaryDoc]
+    binary_operators: list[tuple[int, list[BinaryDoc]]]
+
+    @staticmethod
+    def _append_description(prefix: str, desc: str) -> list[str]:
+        return textwrap.wrap(prefix + desc, subsequent_indent=" " * len(prefix))
+
+    def _str_lines(self) -> list[str]:
+        lines = ["=" * 5 + self.name + "=" * 5]
+
+        lines.extend(textwrap.wrap(self.description))
+        lines.append("")
+
+        if self.unary_operators:
+            lines.append("Unary operators:")
+            for u in self.unary_operators:
+                lines.append(f"  {u.name}: {u.description}")
+            lines.append("")
+
+        if self.binary_operators:
+            lines.append("Binary operators:")
+            for prec, bs in self.binary_operators:
+                lines.append(f"  Precedence {prec}")
+                for b in bs:
+                    if b.is_implicit:
+                        impl, impr, impd = (
+                            "[",
+                            "]",
+                            " This can be omitted and is implicitly assumed if no operator is given between two atoms.",
+                        )
+                    else:
+                        impl, impr, impd = ("", "", "")
+                    pre = f"    TOKEN {impl}{b.name}{impr} TOKEN: "
+                    lines.extend(self._append_description(pre, b.description + impd))
+            lines.append("")
+
+        if self.atoms:
+            lines.append("Atoms:")
+            for a in self.atoms:
+                pre = f"  {a.name_with_args()}: "
+                lines.extend(self._append_description(pre, a.description))
+            lines.append("")
+
+        if self.parenthesis is not None:
+            lines.append("Grouping:")
+            lines.append("  " + self.parenthesis)
+            lines.append("")
+
+        deferred_lines: list[str] = []
+        if self.subparsers:
+            lines.append("Subparsers:")
+            for s in self.subparsers:
+                pre = f"  {s.name} {s.args}: "
+                lines.extend(self._append_description(pre, s.description))
+                # NOTE: it's its own class...
+                # pylint: disable=protected-access
+                deferred_lines += s.subparser._str_lines()
+            lines.append("")
+
+        return lines + deferred_lines
+
+    def __str__(self) -> str:
+        return "\n".join(self._str_lines())
+
+
 class Parser[C, T]:
-    parens = None
-    binaries: dict[Token, tuple[Assoc, Prec, BinaryCallable[C, T]]] = {}
-    unaries: dict[Token, UnaryCallable[C, T]] = {}
-    implicit_operator: Token | None = None
-    atoms: dict[
-        Token, tuple[int | Token, Callable[..., T], Callable[..., Iterable[Any]]]
-    ] = {}
-    subs: dict[Token, tuple["Parser[Any, Any]", SubCallable[C, Any, T, Any]]] = {}
+    def __init__(
+        self,
+        *,
+        name: str = "Unknown",
+        description: str = "",
+    ):
+        self.name = name
+        self.description = description
+
+        self.parens: Parens | None = None
+        self.binaries: dict[Token, tuple[Assoc, Prec, BinaryCallable[C, T]]] = {}
+        self.unaries: dict[Token, UnaryCallable[C, T]] = {}
+        self.implicit_operator: Token | None = None
+        self.atoms: dict[
+            Token, tuple[int | Token, Callable[..., T], Callable[..., Iterable[Any]]]
+        ] = {}
+        self.subs: dict[
+            Token, tuple["Parser[Any, Any]", SubCallable[C, Any, T, Any]]
+        ] = {}
 
     def operator(
         self, name: str, assoc: Assoc, prec: int, func: BinaryCallable[C, T]
     ) -> Self:
         assert name
+        assert prec >= MIN_PREC
         self.binaries[Token(name)] = (assoc, Prec(prec), func)
         return self
 
@@ -221,9 +348,6 @@ class Parser[C, T]:
         name: str,
         func: AtomCallable[C, T, *As],
         mapper: ArgMapper[*As] = arg0,
-        *,
-        # TODO: add? Or retrieve docstring from func? extra?
-        help: str = "",
     ) -> Self:
         """Add an atom."""
         assert name
@@ -292,6 +416,90 @@ class Parser[C, T]:
         if not tokens.is_empty():
             raise ParseError("There are tokens left", tokens)
         return result
+
+    def docs(self) -> ParserDoc:
+        return ParserDoc(
+            name=self.name,
+            description=self.description,
+            atoms=self._atoms_doc(),
+            subparsers=self._subs_doc(),
+            parenthesis=self._parens_doc(),
+            binary_operators=self._binaries_doc(),
+            unary_operators=self._unaries_doc(),
+        )
+
+    def _binaries_doc(self) -> list[tuple[int, list[BinaryDoc]]]:
+        flat = [
+            (token, assoc, prec, call)
+            for token, (assoc, prec, call) in self.binaries.items()
+        ]
+        key: Callable[[tuple[Any, Any, Prec, Any]], int] = lambda x: x[2]
+        flat.sort(key=key)
+        return [
+            (
+                p,
+                [
+                    BinaryDoc(
+                        name=token,
+                        description=shortdoc(call),
+                        associativity="left" if assoc == Assoc.LEFT else "right",
+                        is_implicit=token == self.implicit_operator,
+                    )
+                    for (token, assoc, _, call) in xs
+                ],
+            )
+            for p, xs in groupby(flat, key=key)
+        ]
+
+    def _subs_doc(self) -> list[SubDoc]:
+        def arg(parser: Parser[Any, Any]) -> str:
+            parens = parser.parens
+            assert parens is not None
+            return f"{parens.left} {parser.name}.TOKEN ... {parens.right}"
+
+        return [
+            SubDoc(
+                name=token,
+                description=shortdoc(call),
+                args=arg(sub),
+                subparser=sub.docs(),
+            )
+            for token, (sub, call) in self.subs.items()
+        ]
+
+    def _atoms_doc(self) -> list[AtomDoc]:
+        def arg(numargs: int | str) -> str:
+            match numargs:
+                case str():
+                    return "ARG1 ... ARG"
+                case 0:
+                    return ""
+                case 1:
+                    return "ARG"
+                case 2:
+                    return "ARG1 ARG2"
+                case 3:
+                    return "ARG1 ARG2 ARG3"
+                case n:
+                    return f"ARG1 ... ARG{n}"
+
+        return [
+            AtomDoc(name=token, args=arg(numargs), description=shortdoc(call))
+            for token, (numargs, call, _) in self.atoms.items()
+        ]
+
+    def _unaries_doc(self) -> list[UnaryDoc]:
+        return [
+            UnaryDoc(name=token, description=shortdoc(call))
+            for token, call in self.unaries.items()
+        ]
+
+    def _parens_doc(self) -> None | str:
+        match self.parens:
+            case Parens(l, r):
+                return f"{l} TOKEN ... {r}"
+            case _:
+                return None
 
     @staticmethod
     def _meets_prec_req(test: Prec, min_prec: Prec) -> bool:

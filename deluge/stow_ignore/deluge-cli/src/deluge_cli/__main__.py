@@ -32,10 +32,8 @@ class AnsiColorFormatter(logging.Formatter):
 
 
 class NoExceptionFilter(logging.Filter):
-    """
-    Log the exception that caused this script to crash while preventing the
-    stacktrace to be printed twice to stderr.
-
+    """Log the exception that caused this script to crash while preventing the stacktrace
+    to be printed twice to stderr.
     """
 
     @staticmethod
@@ -137,14 +135,15 @@ def main():
     try:
         match args.subcommand:
             case foreach.subcommand:
-                foreach.run(terms=args.term)
+                foreach.run(args)
             case "monitor":
+                # TODO: this should also be able to start deluge and log whatever it is logging
                 # run_monitor()
                 pass
+            # TODO: action to find files overwriting each other
+            # TODO: action to list saved download dirs in a core subocmmand or smth
             case add.subcommand:
-                add.run(
-                    url=args.magnet, paused=args.paused, download_location=args.location
-                )
+                add.run(args)
             case _:
                 raise ValueError("An invalid subcommand entered somehow")
     except:

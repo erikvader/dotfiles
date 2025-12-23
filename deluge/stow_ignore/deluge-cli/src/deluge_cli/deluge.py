@@ -2,7 +2,7 @@
 
 import logging
 from enum import Enum, auto
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Self, Any, Type, cast, NewType
 from deluge_client import LocalDelugeRPCClient  # type: ignore
 from dataclasses import dataclass
@@ -31,9 +31,31 @@ class Priority(Enum):
 
 @dataclass(frozen=True)
 class File:
-    path: Path
+    path: PurePath
     progress: float
     priority: Priority
+
+    def __str__(self) -> str:
+        return f"{self.path}"
+
+    # TODO: add to its own module and provide a variant that matches on raw strings with
+    # the help of fnmatch
+    glob_doc = " ".join(
+        """
+        This is a glob to match against the basename of a path.
+        If the glob contains at least one /, then the glob needs to match against
+        the entire path. The glob can also start with an !, in which case the result
+        is inverted. The supported special characters are: *, **, ?, [a-z] and [!a-z].
+        """.split()
+    )
+
+    def match(self, glob: str) -> bool:
+        """See glob_doc"""
+        invert = not glob.startswith("!")
+        glob = glob.removeprefix("!")
+        if "/" not in glob:
+            glob = "**/" + glob
+        return self.path.full_match(glob) == invert
 
 
 @dataclass(frozen=True)
@@ -134,7 +156,7 @@ class Deluge:
                         raise DelugeError(
                             "The files didn't arrive in the same order as their indices would imply"
                         )
-                    path = Path(typed_get(fdata, "path", str))
+                    path = PurePath(typed_get(fdata, "path", str))
                     prio = Priority(file_priorities[i])
                     progress = file_progress[i] * 100.0
                     files.append(File(path=path, progress=progress, priority=prio))
@@ -164,8 +186,19 @@ class Deluge:
     def get_method_list(self) -> list[str]:
         return self._call("daemon.get_method_list")
 
-    # TODO: core.move_storage
-    # TODO: core.remove_torrent
+    def remove_torrent(self, torrent: Torrent, *, remove_data: bool = False) -> bool:
+        logger.info(
+            "Removing %s and %s data", torrent, "deleting" if remove_data else "keeping"
+        )
+        ret = self._call("core.remove_torrent", torrent.hash, remove_data)
+        assert isinstance(ret, bool)
+        logger.info("Removed %s", "successfully" if ret else "unsuccessfully")
+        return ret
+
+    def move_storage(self, torrent: Torrent, new_dir: Path):
+        logger.info("Moving storage of %s to %s", torrent, new_dir)
+        assert new_dir.is_dir() or not new_dir.exists()
+        assert self._call("core.move_storage", [torrent.hash], str(new_dir)) is None
 
     def queue_bottom(self, torrent: Torrent):
         logger.info("Queuing to bottom: %s", torrent)
