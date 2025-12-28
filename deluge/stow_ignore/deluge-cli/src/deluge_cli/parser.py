@@ -17,18 +17,11 @@ from typing import (
 )
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from inspect import signature, Parameter, getdoc
+from inspect import signature, Parameter
+from .inspecttools import shortdoc
+from pathlib import Path
 
 Token = NewType("Token", str)
-
-
-def shortdoc(obj: Any) -> str:
-    """Returns the the whole doc of the given object as a single line."""
-    if (doc := getdoc(obj)) is None:
-        return ""
-    if not (lines := doc.splitlines()):
-        return ""
-    return " ".join(l for l in lines if l and not l.isspace())
 
 
 class Tokens:
@@ -83,6 +76,10 @@ def str2(a1: Token, a2: Token) -> tuple[str, str]:
 
 def str3(a1: Token, a2: Token, a3: Token) -> tuple[str, str, str]:
     return (a1, a2, a3)
+
+
+def path1(a1: Token) -> tuple[Path]:
+    return (Path(a1),)
 
 
 def semicolon(*args: Annotated[Token, ";"]) -> tuple[str, ...]:
