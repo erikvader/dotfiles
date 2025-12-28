@@ -6,7 +6,6 @@ authors = []
 requires-python = ">=3.13"
 dependencies = [
     "deluge-client>=1.10.2,<2.0.0",
-    "renameat2>=0.4.4,<0.5.0",
 ]
 
 [project.scripts]

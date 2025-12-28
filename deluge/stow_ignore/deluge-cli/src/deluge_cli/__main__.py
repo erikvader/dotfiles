@@ -5,7 +5,7 @@ import argparse
 import sys
 import os
 from pathlib import Path
-from .subcommand import foreach, add
+from .subcommand import foreach, add, core
 
 
 logger = logging.getLogger(__name__)
@@ -33,12 +33,19 @@ class AnsiColorFormatter(logging.Formatter):
 
 class NoExceptionFilter(logging.Filter):
     """Log the exception that caused this script to crash while preventing the stacktrace
-    to be printed twice to stderr.
+    to be printed twice to stderr due to the default exception handling.
     """
 
     @staticmethod
-    def log():
-        logging.exception("Uncaught exception", extra={"suppress_stream": True})
+    def log_current_exception():
+        """Logs the currently active exception to everywhere except stderr.
+
+        This method must be called from a catch block where `sys.exc_info()` returns the
+        currently active exception.
+
+        This filter must be added to the stderr StreamHandler for anything to be filtered.
+        """
+        logger.exception("Uncaught exception", extra={"suppress_stream": True})
 
     @override
     def filter(self, record: logging.LogRecord) -> bool:
@@ -108,6 +115,7 @@ def parse_args() -> argparse.Namespace:
 
     foreach.argparse_add_subcommand(subparsers.add_parser)
     add.argparse_add_subcommand(subparsers.add_parser)
+    core.argparse_add_subcommand(subparsers.add_parser)
 
     _monitor_parser = subparsers.add_parser(
         "monitor",
@@ -141,13 +149,14 @@ def main():
                 # run_monitor()
                 pass
             # TODO: action to find files overwriting each other
-            # TODO: action to list saved download dirs in a core subocmmand or smth
             case add.subcommand:
                 add.run(args)
+            case core.subcommand:
+                core.run(args)
             case _:
                 raise ValueError("An invalid subcommand entered somehow")
     except:
-        NoExceptionFilter.log()
+        NoExceptionFilter.log_current_exception()
         raise
 
 

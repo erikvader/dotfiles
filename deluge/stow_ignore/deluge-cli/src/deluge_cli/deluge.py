@@ -30,6 +30,14 @@ class Priority(Enum):
 
 
 @dataclass(frozen=True)
+class Hash:
+    inner: str
+
+    def __str__(self) -> str:
+        return f"{self.inner:.7}"
+
+
+@dataclass(frozen=True)
 class File:
     path: PurePath
     progress: float
@@ -38,29 +46,10 @@ class File:
     def __str__(self) -> str:
         return f"{self.path}"
 
-    # TODO: add to its own module and provide a variant that matches on raw strings with
-    # the help of fnmatch
-    glob_doc = " ".join(
-        """
-        This is a glob to match against the basename of a path.
-        If the glob contains at least one /, then the glob needs to match against
-        the entire path. The glob can also start with an !, in which case the result
-        is inverted. The supported special characters are: *, **, ?, [a-z] and [!a-z].
-        """.split()
-    )
-
-    def match(self, glob: str) -> bool:
-        """See glob_doc"""
-        invert = not glob.startswith("!")
-        glob = glob.removeprefix("!")
-        if "/" not in glob:
-            glob = "**/" + glob
-        return self.path.full_match(glob) == invert
-
 
 @dataclass(frozen=True)
 class Torrent:
-    hash: str
+    hash: Hash
     download_location: Path
     files: list[File]
     is_finished: bool
@@ -72,7 +61,7 @@ class Torrent:
     total_remaining: Bytes
 
     def __str__(self) -> str:
-        return f"{self.hash:.7} {self.name}"
+        return f"{self.hash} {self.name}"
 
 
 class DelugeError(Exception):
@@ -118,7 +107,6 @@ class Deluge:
         return res
 
     def get_torrents(self) -> list[Torrent]:
-        logger.debug("Get current torrents")
         filter_dict = {}
         keys = [
             "hash",
@@ -162,7 +150,7 @@ class Deluge:
                     files.append(File(path=path, progress=progress, priority=prio))
 
                 tor = Torrent(
-                    hash=typed_get(data, "hash", str),
+                    hash=Hash(typed_get(data, "hash", str)),
                     files=files,
                     total_remaining=Bytes(typed_get(data, "total_remaining", int)),
                     download_location=Path(typed_get(data, "download_location", str)),
@@ -186,23 +174,24 @@ class Deluge:
     def get_method_list(self) -> list[str]:
         return self._call("daemon.get_method_list")
 
-    def remove_torrent(self, torrent: Torrent, *, remove_data: bool = False) -> bool:
-        logger.info(
-            "Removing %s and %s data", torrent, "deleting" if remove_data else "keeping"
-        )
-        ret = self._call("core.remove_torrent", torrent.hash, remove_data)
+    def remove_torrent(self, torrent: Hash, *, remove_data: bool = False):
+        remove_data_str = "deleting" if remove_data else "keeping"
+        logger.info("Removing %s and %s data", torrent, remove_data_str)
+        ret = self._call("core.remove_torrent", torrent.inner, remove_data)
         assert isinstance(ret, bool)
-        logger.info("Removed %s", "successfully" if ret else "unsuccessfully")
-        return ret
+        if not ret:
+            raise DelugeError(
+                f"Failed to remove torrent {torrent} while {remove_data_str} data"
+            )
 
-    def move_storage(self, torrent: Torrent, new_dir: Path):
+    def move_storage(self, torrent: Hash, new_dir: Path):
         logger.info("Moving storage of %s to %s", torrent, new_dir)
         assert new_dir.is_dir() or not new_dir.exists()
-        assert self._call("core.move_storage", [torrent.hash], str(new_dir)) is None
+        assert self._call("core.move_storage", [torrent.inner], str(new_dir)) is None
 
-    def queue_bottom(self, torrent: Torrent):
+    def queue_bottom(self, torrent: Hash):
         logger.info("Queuing to bottom: %s", torrent)
-        assert self._call("core.queue_bottom", [torrent.hash]) is None
+        assert self._call("core.queue_bottom", [torrent.inner]) is None
 
     def add_magnet(
         self,
@@ -210,7 +199,7 @@ class Deluge:
         *,
         download_location: Path | None = None,
         paused: bool = False,
-    ) -> str:
+    ) -> Hash:
         logger.info("Adding torrent from magnet link '%s'", magnet)
 
         # NOTE: https://github.com/deluge-torrent/deluge/blob/6158d7b71c8bb587818a50759f4e7fed655ac72c/deluge/core/torrent.py#L118
@@ -221,7 +210,19 @@ class Deluge:
 
         ret = self._call("core.add_torrent_magnet", magnet, options)
         assert isinstance(ret, str)
-        logger.info("Added with hash: %s", ret)
+        return Hash(ret)
+
+    def resume(self, torrent: Hash):
+        logger.info("Resuming %s", torrent)
+        assert self._call("core.resume_torrent", torrent.inner) is None
+
+    def pause(self, torrent: Hash):
+        logger.info("Pausing %s", torrent)
+        assert self._call("core.pause_torrent", torrent.inner) is None
+
+    def get_config_value(self, key: str) -> Any:
+        ret = self._call("core.get_config_value", key)
+        logger.debug("Got config '%s' = '%s'", key, ret)
         return ret
 
     def __enter__(self) -> Self:
