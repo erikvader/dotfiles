@@ -265,6 +265,25 @@ Install =xdg-user-dirs= to create the documents folder and the like in home fold
 ** Reflector
 [[https://wiki.archlinux.org/title/Reflector][archwiki]]
 Can start a timer to update the mirrors weekly.
+This is my =/etc/xdg/reflector/reflector.conf=:
+#+BEGIN_SRC
+# Set the output path where the mirrorlist will be saved (--save).
+--save /etc/pacman.d/mirrorlist
+
+# Select the transfer protocol (--protocol).
+--protocol https
+
+# Select the country (--country).
+# Consult the list of available countries with "reflector --list-countries" and
+# select the countries nearest to you or the ones that you trust. For example:
+--country SE,DK,DE,NO
+
+# Use only the  most recently synchronized mirrors (--latest).
+--latest 5
+
+# Sort the mirrors by download rate (--sort).
+--sort rate
+#+END_SRC
 ** systemd-boot
 [[https://wiki.archlinux.org/title/Systemd-boot][archwiki]]
 Need to create entries manually.
@@ -325,8 +344,10 @@ useradd -m -G wheel -s /usr/bin/zsh erik
 #+END_SRC
 ** fsck
 Mkinitcpio will run fsck on the root file system through its =fsck= hook. I don't think it
-runs on the other filesystems, like home, so a 2 needs to be added in fstab for those, and
-a 0 for the root system so it doesn't get checked twice. I think that is how it works.
+runs on the other filesystems, like home, so a 2 needs to be added in fstab for those,
++and a 0 for the root system so it doesn't get checked twice. I think that is how it works.+
+It is safer to set it as 1 to make sure it is always run by /some/ mechanism, the redundancy
+doesn't hurt.
 ** PC speaker as bell
 Disable it by blacklisting it in =/etc/modprobe.d/nobeep.conf=
 #+BEGIN_SRC
