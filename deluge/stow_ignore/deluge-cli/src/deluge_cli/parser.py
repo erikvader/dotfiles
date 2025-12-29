@@ -15,12 +15,14 @@ from typing import (
     get_args,
     override,
 )
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from abc import ABC, abstractmethod
 from inspect import signature, Parameter
 from .inspecttools import shortdoc
 from pathlib import Path
 
+# TODO: make this store position information, like where in the input stream this token
+# occurs.
 Token = NewType("Token", str)
 
 
@@ -102,6 +104,9 @@ MIN_PREC = Prec(0)
 class Tree[C, T](ABC):
     token: Token
 
+    def name(self) -> str:
+        return self.token
+
     @abstractmethod
     def eval(self, context: C) -> T: ...
 
@@ -172,6 +177,11 @@ class Sub[C, T](Tree[C, T]):
     inner: Tree[Any, Any]
     func: SubCallable[C, Any, T, Any]
 
+    def change_callable(self, new_func: SubCallable[C, Any, T, Any]) -> Self:
+        if signature(self.func) != signature(new_func):
+            raise TypeError("The function signatures are not the same")
+        return replace(self, func=new_func)
+
     @override
     def eval(self, context: C) -> T:
         return self.func(context, self.inner)
@@ -185,6 +195,22 @@ class Sub[C, T](Tree[C, T]):
         return f"({self.token} {self.inner})"
 
 
+type Visitor = Callable[[Tree[Any, Any]], None]
+
+
+def visit_default(visitor: Visitor, tree: Tree[Any, Any]):
+    match tree:
+        case Unary():
+            visitor(tree.inner)
+        case Binary():
+            visitor(tree.left)
+            visitor(tree.right)
+        case Sub():
+            visitor(tree.inner)
+        case _:
+            pass
+
+
 @dataclass(frozen=True)
 class Parens:
     left: Token
@@ -192,6 +218,7 @@ class Parens:
 
 
 class ParseError(Exception):
+    # TODO: having the second argument as a single token should be enough for the position?
     def __init__(self, message: str, tokens: Tokens):
         """
         The last popped token is the one that caused this exception to be raised.
@@ -324,6 +351,7 @@ class Parser[C, T]:
         self.subs: dict[
             Token, tuple["Parser[Any, Any]", SubCallable[C, Any, T, Any]]
         ] = {}
+        self.verifiers: list[Visitor] = []
 
     def operator(
         self, name: str, assoc: Assoc, prec: int, func: BinaryCallable[C, T]
@@ -393,6 +421,10 @@ class Parser[C, T]:
         self.subs[Token(name)] = (sub_parser, func)
         return self
 
+    def add_verifier(self, visitor: Visitor) -> Self:
+        self.verifiers.append(visitor)
+        return self
+
     def set_implicit(self, name: str) -> Self:
         assert name
         assert self.implicit_operator is None, "Implicit operator already set"
@@ -410,8 +442,16 @@ class Parser[C, T]:
 
     def parse(self, tokens: Tokens) -> Tree[C, T]:
         result = self._parse_inner(tokens, MIN_PREC)
+
         if not tokens.is_empty():
             raise ParseError("There are tokens left", tokens)
+
+        for ver in self.verifiers:
+            try:
+                ver(result)
+            except Exception as e:
+                raise ParseError(f"A verifier did not pass: {ver}", tokens) from e
+
         return result
 
     def docs(self) -> ParserDoc:

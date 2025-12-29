@@ -5,7 +5,7 @@ from pathlib import Path
 import logging
 import argparse
 import textwrap
-from typing import Callable, Any
+from typing import Callable, Any, Iterable
 from .. import parser as P
 from .. import glob as G
 from ..deluge import Deluge, Torrent, File, State
@@ -84,26 +84,53 @@ def add_eachfile(p: P.Parser[Any, Any]):
     )
     add_bool_algebra(fp)
 
-    def eachfile_func(ctx: Context, sub: P.Tree[FileContext, bool]) -> bool:
+    def eachfile_apply(ctx: Context, sub: P.Tree[FileContext, bool]) -> Iterable[bool]:
+        return (sub(FileContext(deluge=ctx.deluge, file=f)) for f in ctx.torrent.files)
+
+    def eachfile_and_func(ctx: Context, sub: P.Tree[FileContext, bool]) -> bool:
         """Run a boolean expression on each file contained in the torrent.
 
-        Each subresult is AND:ed with short circuiting, i.e., `eachfile ( X Y Z )` is the
-        logical expression `X AND Y AND Z`. De morgan's law can be used if an OR is
-        desired instead, also short circuit. To achieve `X OR Y OR Z` use `not eachfile (
-        not X not Y not Z )`.
-        """
-        return all(
-            sub(FileContext(deluge=ctx.deluge, file=f)) for f in ctx.torrent.files
-        )
+        Aggregate all sub-results into a final bool using AND."""
+        return all(eachfile_apply(ctx, sub))
 
-    p.sub("eachfile", fp, eachfile_func)
+    def eachfile_or_func(ctx: Context, sub: P.Tree[FileContext, bool]) -> bool:
+        return any(eachfile_apply(ctx, sub))
+
+    p.sub("eachfile", fp, eachfile_and_func)
+
+    def any_func(ctx: Context, left: P.Tree[Context, bool]) -> bool:
+        """When applied to 'eachfile', aggregate all sub-results with OR instead of AND"""
+        assert isinstance(left, P.Sub)
+        assert left.func is eachfile_and_func
+        left = left.change_callable(eachfile_or_func)
+        return left(ctx)
+
+    def any_verifier(tree: P.Tree[Any, Any]):
+        match tree:
+            case P.Unary() if tree.name() == "any" and tree.inner.name() != "eachfile":
+                # TODO: should this be a ParseError so the token position can be used?
+                raise TypeError(
+                    f"A '{tree.token}' can only be applied to 'eachfile', not {tree.inner.name()}"
+                )
+            case _:
+                P.visit_default(any_verifier, tree)
+
+    p.unary("any", any_func)
+    p.add_verifier(any_verifier)
 
     def fprint_func(ctx: FileContext) -> bool:
-        """Print the current file."""
+        """Print the current file relatively to the download dir"""
         print(str(ctx.file))
         return True
 
     fp.atom("print", fprint_func)
+
+    def path_func(ctx: FileContext, glob: str) -> bool:
+        """Check if a PATH_GLOB matches the relative path to this file from the download
+        dir."""
+        return G.path_match(ctx.file.path, glob)
+
+    fp.atom("path", path_func, P.str1)
 
 
 @cache
@@ -213,8 +240,6 @@ def argparse_add_subcommand(add_parser: Callable[..., argparse.ArgumentParser]):
 
 def run(args: argparse.Namespace):
     terms: list[str] = args.token
-
-    logger.info("Running foreach")
 
     logger.debug("Parsing terms: %s", terms)
     parsed = term_parser().parse(P.Tokens(terms))
