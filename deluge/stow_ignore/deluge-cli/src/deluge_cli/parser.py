@@ -21,14 +21,26 @@ from inspect import signature, Parameter
 from .inspecttools import shortdoc
 from pathlib import Path
 
-# TODO: make this store position information, like where in the input stream this token
-# occurs.
-Token = NewType("Token", str)
+
+@dataclass(frozen=True)
+class Token:
+    name: str
+    position: int | None
+
+    @classmethod
+    def injected(cls, name: str) -> Self:
+        return cls(name, None)
+
+    def __repr__(self) -> str:
+        return f"{self.name}[{self.position}]"
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class Tokens:
     def __init__(self, tokens: Iterable[str]):
-        self.tokens = list(Token(t) for t in tokens)
+        self.tokens = list(Token(t, i) for i, t in enumerate(tokens))
         self.tokens.reverse()
         self.popped: list[Token] = []
 
@@ -56,7 +68,9 @@ class Tokens:
 
     @override
     def __repr__(self):
-        return repr((self.popped, self.tokens[::-1]))
+        return repr(
+            ([str(t) for t in self.popped], [str(t) for t in self.tokens[::-1]])
+        )
 
 
 class Assoc(Enum):
@@ -69,23 +83,23 @@ def arg0() -> tuple[()]:
 
 
 def str1(a1: Token) -> tuple[str]:
-    return (a1,)
+    return (a1.name,)
 
 
 def str2(a1: Token, a2: Token) -> tuple[str, str]:
-    return (a1, a2)
+    return (a1.name, a2.name)
 
 
 def str3(a1: Token, a2: Token, a3: Token) -> tuple[str, str, str]:
-    return (a1, a2, a3)
+    return (a1.name, a2.name, a3.name)
 
 
 def path1(a1: Token) -> tuple[Path]:
-    return (Path(a1),)
+    return (Path(a1.name),)
 
 
 def semicolon(*args: Annotated[Token, ";"]) -> tuple[str, ...]:
-    return tuple(args)
+    return tuple(a.name for a in args)
 
 
 # NOTE: there is no way to specify that the number of arguments must be the same as the
@@ -105,7 +119,7 @@ class Tree[C, T](ABC):
     token: Token
 
     def name(self) -> str:
-        return self.token
+        return self.token.name
 
     @abstractmethod
     def eval(self, context: C) -> T: ...
@@ -130,7 +144,7 @@ class Atom[C, T](Tree[C, T]):
     @override
     def __str__(self):
         if self.tokens:
-            commas = " ".join([self.token, *self.tokens])
+            commas = " ".join(str(t) for t in [self.token, *self.tokens])
             return f"({commas})"
         return f"{self.token}"
 
@@ -213,18 +227,17 @@ def visit_default(visitor: Visitor, tree: Tree[Any, Any]):
 
 @dataclass(frozen=True)
 class Parens:
-    left: Token
-    right: Token
+    left: str
+    right: str
 
 
 class ParseError(Exception):
-    # TODO: having the second argument as a single token should be enough for the position?
-    def __init__(self, message: str, tokens: Tokens):
-        """
-        The last popped token is the one that caused this exception to be raised.
-        """
+    def __init__(self, message: str, token: Token):
         super().__init__(message)
-        self.tokens = tokens
+        self.token = token
+
+    def __str__(self) -> str:
+        return f"On token '{self.token.name}' at {self.token.position}: {super().__str__()}"
 
 
 @dataclass(frozen=True)
@@ -342,15 +355,15 @@ class Parser[C, T]:
         self.description = description
 
         self.parens: Parens | None = None
-        self.binaries: dict[Token, tuple[Assoc, Prec, BinaryCallable[C, T]]] = {}
-        self.unaries: dict[Token, UnaryCallable[C, T]] = {}
-        self.implicit_operator: Token | None = None
+        self.binaries: dict[str, tuple[Assoc, Prec, BinaryCallable[C, T]]] = {}
+        self.unaries: dict[str, UnaryCallable[C, T]] = {}
+        self.implicit_operator: str | None = None
         self.atoms: dict[
-            Token, tuple[int | Token, Callable[..., T], Callable[..., Iterable[Any]]]
+            str, tuple[int | str, Callable[..., T], Callable[..., Iterable[Any]]]
         ] = {}
-        self.subs: dict[
-            Token, tuple["Parser[Any, Any]", SubCallable[C, Any, T, Any]]
-        ] = {}
+        self.subs: dict[str, tuple["Parser[Any, Any]", SubCallable[C, Any, T, Any]]] = (
+            {}
+        )
         self.verifiers: list[Visitor] = []
 
     def operator(
@@ -358,12 +371,12 @@ class Parser[C, T]:
     ) -> Self:
         assert name
         assert prec >= MIN_PREC
-        self.binaries[Token(name)] = (assoc, Prec(prec), func)
+        self.binaries[name] = (assoc, Prec(prec), func)
         return self
 
     def unary(self, name: str, func: UnaryCallable[C, T]) -> Self:
         assert name
-        self.unaries[Token(name)] = func
+        self.unaries[name] = func
         return self
 
     # NOTE: pylint gets confused
@@ -391,7 +404,7 @@ class Parser[C, T]:
                             raise ValueError(f"The type should be Token: {typ}")
                         if not isinstance(terminator, str):
                             raise ValueError(f"Terminator should be a str: {typ}")
-                        numargs = Token(terminator)
+                        numargs = terminator
                     case _:
                         raise ValueError(f"Invalid Annotated: {typ}")
             case [*ps] if all(
@@ -408,7 +421,7 @@ class Parser[C, T]:
                     f"Not a valid mapper signature in terms of number of parameters: {mapper}"
                 )
 
-        self.atoms[Token(name)] = (numargs, func, mapper)
+        self.atoms[name] = (numargs, func, mapper)
         return self
 
     # NOTE: pylint gets confused
@@ -418,7 +431,7 @@ class Parser[C, T]:
     ) -> Self:
         assert name
         assert sub_parser.parens is not None, "Sub parser must have parens set up"
-        self.subs[Token(name)] = (sub_parser, func)
+        self.subs[name] = (sub_parser, func)
         return self
 
     def add_verifier(self, visitor: Visitor) -> Self:
@@ -428,7 +441,7 @@ class Parser[C, T]:
     def set_implicit(self, name: str) -> Self:
         assert name
         assert self.implicit_operator is None, "Implicit operator already set"
-        self.implicit_operator = Token(name)
+        self.implicit_operator = name
         assert (
             self.implicit_operator in self.binaries
         ), "Implicit operator does not exist"
@@ -437,20 +450,17 @@ class Parser[C, T]:
     def set_parens(self, left: str, right: str) -> Self:
         assert left
         assert right
-        self.parens = Parens(Token(left), Token(right))
+        self.parens = Parens(left, right)
         return self
 
     def parse(self, tokens: Tokens) -> Tree[C, T]:
         result = self._parse_inner(tokens, MIN_PREC)
 
-        if not tokens.is_empty():
-            raise ParseError("There are tokens left", tokens)
+        if (peek := tokens.peek()) is not None:
+            raise ParseError("There are tokens left", peek)
 
         for ver in self.verifiers:
-            try:
-                ver(result)
-            except Exception as e:
-                raise ParseError(f"A verifier did not pass: {ver}", tokens) from e
+            ver(result)
 
         return result
 
@@ -539,6 +549,12 @@ class Parser[C, T]:
                 return None
 
     @staticmethod
+    def _expect(token: Token | None) -> Token:
+        if token is None:
+            raise ParseError("Early end of tokens", Token.injected("EOF"))
+        return token
+
+    @staticmethod
     def _meets_prec_req(test: Prec, min_prec: Prec) -> bool:
         return test >= min_prec
 
@@ -548,10 +564,13 @@ class Parser[C, T]:
         if (operator_token := tokens.peek()) is None:
             return None
 
-        if self.parens is not None and operator_token == self.parens.right:
+        if self.parens is not None and operator_token.name == self.parens.right:
             return None
 
-        if self.implicit_operator is not None and operator_token not in self.binaries:
+        if (
+            self.implicit_operator is not None
+            and operator_token.name not in self.binaries
+        ):
             return self._next_implicit_operator(min_prec)
 
         return self._next_non_implicit_operator(tokens, min_prec)
@@ -564,7 +583,7 @@ class Parser[C, T]:
         if not Parser._meets_prec_req(prec, min_prec):
             return None
 
-        return self.implicit_operator, assoc, prec, func
+        return Token.injected(self.implicit_operator), assoc, prec, func
 
     def _next_non_implicit_operator(
         self, tokens: Tokens, min_prec: Prec
@@ -572,8 +591,8 @@ class Parser[C, T]:
         operator_token = tokens.pop()
         assert operator_token is not None
 
-        if (operator := self.binaries.get(operator_token)) is None:
-            raise ParseError(f"Unknown operator '{operator_token}'", tokens)
+        if (operator := self.binaries.get(operator_token.name)) is None:
+            raise ParseError(f"Unknown operator '{operator_token}'", operator_token)
 
         assoc, prec, func = operator
         if not Parser._meets_prec_req(prec, min_prec):
@@ -596,34 +615,32 @@ class Parser[C, T]:
         return result
 
     def _parse_atom(self, tokens: Tokens) -> Tree[C, T]:
-        atom_token = tokens.pop()
-        if atom_token is None:
-            raise ParseError("Early end of tokens", tokens)
+        atom_token = self._expect(tokens.pop())
 
-        if self.parens is not None and atom_token == self.parens.left:
+        if self.parens is not None and atom_token.name == self.parens.left:
             inside = self._parse_inner(tokens, MIN_PREC)
-            close = tokens.pop()
-            if close != self.parens.right:
+            close = self._expect(tokens.pop())
+            if close.name != self.parens.right:
                 raise ParseError(
                     f"Expected a matching closing paren, but got '{close}' instead",
-                    tokens,
+                    close,
                 )
             return inside
 
-        if (unary_func := self.unaries.get(atom_token)) is not None:
+        if (unary_func := self.unaries.get(atom_token.name)) is not None:
             inner = self._parse_atom(tokens)
             # NOTE: pylint doesn't understand new type parameter syntax
             # pylint: disable=too-many-function-args
             return Unary(atom_token, inner, unary_func)
 
-        if (sub_info := self.subs.get(atom_token)) is not None:
+        if (sub_info := self.subs.get(atom_token.name)) is not None:
             sub_parser, sfunc = sub_info
             assert sub_parser.parens is not None
-            oppen = tokens.pop()
-            if oppen != sub_parser.parens.left:
+            oppen = self._expect(tokens.pop())
+            if oppen.name != sub_parser.parens.left:
                 raise ParseError(
                     f"A sub-expression must be surrounded by parens, found '{oppen}' instead",
-                    tokens,
+                    oppen,
                 )
 
             # NOTE: It's the same class accessing a member of the same class
@@ -631,26 +648,23 @@ class Parser[C, T]:
             try:
                 inner = sub_parser._parse_inner(tokens, MIN_PREC)
             except ParseError as pe:
-                # TODO: the outer-most tokens is the same as the inner, so they will both
-                # point to the same token. It would be nice if the outer pointed to
-                # atom_token maybe?
                 raise ParseError(
-                    f"The sub-parser of '{atom_token}' failed", tokens
+                    f"The sub-parser of '{atom_token}' failed", atom_token
                 ) from pe
 
-            close = tokens.pop()
-            if close != sub_parser.parens.right:
+            close = self._expect(tokens.pop())
+            if close.name != sub_parser.parens.right:
                 raise ParseError(
                     f"Expected a matching closing paren, but got '{close}' instead",
-                    tokens,
+                    close,
                 )
 
             # NOTE: pylint doesn't understand new type parameter syntax
             # pylint: disable=too-many-function-args
             return Sub(atom_token, inner, sfunc)
 
-        if (info := self.atoms.get(atom_token)) is None:
-            raise ParseError(f"Unknown atom '{atom_token}'", tokens)
+        if (info := self.atoms.get(atom_token.name)) is None:
+            raise ParseError(f"Unknown atom '{atom_token}'", atom_token)
 
         numargs, func, mapper = info
         args: list[Token] = []
@@ -660,18 +674,18 @@ class Parser[C, T]:
                 for _ in range(numargs):
                     if (val := tokens.pop()) is None:
                         raise ParseError(
-                            f"Not enough arguments for '{atom_token}'", tokens
+                            f"Not enough arguments for '{atom_token}'", atom_token
                         )
                     args.append(val)
             case str():
                 while (val := tokens.pop()) is not None:
-                    if numargs == val:
+                    if numargs == val.name:
                         break
                     args.append(val)
                 else:
                     raise ParseError(
                         f"Could not find '{numargs}' when gathering arguments for '{atom_token}'",
-                        tokens,
+                        atom_token,
                     )
             case _ as unreachable:
                 assert_never(unreachable)
@@ -681,7 +695,7 @@ class Parser[C, T]:
         except Exception as e:
             raise ParseError(
                 f"The arguments of atom '{atom_token}' failed to map its args",
-                tokens,
+                atom_token,
             ) from e
 
         prepped_func: Callable[[C], T] = lambda ctx: func(ctx, *mapped_args)

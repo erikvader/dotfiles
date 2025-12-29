@@ -108,9 +108,9 @@ def add_eachfile(p: P.Parser[Any, Any]):
     def any_verifier(tree: P.Tree[Any, Any]):
         match tree:
             case P.Unary() if tree.name() == "any" and tree.inner.name() != "eachfile":
-                # TODO: should this be a ParseError so the token position can be used?
-                raise TypeError(
-                    f"A '{tree.token}' can only be applied to 'eachfile', not {tree.inner.name()}"
+                raise P.ParseError(
+                    f"A '{tree.name}' can only be applied to 'eachfile', not {tree.inner.name()}",
+                    tree.token,
                 )
             case _:
                 P.visit_default(any_verifier, tree)

@@ -18,13 +18,13 @@ from typing import Any, Annotated
 def test_tokens() -> None:
     tok = Tokens(["1", "2", "3"])
     assert not tok.is_empty()
-    assert tok.peek() == "1"
-    assert tok.peek() == "1"
-    assert tok.pop() == "1"
-    assert tok.pop() == "2"
-    assert tok.pop() == "3"
+    assert tok.peek() == Token("1", 0)
+    assert tok.peek() == Token("1", 0)
+    assert tok.pop() == Token("1", 0)
+    assert tok.pop() == Token("2", 1)
+    assert tok.pop() == Token("3", 2)
     tok.unpop()
-    assert tok.pop() == "3"
+    assert tok.pop() == Token("3", 2)
     assert tok.pop() is None
     assert tok.peek() is None
     assert tok.is_empty()
@@ -82,20 +82,23 @@ def test_single_atom(simple_math_parser: Parser) -> None:
 
 def test_empty(simple_math_parser: Parser) -> None:
     tokens = Tokens.split("")
-    with raises(ParseError):
+    with raises(ParseError) as e:
         simple_math_parser.parse(tokens)
+    assert e.value.token.name == "EOF"
 
 
 def test_single_operator_missing_right(simple_math_parser: Parser) -> None:
     tokens = Tokens.split("1 +")
-    with raises(ParseError):
+    with raises(ParseError) as e:
         simple_math_parser.parse(tokens)
+    assert e.value.token.name == "EOF"
 
 
 def test_only_operator(simple_math_parser: Parser) -> None:
     tokens = Tokens.split("+")
-    with raises(ParseError):
+    with raises(ParseError) as e:
         simple_math_parser.parse(tokens)
+    assert e.value.token.position == 0
 
 
 def test_single_operator(simple_math_parser: Parser) -> None:
@@ -147,8 +150,9 @@ def test_parens_righty(simple_math_parser: Parser) -> None:
 
 def test_missing_closing_parens(simple_math_parser: Parser) -> None:
     tokens = Tokens.split("1 + ( 2 + ( 3 + 4 )")
-    with raises(ParseError):
+    with raises(ParseError) as e:
         simple_math_parser.parse(tokens)
+    assert e.value.token.name == "EOF"
 
 
 @fixture
@@ -157,7 +161,7 @@ def multi_arg_parser() -> Parser[list[int], None]:
         return lambda ctx, *_rest: ctx.append(num)
 
     def mapper(arg: Token) -> tuple[int]:
-        if arg != "omg":
+        if arg.name != "omg":
             raise ValueError("arg is not omg")
         return (1,)
 
@@ -184,21 +188,24 @@ def test_op_args(multi_arg_parser: Parser) -> None:
     parsed = multi_arg_parser.parse(Tokens.split("op1 arg1"))
     assert str(parsed) == "(op1 arg1)"
 
-    with raises(ParseError):
+    with raises(ParseError) as e:
         multi_arg_parser.parse(Tokens.split("op1 arg1 arg2"))
+    assert e.value.token.name == "arg2"
 
 
 def test_op_args3(multi_arg_parser: Parser) -> None:
-    with raises(ParseError):
+    with raises(ParseError) as e:
         multi_arg_parser.parse(Tokens.split("op3 arg1 arg2"))
+    assert e.value.token.name == "op3"
 
     parsed = multi_arg_parser.parse(Tokens.split("op3 1 2 3"))
     assert str(parsed) == "(op3 1 2 3)"
 
 
 def test_varargs_op(multi_arg_parser: Parser) -> None:
-    with raises(ParseError):
+    with raises(ParseError) as e:
         multi_arg_parser.parse(Tokens.split("op4 1"))
+    assert e.value.token.name == "op4"
 
     parsed = multi_arg_parser.parse(Tokens.split("op4 1 2 3 ;"))
     assert str(parsed) == "(op4 1 2 3)"
@@ -208,8 +215,9 @@ def test_varargs_op(multi_arg_parser: Parser) -> None:
 
 
 def test_mapper(multi_arg_parser: Parser) -> None:
-    with raises(ParseError):
+    with raises(ParseError) as e:
         multi_arg_parser.parse(Tokens.split("op5 asd"))
+    assert e.value.token.name == "op5"
 
     parsed = multi_arg_parser.parse(Tokens.split("op5 omg"))
     assert str(parsed) == "(op5 omg)"
