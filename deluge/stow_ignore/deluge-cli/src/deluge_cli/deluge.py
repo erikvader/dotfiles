@@ -1,6 +1,7 @@
 # pyright: strict
 
 import logging
+from .inspecttools import base_type
 from enum import Enum, auto
 from pathlib import Path, PurePath
 from typing import Self, Any, Type, cast, NewType
@@ -70,7 +71,9 @@ class DelugeError(Exception):
 
 def typed_get[T](dic: dict[str, Any], key: str, typ: Type[T]) -> T:
     val = dic[key]
-    if isinstance(val, typ):
+    # NOTE: this only checks that the 'container' type is correct, not the type
+    # parameters.
+    if isinstance(val, base_type(typ)):
         return val
     raise DelugeError(f"Value {val} from key {key} is not of type {typ}")
 
@@ -100,10 +103,16 @@ class Deluge:
         self.client = LocalDelugeRPCClient(automatic_reconnect=False, decode_utf8=True)
         self.client.connect()
 
-    def _call(self, cmd: str, *args: Any) -> Any:
+    def _call[T](self, cmd: str, expect: Type[T], *args: Any) -> T:
         logger.debug("RPC call: %s %s", cmd, args)
         res = cast(Any, self.client.call(cmd, *args))  # type: ignore
         logger.debug("RPC done: %s %s", cmd, Ellipses(res, 100))
+        # NOTE: this only checks that the 'container' type is correct, not the type
+        # parameters.
+        if not isinstance(res, base_type(expect)):
+            raise DelugeError(
+                f"Unexpected return value from deluge '{res}' expected type {expect}"
+            )
         return res
 
     def get_torrents(self) -> list[Torrent]:
@@ -122,20 +131,15 @@ class Deluge:
             "file_priorities",
             "total_remaining",
         ]
-        typed: dict[str, dict[str, Any]] = self._call(
-            "core.get_torrents_status", filter_dict, keys
+        typed = self._call(
+            "core.get_torrents_status", dict[str, dict[str, Any]], filter_dict, keys
         )
 
         torrents: list[Torrent] = []
         for data in typed.values():
             try:
-                # TODO: how to avoid these casts?
-                file_progress = cast(
-                    tuple[float, ...], typed_get(data, "file_progress", tuple)
-                )
-                file_priorities = cast(
-                    tuple[int, ...], typed_get(data, "file_priorities", tuple)
-                )
+                file_progress = typed_get(data, "file_progress", tuple[float, ...])
+                file_priorities = typed_get(data, "file_priorities", tuple[int, ...])
                 raw_files = cast(tuple[dict[str, Any]], typed_get(data, "files", tuple))
                 files: list[File] = []
                 for i, fdata in enumerate(raw_files):
@@ -172,13 +176,12 @@ class Deluge:
         return torrents
 
     def get_method_list(self) -> list[str]:
-        return self._call("daemon.get_method_list")
+        return self._call("daemon.get_method_list", list[str])
 
     def remove_torrent(self, torrent: Hash, *, remove_data: bool = False):
         remove_data_str = "deleting" if remove_data else "keeping"
         logger.info("Removing %s and %s data", torrent, remove_data_str)
-        ret = self._call("core.remove_torrent", torrent.inner, remove_data)
-        assert isinstance(ret, bool)
+        ret = self._call("core.remove_torrent", bool, torrent.inner, remove_data)
         if not ret:
             raise DelugeError(
                 f"Failed to remove torrent {torrent} while {remove_data_str} data"
@@ -187,11 +190,11 @@ class Deluge:
     def move_storage(self, torrent: Hash, new_dir: Path):
         logger.info("Moving storage of %s to %s", torrent, new_dir)
         assert new_dir.is_dir() or not new_dir.exists()
-        assert self._call("core.move_storage", [torrent.inner], str(new_dir)) is None
+        self._call("core.move_storage", type(None), [torrent.inner], str(new_dir))
 
     def queue_bottom(self, torrent: Hash):
         logger.info("Queuing to bottom: %s", torrent)
-        assert self._call("core.queue_bottom", [torrent.inner]) is None
+        self._call("core.queue_bottom", type(None), [torrent.inner])
 
     def add_magnet(
         self,
@@ -208,20 +211,19 @@ class Deluge:
             options["download_location"] = str(download_location)
         logger.debug("Options set to: %s", options)
 
-        ret = self._call("core.add_torrent_magnet", magnet, options)
-        assert isinstance(ret, str)
+        ret = self._call("core.add_torrent_magnet", str, magnet, options)
         return Hash(ret)
 
     def resume(self, torrent: Hash):
         logger.info("Resuming %s", torrent)
-        assert self._call("core.resume_torrent", torrent.inner) is None
+        self._call("core.resume_torrent", type(None), torrent.inner)
 
     def pause(self, torrent: Hash):
         logger.info("Pausing %s", torrent)
-        assert self._call("core.pause_torrent", torrent.inner) is None
+        self._call("core.pause_torrent", type(None), torrent.inner)
 
     def get_config_value(self, key: str) -> Any:
-        ret = self._call("core.get_config_value", key)
+        ret = self._call("core.get_config_value", object, key)
         logger.debug("Got config '%s' = '%s'", key, ret)
         return ret
 
