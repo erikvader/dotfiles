@@ -182,7 +182,7 @@ def term_parser() -> P.Parser[Context, bool]:
 
     def state_mapper(arg: P.Token) -> tuple[State]:
         try:
-            return (State[arg.upper()],)
+            return (State[arg.name.upper()],)
         except ValueError as e:
             e.add_note("Valid values are: " + ", ".join(s.name.lower() for s in State))
             raise

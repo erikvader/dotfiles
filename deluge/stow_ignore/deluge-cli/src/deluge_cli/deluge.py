@@ -8,6 +8,7 @@ from typing import Self, Any, Type, cast, NewType
 from deluge_client import LocalDelugeRPCClient  # type: ignore
 from dataclasses import dataclass
 from datetime import datetime
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -98,10 +99,29 @@ class Ellipses:
 
 
 class Deluge:
-    def __init__(self):
-        logger.info("Connecting to local deluge client")
+    def __init__(self, *, connection_attempts: int = 1):
+        if connection_attempts < 1:
+            raise ValueError(
+                f"Invalid connection attempts value: {connection_attempts}"
+            )
+        logger.info(
+            "Connecting to local deluge client, trying %s times", connection_attempts
+        )
         self.client = LocalDelugeRPCClient(automatic_reconnect=False, decode_utf8=True)
-        self.client.connect()
+
+        for i in range(1, connection_attempts + 1):
+            try:
+                self.client.reconnect()
+            except ConnectionRefusedError as e:
+                e.add_note(f"Connection attempt {i}")
+                if i < connection_attempts:
+                    logger.warning("Failed to connect try %s because %s", i, e)
+                    time.sleep(5)
+                else:
+                    raise
+            else:
+                logger.info("Connected successfully")
+                break
 
     def _call[T](self, cmd: str, expect: Type[T], *args: Any) -> T:
         logger.debug("RPC call: %s %s", cmd, args)

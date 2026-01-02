@@ -1,59 +1,14 @@
 # pyright: strict
-from typing import TextIO, override
+from typing import TextIO
 import logging
 import argparse
 import sys
-import os
 from pathlib import Path
-from .subcommand import foreach, add, core
+from .subcommand import foreach, add, core, monitor
+from .loggingtools import supports_color, AnsiColorFormatter, NoExceptionFilter
 
 
 logger = logging.getLogger(__name__)
-
-
-class AnsiColorFormatter(logging.Formatter):
-    @override
-    def format(self, record: logging.LogRecord):
-        no_style = "\033[0m"
-        bold = "\033[1m"
-        grey = "\033[90m"
-        yellow = "\033[33m"
-        red = "\033[31m"
-        red_light = "\033[31m"
-        start_style = {
-            "DEBUG": grey,
-            "INFO": no_style,
-            "WARNING": yellow + bold,
-            "ERROR": red,
-            "CRITICAL": red_light + bold,
-        }.get(record.levelname, no_style)
-        end_style = no_style
-        return f"{start_style}{super().format(record)}{end_style}"
-
-
-class NoExceptionFilter(logging.Filter):
-    """Log the exception that caused this script to crash while preventing the stacktrace
-    to be printed twice to stderr due to the default exception handling.
-    """
-
-    @staticmethod
-    def log_current_exception():
-        """Logs the currently active exception to everywhere except stderr.
-
-        This method must be called from a catch block where `sys.exc_info()` returns the
-        currently active exception.
-
-        This filter must be added to the stderr StreamHandler for anything to be filtered.
-        """
-        logger.exception("Uncaught exception", extra={"suppress_stream": True})
-
-    @override
-    def filter(self, record: logging.LogRecord) -> bool:
-        return not (hasattr(record, "suppress_stream") and record.suppress_stream)  # type: ignore
-
-
-def supports_color(stream: TextIO) -> bool:
-    return os.getenv("TERM") != "dumb" and stream.isatty()
 
 
 def setup_logging(
@@ -92,6 +47,8 @@ def setup_logging(
 
     logging.getLogger("deluge_client.client").setLevel(logging.INFO)
 
+    NoExceptionFilter.install_excepthooks()
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="A better CLI for Deluge")
@@ -116,12 +73,7 @@ def parse_args() -> argparse.Namespace:
     foreach.argparse_add_subcommand(subparsers.add_parser)
     add.argparse_add_subcommand(subparsers.add_parser)
     core.argparse_add_subcommand(subparsers.add_parser)
-
-    _monitor_parser = subparsers.add_parser(
-        "monitor",
-        description="Monitor events and manage torrents",
-        help="Monitor events and manage torrents",
-    )
+    monitor.argparse_add_subcommand(subparsers.add_parser)
 
     return parser.parse_args()
 
@@ -140,24 +92,18 @@ def main():
     setup_logging(stream_level=stream_level, logfile=args.logfile)
 
     logger.debug("Parsed args: %s", args)
-    try:
-        match args.subcommand:
-            case foreach.subcommand:
-                foreach.run(args)
-            case "monitor":
-                # TODO: this should also be able to start deluge and log whatever it is logging
-                # run_monitor()
-                pass
-            # TODO: action to find files overwriting each other
-            case add.subcommand:
-                add.run(args)
-            case core.subcommand:
-                core.run(args)
-            case _:
-                raise ValueError("An invalid subcommand entered somehow")
-    except:
-        NoExceptionFilter.log_current_exception()
-        raise
+    match args.subcommand:
+        case foreach.subcommand:
+            foreach.run(args)
+        case monitor.subcommand:
+            monitor.run(args)
+        # TODO: action to find files overwriting each other
+        case add.subcommand:
+            add.run(args)
+        case core.subcommand:
+            core.run(args)
+        case _:
+            raise ValueError("An invalid subcommand entered somehow")
 
 
 if __name__ == "__main__":
