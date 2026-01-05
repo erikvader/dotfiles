@@ -1,4 +1,5 @@
 # pyright: strict
+import sys
 from typing import Callable, assert_never
 import threading
 import logging
@@ -69,6 +70,8 @@ class Failure[E]:
 
 
 class Result[T, E]:
+    """A thread return value, either an exception or a value."""
+
     def __init__(self):
         self._value: Success[T] | Failure[E] | None = None
         self._lock = threading.Lock()
@@ -95,26 +98,29 @@ class Result[T, E]:
 # NOTE: pylint gets confused
 # pylint: disable=redefined-outer-name
 def _worker[T](
-    cancel: CancelToken, work: Callable[[CancelToken], T], res: Result[T, Exception]
+    cancel: CancelToken,
+    work: Callable[[CancelToken], T],
+    res: Result[T, Exception],
 ):
     thread_name = threading.current_thread().name
     work_name = work.__qualname__
     logger.debug("Starting worker in thread %s running %s", thread_name, work_name)
 
-    state = "unknown"
     try:
         r = work(cancel)
     # pylint: disable=broad-exception-caught
     except Exception as e:
         state = "error " + type(e).__name__
-        e.add_note(f"This happened in a fork worker: {work_name}")
+        e.add_note(f"Worker {work_name} in thread {thread_name}")
         # TODO: The backtrace stored in this exception contains all local variables the
         # thread had when this was raised. Call traceback.clear_frames()?
         res.set_error(e)
         cancel.cancel()
-    except BaseException as e:
+    except:
+        e = sys.exception()
+        assert e is not None
         state = "serious error " + type(e).__name__
-        e.add_note(f"This happened in a fork worker: {work_name}")
+        e.add_note(f"Worker {work_name} in thread {thread_name}")
         cancel.cancel()
         raise
     else:
@@ -134,31 +140,59 @@ def fork[T](
     parent: CancelToken | None = None,
     cancel_callback: Callable[[], None] | None = None,
 ) -> list[T]:
+    """Run several functions concurrently in their own threads and return their return values.
+
+    This function runs all functions in fs in their own threads, except for the first
+    which is run on the current thread, and collects all their results in a list in order.
+    If one or more functions raise an exception, then this function raises an exception
+    group with all of them.
+
+    Since the first is run on the current thread, it means it can receive
+    KeyboardInterrupts and such, if it is the main thread. When that happens, all other
+    threads are cancelled and waited upon before re-raising the interrupt. A second
+    interrupt can be sent to interrupt the waiting, but that will leave the threads
+    running, and they will be force quit when the interpreter exits since they are daemon
+    threads. Except for this case, this function makes sure all threads have exited before
+    returning.
+
+    Threads are canceled using a CancelToken if any thread raises an exception. Each
+    thread must periodically check this token to see if they should exit. A callable can
+    be supplied that is run when the token is canceled to help the threads to exit. A
+    parent token can also be supplied, where if that token is canceled the child token is
+    also canceled, but not the other way around. Useful when a callable calls another
+    fork.
+
+    """
     if not fs:
         return []
 
     cancel = CancelToken(parent=parent, callback=cancel_callback)
-    results: list[Result[T, Exception]] = []
+    results: list[Result[T, Exception]] = [Result()]
     threads: list[threading.Thread] = []
 
-    for f in fs[:-1]:
+    for f in fs[1:]:
         res: Result[T, Exception] = Result()
         results.append(res)
-        t = threading.Thread(target=_worker, args=(cancel, f, res))
+        t = threading.Thread(target=_worker, args=(cancel, f, res), daemon=True)
         threads.append(t)
         t.start()
 
-    res_last: Result[T, Exception] = Result()
-    results.append(res_last)
     try:
-        _worker(cancel, fs[-1], res_last)
+        _worker(cancel, fs[0], results[0])
         for t in threads:
             t.join()
     # NOTE: keyboardinterrupt is only raised on the main thread, so it is fine to only
     # do something about it here and not also in the threads.
-    except KeyboardInterrupt:
-        logger.error(
-            "Received a keyboard interrupt, canceling all other threads and waiting on them"
+    except:
+        e = sys.exception()
+        assert e is not None
+        # NOTE: this logs so the user know that an interrupt has been received and we are
+        # trying to exit. It is critical since all threads are canceled and their return
+        # values and exceptions are thrown away, but not sure if that is the best log
+        # level to use.
+        logger.critical(
+            "Received a %s, canceling all other threads and waiting on them",
+            type(e).__name__,
         )
         # TODO: try catch these again and add as many failures as possible from the
         # results to an exceptiongroup that is the cause of the keybordinterrupt?
@@ -166,6 +200,8 @@ def fork[T](
         for t in threads:
             t.join()
         raise
+
+    assert all(not t.is_alive() for t in threads)
 
     successes: list[T] = []
     failures: list[Exception] = []
