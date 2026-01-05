@@ -4,7 +4,6 @@ import threading
 import logging
 from dataclasses import dataclass
 
-# TODO: remove?
 logger = logging.getLogger(__name__)
 
 
@@ -98,20 +97,36 @@ class Result[T, E]:
 def _worker[T](
     cancel: CancelToken, work: Callable[[CancelToken], T], res: Result[T, Exception]
 ):
+    thread_name = threading.current_thread().name
+    work_name = work.__qualname__
+    logger.debug("Starting worker in thread %s running %s", thread_name, work_name)
+
+    state = "unknown"
     try:
         r = work(cancel)
     # pylint: disable=broad-exception-caught
     except Exception as e:
-        e.add_note("This happened in a fork worker")
+        state = "error " + type(e).__name__
+        e.add_note(f"This happened in a fork worker: {work_name}")
         # TODO: The backtrace stored in this exception contains all local variables the
         # thread had when this was raised. Call traceback.clear_frames()?
         res.set_error(e)
         cancel.cancel()
-    except:
+    except BaseException as e:
+        state = "serious error " + type(e).__name__
+        e.add_note(f"This happened in a fork worker: {work_name}")
         cancel.cancel()
         raise
     else:
+        state = "success"
         res.set_value(r)
+    finally:
+        logger.debug(
+            "Worker in thread %s exiting, ran %s, state %s",
+            thread_name,
+            work_name,
+            state,
+        )
 
 
 def fork[T](
@@ -141,9 +156,10 @@ def fork[T](
             t.join()
     # NOTE: keyboardinterrupt is only raised on the main thread, so it is fine to only
     # do something about it here and not also in the threads.
-    # NOTE: subprocess.run, from the standard library, also catches everything, kills and
-    # waits again, so it's probably fine to do that here as well.
-    except:
+    except KeyboardInterrupt:
+        logger.error(
+            "Received a keyboard interrupt, canceling all other threads and waiting on them"
+        )
         # TODO: try catch these again and add as many failures as possible from the
         # results to an exceptiongroup that is the cause of the keybordinterrupt?
         cancel.cancel()

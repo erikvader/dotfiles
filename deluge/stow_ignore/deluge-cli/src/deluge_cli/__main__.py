@@ -4,7 +4,7 @@ import logging
 import argparse
 import sys
 from pathlib import Path
-from .subcommand import foreach, add, core, monitor
+from .subcommand import foreach, add, core
 from .loggingtools import supports_color, AnsiColorFormatter, NoExceptionFilter
 
 
@@ -73,7 +73,6 @@ def parse_args() -> argparse.Namespace:
     foreach.argparse_add_subcommand(subparsers.add_parser)
     add.argparse_add_subcommand(subparsers.add_parser)
     core.argparse_add_subcommand(subparsers.add_parser)
-    monitor.argparse_add_subcommand(subparsers.add_parser)
 
     return parser.parse_args()
 
@@ -95,9 +94,6 @@ def main():
     match args.subcommand:
         case foreach.subcommand:
             foreach.run(args)
-        case monitor.subcommand:
-            monitor.run(args)
-        # TODO: action to find files overwriting each other
         case add.subcommand:
             add.run(args)
         case core.subcommand:

@@ -1,5 +1,5 @@
 # pyright: strict
-from typing import TextIO, override, Type
+from typing import TextIO, override, Type, Any
 from types import TracebackType
 import threading
 import logging
@@ -48,8 +48,8 @@ class NoExceptionFilter(logging.Filter):
         value: BaseException,
         tb: TracebackType | None,
     ):
-        # NOTE: fatal since the program exits
-        logging.fatal(
+        # NOTE: critical since the program exits
+        logging.critical(
             "Uncaught exception",
             exc_info=(typ, value, tb),
             extra={"suppress_stream": True},
@@ -84,3 +84,24 @@ class NoExceptionFilter(logging.Filter):
     @override
     def filter(self, record: logging.LogRecord) -> bool:
         return not (hasattr(record, "suppress_stream") and record.suppress_stream)  # type: ignore
+
+
+class Ellipses:
+    """Wrap a value to limit its string representation to a given max length."""
+
+    def __init__(self, inner: Any, width: int = 30, elips: str = "..."):
+        assert width >= len(elips)
+        self.inner = inner
+        self.width = width
+        self.elips = elips
+
+    def trunc(self, string: str) -> str:
+        if len(string) > self.width:
+            return string[: self.width - len(self.elips)] + self.elips
+        return string
+
+    def __repr__(self) -> str:
+        return self.trunc(repr(self.inner))
+
+    def __str__(self) -> str:
+        return self.trunc(str(self.inner))

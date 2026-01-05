@@ -1,12 +1,15 @@
 # pyright: strict
 
+import re
 import logging
 from .inspecttools import base_type
+from .loggingtools import Ellipses
 from enum import Enum, auto
 from pathlib import Path, PurePath
 from typing import Self, Any, Type, cast, NewType
 from deluge_client import LocalDelugeRPCClient  # type: ignore
-from dataclasses import dataclass
+from deluge_client.client import RemoteException  # type: ignore
+from dataclasses import dataclass, field
 from datetime import datetime
 import time
 
@@ -41,7 +44,7 @@ class Hash:
 
 @dataclass(frozen=True)
 class File:
-    path: PurePath
+    path: PurePath  # relative to the download location
     progress: float
     priority: Priority
 
@@ -52,15 +55,17 @@ class File:
 @dataclass(frozen=True)
 class Torrent:
     hash: Hash
-    download_location: Path
-    files: list[File]
-    is_finished: bool
-    name: str
-    paused: bool
-    progress: float
-    state: State
-    time_added: datetime
-    total_remaining: Bytes
+    download_location: Path = field(compare=False)
+    files: list[File] = field(compare=False)
+    is_finished: bool = field(compare=False)
+    name: str = field(compare=False)
+    paused: bool = field(compare=False)
+    progress: float = field(compare=False)
+    state: State = field(compare=False)
+    time_added: datetime = field(compare=False)
+    total_downloaded: Bytes = field(compare=False)
+    total_uploaded: Bytes = field(compare=False)
+    queue: int | None = field(compare=False)
 
     def __str__(self) -> str:
         return f"{self.hash} {self.name}"
@@ -79,26 +84,11 @@ def typed_get[T](dic: dict[str, Any], key: str, typ: Type[T]) -> T:
     raise DelugeError(f"Value {val} from key {key} is not of type {typ}")
 
 
-class Ellipses:
-    def __init__(self, inner: Any, width: int = 30, elips: str = "..."):
-        assert width >= len(elips)
-        self.inner = inner
-        self.width = width
-        self.elips = elips
-
-    def trunc(self, string: str) -> str:
-        if len(string) > self.width:
-            return string[: self.width - len(self.elips)] + self.elips
-        return string
-
-    def __repr__(self) -> str:
-        return self.trunc(repr(self.inner))
-
-    def __str__(self) -> str:
-        return self.trunc(str(self.inner))
-
-
 class Deluge:
+    already_added_regex = re.compile(
+        r"^Torrent already in session \(([a-zA-Z0-9]+)\)\.$", re.MULTILINE
+    )
+
     def __init__(self, *, connection_attempts: int = 1):
         if connection_attempts < 1:
             raise ValueError(
@@ -149,7 +139,9 @@ class Deluge:
             "state",
             "time_added",
             "file_priorities",
-            "total_remaining",
+            "all_time_download",
+            "total_uploaded",
+            "queue",
         ]
         typed = self._call(
             "core.get_torrents_status", dict[str, dict[str, Any]], filter_dict, keys
@@ -173,10 +165,18 @@ class Deluge:
                     progress = file_progress[i] * 100.0
                     files.append(File(path=path, progress=progress, priority=prio))
 
+                queue = typed_get(data, "queue", int)
+                if queue < 0:
+                    queue = None
+                else:
+                    queue += 1
+
                 tor = Torrent(
                     hash=Hash(typed_get(data, "hash", str)),
                     files=files,
-                    total_remaining=Bytes(typed_get(data, "total_remaining", int)),
+                    total_downloaded=Bytes(typed_get(data, "all_time_download", int)),
+                    total_uploaded=Bytes(typed_get(data, "total_uploaded", int)),
+                    queue=queue,
                     download_location=Path(typed_get(data, "download_location", str)),
                     is_finished=typed_get(data, "is_finished", bool),
                     name=typed_get(data, "name", str),
@@ -193,6 +193,9 @@ class Deluge:
                 raise
 
         logger.debug("Got %s torrents", len(torrents))
+        assert len(torrents) == len(
+            set(torrents)
+        ), "There are torrents with the same hash"
         return torrents
 
     def get_method_list(self) -> list[str]:
@@ -209,7 +212,8 @@ class Deluge:
 
     def move_storage(self, torrent: Hash, new_dir: Path):
         logger.info("Moving storage of %s to %s", torrent, new_dir)
-        assert new_dir.is_dir() or not new_dir.exists()
+        if not new_dir.is_dir() and new_dir.exists():
+            raise ValueError(f"Can't move to an existing non-dir: {new_dir}")
         self._call("core.move_storage", type(None), [torrent.inner], str(new_dir))
 
     def queue_bottom(self, torrent: Hash):
@@ -222,7 +226,7 @@ class Deluge:
         *,
         download_location: Path | None = None,
         paused: bool = False,
-    ) -> Hash:
+    ) -> Hash | None:
         logger.info("Adding torrent from magnet link '%s'", magnet)
 
         # NOTE: https://github.com/deluge-torrent/deluge/blob/6158d7b71c8bb587818a50759f4e7fed655ac72c/deluge/core/torrent.py#L118
@@ -231,8 +235,23 @@ class Deluge:
             options["download_location"] = str(download_location)
         logger.debug("Options set to: %s", options)
 
-        ret = self._call("core.add_torrent_magnet", str, magnet, options)
-        return Hash(ret)
+        try:
+            ret = self._call("core.add_torrent_magnet", str, magnet, options)
+        except RemoteException as e:
+            name = type(e).__name__
+            msg = str(e)
+            if (
+                name == "AddTorrentError"
+                and (m := Deluge.already_added_regex.match(msg)) is not None
+            ):
+                logger.warning("The torrent is already added as %s", Hash(m.group(1)))
+                return None
+            else:
+                raise
+
+        h = Hash(ret)
+        logger.info("Added with hash: %s", h)
+        return h
 
     def resume(self, torrent: Hash):
         logger.info("Resuming %s", torrent)

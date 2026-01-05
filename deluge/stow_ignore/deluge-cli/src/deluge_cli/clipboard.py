@@ -93,3 +93,27 @@ def clipboard_listener() -> Generator[str]:
         if new != old:
             old = new
             yield new
+
+
+# TODO: This doesn't belong in this file
+def send_notification(summary: str, body: str = ""):
+    logger.debug("Running notify-send")
+    try:
+        completed = S.run(
+            ["notify-send", summary, body],
+            check=True,
+            stdin=S.DEVNULL,
+            stdout=S.PIPE,
+            stderr=S.PIPE,
+            text=True,
+        )
+    except OSError as e:
+        e.add_note("Is notify-send installed?")
+        raise
+    except S.CalledProcessError as e:
+        logger.debug("notify-send: %s", e)
+        logger.debug("notify-send stdout: '%s'", e.stdout)
+        logger.debug("notify-send stderr: '%s'", e.stderr)
+        raise
+
+    logger.debug("notify-send: %s", completed)

@@ -50,6 +50,12 @@ def argparse_add_subcommand(add_parser: Callable[..., argparse.ArgumentParser]):
         "--magnet", "-m", type=magnet, help="Magnet link to add"
     )
     magnet_exgroup.add_argument(
+        "--clipboard",
+        "-c",
+        action="store_true",
+        help="Get the link from the clipboard",
+    )
+    magnet_exgroup.add_argument(
         "--clipboard-listen",
         "-l",
         action="store_true",
@@ -67,12 +73,15 @@ def run(args: argparse.Namespace):
         new_hash = deluge.add_magnet(
             m, download_location=download_dir, paused=paused or queue_bottom
         )
+        if new_hash is None:
+            return
         if queue_bottom and not paused:
             deluge.resume(new_hash)
         print(new_hash)
 
-    magnet: str = args.magnet
+    magnet: str | None = args.magnet
     clipboard_listen: bool = args.clipboard_listen
+    clipboard: bool = args.clipboard
 
     with Deluge() as deluge:
         if clipboard_listen:
@@ -81,5 +90,13 @@ def run(args: argparse.Namespace):
                     add(link)
                 else:
                     logger.warning("Not adding '%s'", link)
-        else:
+        elif clipboard:
+            link = C.paste()
+            if is_magnet_link(link):
+                add(link)
+            else:
+                raise RuntimeError(f"Not a valid magnet link in clipboard: {link}")
+        elif magnet is not None:
             add(magnet)
+        else:
+            raise RuntimeError("No magnet source given somehow")
