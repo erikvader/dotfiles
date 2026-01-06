@@ -39,7 +39,7 @@ alias ye='y -Qet'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
-alias l='ls -Avhw80 --quoting-style=shell-escape'
+alias l='ls -Avh --quoting-style=shell-escape'
 alias ll='l -la --time-style=long-iso'
 
 alias naspoweroff='umount /media/NAS && ssh -t nas.local "sudo midclt call -j system.shutdown reason"'
