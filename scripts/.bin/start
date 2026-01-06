@@ -1,14 +1,31 @@
 #!/bin/bash
 
+# Spawn a process as a daemon and send its output to a log file
+
 set -eu
 
-outfile=$(mktemp --tmpdir start-XXXXXX.log)
-echo Logging "'$*'" to "$outfile"
+if [[ $# -le 0 ]]; then
+    echo "no command given"
+    exit 1
+fi
 
-{
-    echo "$@"
-    date
-    echo "-----"
-} >> "$outfile"
+# TODO: should probably make sure the spawned process doesn't hog the current working
+# directory? Can't spawn executables with relative arguments if this is done.
+# cd /
 
-exec setsid --fork "$@" >>"$outfile" 2>&1 </dev/null
+name=${1##*/}
+
+if command -v systemd-cat &>/dev/null; then
+    exec setsid --fork systemd-cat --identifier="$name" "$@" &>/dev/null </dev/null
+else
+    date=$(date --iso-8601=seconds)
+    outfile=$(mktemp --tmpdir "$name"-"$date"-XXXXXX.log)
+    {
+        echo "$@"
+        echo "-----"
+    } > "$outfile"
+
+    # TODO: this will become a session leader, which means it can acquire a tty if it wants
+    # to, which could be a problem?
+    exec setsid --fork "$@" &>>"$outfile" </dev/null
+fi
