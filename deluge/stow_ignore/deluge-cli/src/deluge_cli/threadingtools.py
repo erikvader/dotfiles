@@ -37,6 +37,16 @@ class CancelToken:
                 except Exception as e:
                     e.add_note("This happened in a CancelToken callback")
                     self._callback = e
+                    # NOTE: logging for immediate feedback, and it is not guaranteed this
+                    # will get re-raised. But this is technically the log and throw
+                    # anti-pattern.
+                    logger.error("A cancel token callback failed", exc_info=e)
+                except:
+                    self._callback = None
+                    raise
+                else:
+                    self._callback = None
+                assert self._callback is None or isinstance(self._callback, Exception)
 
     # TODO: make this also wait on the parent(s) somehow
     def is_cancelled_wait(self, timeout: float | None = None) -> bool:
@@ -57,6 +67,7 @@ class CancelToken:
         if self._callback_lock.locked():
             assert not callable(self._callback)
             return self._callback
+        return None
 
 
 @dataclass(frozen=True)
@@ -115,6 +126,9 @@ def _worker[T](
         # TODO: The backtrace stored in this exception contains all local variables the
         # thread had when this was raised. Call traceback.clear_frames()?
         res.set_error(e)
+        # NOTE: logging for immediate feedback, and it is not guaranteed this will get
+        # re-raised. But this is technically the log and throw anti-pattern.
+        logger.error("A worker failed", exc_info=e)
         cancel.cancel()
     except:
         e = sys.exception()
@@ -205,15 +219,20 @@ def fork[T](
 
     successes: list[T] = []
     failures: list[Exception] = []
-    for r in results:
+    for r, t, f in zip(
+        results, [threading.current_thread()] + threads, fs, strict=True
+    ):
         match r.get():
             case Success(val):
                 successes.append(val)
             case Failure(val):
                 failures.append(val)
             case None:
-                # NOTE: a thread shouldn't experience KeyboardInterrupt and SystemExit
-                raise RuntimeError("A thread failed in an unexpected way")
+                failures.append(
+                    RuntimeError(
+                        f"A thread failed in an unexpected way: {t.name}, running {f.__qualname__}"
+                    )
+                )
             case _ as unreachable:
                 assert_never(unreachable)
 

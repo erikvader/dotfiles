@@ -9,18 +9,6 @@ from typing import NewType, SupportsFloat
 Seconds = NewType("Seconds", float)
 
 
-@dataclass(frozen=True, eq=False)
-class Timestamp:
-    ts: float
-
-    @classmethod
-    def make(cls):
-        return cls(time.monotonic())
-
-    def __sub__(self, other: "Timestamp") -> Seconds:
-        return Seconds(self.ts - other.ts)
-
-
 def parse_seconds(s: str) -> Seconds:
     match ["".join(g) for _, g in groupby(s, str.isalpha)]:
         case [num, "s"]:
@@ -33,6 +21,21 @@ def parse_seconds(s: str) -> Seconds:
             raise ValueError(f"Invalid duration string: {s}")
     assert math.isfinite(f)
     return Seconds(f)
+
+
+@dataclass(frozen=True, eq=False)
+class Timestamp:
+    ts: float
+
+    @classmethod
+    def make(cls):
+        return cls(time.monotonic())
+
+    def age(self) -> Seconds:
+        return Timestamp.make() - self
+
+    def __sub__(self, other: "Timestamp") -> Seconds:
+        return Seconds(self.ts - other.ts)
 
 
 class Timeseries[T: SupportsFloat]:

@@ -5,7 +5,7 @@ import argparse
 import sys
 from pathlib import Path
 from .subcommand import foreach, add, core
-from .loggingtools import supports_color, AnsiColorFormatter, NoExceptionFilter
+from .loggingtools import supports_color, AnsiColorFormatter, ExceptionLogHooks
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,6 @@ def setup_logging(
         formatter = logging.Formatter(format_str)
     formatter.default_msec_format = msec_format
     handler.setFormatter(formatter)
-    handler.addFilter(NoExceptionFilter())
     root.addHandler(handler)
 
     if logfile is not None:
@@ -47,7 +46,7 @@ def setup_logging(
 
     logging.getLogger("deluge_client.client").setLevel(logging.INFO)
 
-    NoExceptionFilter.install_excepthooks()
+    ExceptionLogHooks.install_excepthooks()
 
 
 def parse_args() -> argparse.Namespace:

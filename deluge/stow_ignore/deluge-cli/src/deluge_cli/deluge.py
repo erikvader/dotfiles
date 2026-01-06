@@ -1,7 +1,8 @@
 # pyright: strict
-
+import math
 import re
 import logging
+from itertools import groupby
 from .inspecttools import base_type
 from .loggingtools import Ellipses
 from enum import Enum, auto
@@ -16,6 +17,22 @@ import time
 logger = logging.getLogger(__name__)
 
 Bytes = NewType("Bytes", int)
+BytesPerSecond = NewType("BytesPerSecond", float)
+
+
+def parse_bytes_per_second(s: str) -> BytesPerSecond:
+    """Actually kibibytes, mebibytes etc"""
+    match ["".join(g) for _, g in groupby(s, str.isalpha)]:
+        case [num, "b", "/", "s"]:
+            f = float(num)
+        case [num, "kb", "/", "s"]:
+            f = float(num) * 1024
+        case [num, "Mb", "/", "s"]:
+            f = float(num) * 1024 * 1024
+        case _:
+            raise ValueError(f"Invalid speed string: {s}")
+    assert math.isfinite(f)
+    return BytesPerSecond(f)
 
 
 class State(Enum):
@@ -25,6 +42,7 @@ class State(Enum):
     SEEDING = auto()
     CHECKING = auto()
     DOWNLOADING = auto()
+    MOVING = auto()
 
 
 class Priority(Enum):
@@ -139,12 +157,20 @@ class Deluge:
             "state",
             "time_added",
             "file_priorities",
-            "all_time_download",
-            "total_uploaded",
+            # total_payload_download = bytes downloaded this session
+            # all_time_download = bytes downloaded since the start, including protocol data?
+            # total_done = corresponds to the progress bar?
+            "total_payload_download",
+            # total_payload_upload = bytes uploaded this session
+            # total_uploaded = bytes uploaded since the start, including protocol data?
+            "total_payload_upload",
             "queue",
         ]
         typed = self._call(
-            "core.get_torrents_status", dict[str, dict[str, Any]], filter_dict, keys
+            "core.get_torrents_status",
+            dict[str, dict[str, Any]],
+            filter_dict,
+            keys,
         )
 
         torrents: list[Torrent] = []
@@ -174,8 +200,10 @@ class Deluge:
                 tor = Torrent(
                     hash=Hash(typed_get(data, "hash", str)),
                     files=files,
-                    total_downloaded=Bytes(typed_get(data, "all_time_download", int)),
-                    total_uploaded=Bytes(typed_get(data, "total_uploaded", int)),
+                    total_downloaded=Bytes(
+                        typed_get(data, "total_payload_download", int)
+                    ),
+                    total_uploaded=Bytes(typed_get(data, "total_payload_upload", int)),
                     queue=queue,
                     download_location=Path(typed_get(data, "download_location", str)),
                     is_finished=typed_get(data, "is_finished", bool),
@@ -212,6 +240,8 @@ class Deluge:
 
     def move_storage(self, torrent: Hash, new_dir: Path):
         logger.info("Moving storage of %s to %s", torrent, new_dir)
+        if not new_dir.is_absolute():
+            raise ValueError(f"Can only move to an absolute path: {new_dir}")
         if not new_dir.is_dir() and new_dir.exists():
             raise ValueError(f"Can't move to an existing non-dir: {new_dir}")
         self._call("core.move_storage", type(None), [torrent.inner], str(new_dir))
@@ -232,6 +262,10 @@ class Deluge:
         # NOTE: https://github.com/deluge-torrent/deluge/blob/6158d7b71c8bb587818a50759f4e7fed655ac72c/deluge/core/torrent.py#L118
         options: dict[str, Any] = {"add_paused": paused}
         if download_location is not None:
+            if not download_location.is_absolute():
+                raise ValueError(
+                    f"Download location must be absolute: {download_location}"
+                )
             options["download_location"] = str(download_location)
         logger.debug("Options set to: %s", options)
 

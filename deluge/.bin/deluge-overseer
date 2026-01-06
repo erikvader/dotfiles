@@ -1,0 +1,11 @@
+#!/bin/bash
+
+exec deluge-cli \
+     -vv \
+     foreach \
+     --spawn-deluge \
+     --loop 1min \
+     just-finished send-notification "Torrent complete" , \
+     is-duplicated send-notification "Duplicated files" any foreach-file \( print-duplicate \) , \
+     \( download-rate-le 5min 0b/s active-for-ge 5min or download-rate-le 5min 50kb/s writing-for-ge 5min \) queue-bottom
+

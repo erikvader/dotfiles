@@ -9,21 +9,23 @@ from pathlib import Path
 import logging
 import argparse
 import textwrap
-from typing import Callable, Any, Iterable, Sequence
+from typing import Callable, Any, Iterable, Sequence, assert_never
 from .. import parser as P
 from .. import glob as G
-from ..deluge import Deluge, Torrent, File, State, Bytes
+from ..deluge import (
+    Deluge,
+    Torrent,
+    File,
+    State,
+    Bytes,
+    BytesPerSecond,
+    parse_bytes_per_second,
+)
 from ..timetools import Timestamp, Timeseries, parse_seconds, Seconds
 
 logger = logging.getLogger(__name__)
 
 subcommand = "foreach"
-
-
-@dataclass(frozen=True)
-class FileContext:
-    deluge: Deluge
-    file: File
 
 
 @dataclass(frozen=True)
@@ -35,6 +37,13 @@ class Context:
     downloading_state_since: Timestamp | None
     writing_bytes_since: Timestamp | None
     byte_write_history: Timeseries[Bytes] | None
+    is_duplicated: bool
+
+
+@dataclass(frozen=True)
+class FileContext:
+    parent: Context
+    file: File
 
 
 @dataclass(frozen=True)
@@ -112,7 +121,7 @@ def add_eachfile(p: P.Parser[Any, Any]):
     add_bool_algebra(fp)
 
     def eachfile_apply(ctx: Context, sub: P.Tree[FileContext, bool]) -> Iterable[bool]:
-        return (sub(FileContext(deluge=ctx.deluge, file=f)) for f in ctx.torrent.files)
+        return (sub(FileContext(parent=ctx, file=f)) for f in ctx.torrent.files)
 
     def eachfile_and_func(ctx: Context, sub: P.Tree[FileContext, bool]) -> bool:
         """Run a boolean expression on each file contained in the torrent.
@@ -126,10 +135,10 @@ def add_eachfile(p: P.Parser[Any, Any]):
         Aggregate all sub-results into a final bool using OR, with short-circuiting."""
         return any(eachfile_apply(ctx, sub))
 
-    p.sub("eachfile", fp, eachfile_and_func)
+    p.sub("foreach-file", fp, eachfile_and_func)
 
     def any_func(ctx: Context, left: P.Tree[Context, bool]) -> bool:
-        """When applied to 'eachfile', aggregate all sub-results with OR instead of AND"""
+        """When applied to 'foreach-file', aggregate all sub-results with OR instead of AND"""
         assert isinstance(left, P.Sub)
         assert left.func is eachfile_and_func
         left = left.change_callable(eachfile_or_func)
@@ -137,9 +146,11 @@ def add_eachfile(p: P.Parser[Any, Any]):
 
     def any_verifier(tree: P.Tree[Any, Any]):
         match tree:
-            case P.Unary() if tree.name() == "any" and tree.inner.name() != "eachfile":
+            case P.Unary() if (
+                tree.name() == "any" and tree.inner.name() != "foreach-file"
+            ):
                 raise P.ParseError(
-                    f"A '{tree.name}' can only be applied to 'eachfile', not {tree.inner.name()}",
+                    f"A '{tree.name}' can only be applied to 'foreach-file', not {tree.inner.name()}",
                     tree.token,
                 )
             case _:
@@ -163,12 +174,20 @@ def add_eachfile(p: P.Parser[Any, Any]):
     fp.atom("path", path_func, P.str1)
 
     def duplicate_func(ctx: FileContext) -> bool:
-        """Check if this file is duplicate of another torrent, i.e., two torrents are
-        writing to the same file."""
-        # TODO: implement
-        return True
+        """If this file is written to by multiple torrents, then return True and print
+        which ones, else return False"""
+        retval = False
+        me = ctx.parent.torrent
+        me_abs = me.download_location / ctx.file.path
+        for other in ctx.parent.other_torrents:
+            for file in other.files:
+                other_abs = other.download_location / file.path
+                if me_abs == other_abs:
+                    print(f"{other} - {me_abs}")
+                    retval = True
+        return retval
 
-    fp.atom("duplicate", duplicate_func)
+    fp.atom("print-duplicate", duplicate_func)
 
 
 @cache
@@ -215,7 +234,7 @@ def term_parser() -> P.Parser[Context, bool]:
     p.atom("name", name_func, P.str1)
 
     def state_func(ctx: Context, state: State) -> bool:
-        """Check for the state"""
+        """Check if the torrent is in this state"""
         return ctx.torrent.state == state
 
     def state_mapper(arg: P.Token) -> tuple[State]:
@@ -229,10 +248,17 @@ def term_parser() -> P.Parser[Context, bool]:
 
     def move_func(ctx: Context, new_loc: Path) -> bool:
         """Change where the files are downloaded to"""
-        ctx.deluge.move_storage(ctx.torrent.hash, new_loc)
+        ctx.deluge.move_storage(ctx.torrent.hash, new_loc.absolute())
         return True
 
     p.atom("move", move_func, P.path1)
+
+    def queue_bottom_func(ctx: Context) -> bool:
+        """Queue this torrent to the bottom"""
+        ctx.deluge.queue_bottom(ctx.torrent.hash)
+        return True
+
+    p.atom("queue-bottom", queue_bottom_func)
 
     def remove_func(ctx: Context) -> bool:
         """Remove without deleting the files"""
@@ -246,13 +272,20 @@ def term_parser() -> P.Parser[Context, bool]:
         ctx.deluge.remove_torrent(ctx.torrent.hash, remove_data=True)
         return True
 
-    p.atom("remove-everything", remove_everything_func)
+    p.atom("delete-everything", remove_everything_func)
 
     def confirm_func(ctx: Context) -> bool:
         """Prompt the user for confirmation"""
         return input(f"{ctx.torrent} (y/N): ") == "y"
 
     p.atom("confirm", confirm_func)
+
+    def is_duplicated_func(ctx: Context) -> bool:
+        """If some of this torrent's files are being written to by other torrents as
+        well. This will not trigger on the first torrent, only on the others"""
+        return ctx.is_duplicated
+
+    p.atom("is-duplicated", is_duplicated_func)
 
     def send_notification_func(ctx: Context, header: str) -> bool:
         """Send a notification with the given header"""
@@ -264,9 +297,63 @@ def term_parser() -> P.Parser[Context, bool]:
 
     p.atom("send-notification", send_notification_func, P.str1)
 
-    # TODO: atom for just finished
-    # TODO: atom for been active for
-    # TODO: atom for average download speed, or smth
+    def just_finished_func(ctx: Context) -> bool:
+        """Check whether the torrent got finished since the last loop, which only works
+        when looping"""
+        return ctx.is_newly_finished
+
+    p.atom("just-finished", just_finished_func)
+
+    def download_slower_func(
+        ctx: Context, over: Seconds, below: BytesPerSecond
+    ) -> bool:
+        """Check whether the average download rate averaged over the first argument
+        (seconds) is below the second argument (bytes per second). Only works when
+        looping"""
+        assert over > 0
+        assert below >= 0
+        if ctx.byte_write_history is None:
+            return True
+        return ctx.byte_write_history.slope(over, Seconds(0)) <= below
+
+    def rate_args_mapper(
+        arg1: P.Token, arg2: P.Token
+    ) -> tuple[Seconds, BytesPerSecond]:
+        over = parse_seconds(arg1.name)
+        if over <= 0:
+            raise ValueError("Interval must be positive")
+        b = parse_bytes_per_second(arg2.name)
+        if b < 0:
+            raise ValueError("Threshold must not be negative")
+        return (over, BytesPerSecond(b))
+
+    p.atom("download-rate-le", download_slower_func, rate_args_mapper)
+
+    def active_for_func(ctx: Context, for_atleast: Seconds) -> bool:
+        """Check whether this torrent has been active, i.e. been in DOWNLOADING state, for
+        at least this long. Only works when looping"""
+        assert for_atleast > 0
+        if ctx.downloading_state_since is None:
+            return False
+        return ctx.downloading_state_since.age() >= for_atleast
+
+    def seconds_args_mapper(arg1: P.Token) -> tuple[Seconds]:
+        over = parse_seconds(arg1.name)
+        if over <= 0:
+            raise ValueError("Interval must be positive")
+        return (over,)
+
+    p.atom("active-for-ge", active_for_func, seconds_args_mapper)
+
+    def writing_for_func(ctx: Context, for_atleast: Seconds) -> bool:
+        """Check whether this torrent has been writing new bytes for at least this long,
+        i.e. actually been downloading. Only works when looping"""
+        assert for_atleast > 0
+        if ctx.writing_bytes_since is None:
+            return False
+        return ctx.writing_bytes_since.age() >= for_atleast
+
+    p.atom("writing-for-ge", writing_for_func, seconds_args_mapper)
 
     return p
 
@@ -320,11 +407,12 @@ class Bookkeeping:
             ts.record(t.total_downloaded)
             self._download_stats[t] = (Timestamp.make(), None, ts)
             logger.debug("Torrent is now tracked for download stats: %s", t)
-        elif t.state != State.DOWNLOADING:
-            self._download_stats.pop(t, None)
+
+        elif t.state != State.DOWNLOADING and t in self._download_stats:
+            self._download_stats.pop(t)
             logger.debug("Torrent is no longer tracked for download stats: %s", t)
-        elif t in self._download_stats:
-            assert t.state == State.DOWNLOADING
+
+        elif t.state == State.DOWNLOADING and t in self._download_stats:
             down_since, written_bytes_since, ts = self._download_stats[t]
             newest = ts.newest()
             assert newest is not None
@@ -344,6 +432,14 @@ class Bookkeeping:
             self._unfinished.add(t)
         return False
 
+    def prepare_duplicate(self) -> set[Path]:
+        return set()
+
+    def is_duplicated(self, t: Torrent, seen_files: set[Path]) -> bool:
+        len_before = len(seen_files)
+        seen_files.update((t.download_location / f.path for f in t.files))
+        return len_before + len(t.files) != len(seen_files)
+
 
 def foreach_worker(c: CancelToken, args: ForeachWorkerArgs):
     book = Bookkeeping()
@@ -352,19 +448,32 @@ def foreach_worker(c: CancelToken, args: ForeachWorkerArgs):
         while True:
             new_torrents: deque[Torrent] = deque(deluge.get_torrents())
             visited_torrents: deque[Torrent] = deque(maxlen=len(new_torrents))
+            dup_cookie = book.prepare_duplicate()
 
             while new_torrents:
                 cur_torrent = new_torrents.popleft()
                 other_torrents = [*visited_torrents, *new_torrents]
-                download_stats = book.download_stats(cur_torrent)
+                match book.download_stats(cur_torrent):
+                    case None:
+                        downloading_state_since = None
+                        writing_bytes_since = None
+                        byte_write_history = None
+                    case (d, w, b):
+                        downloading_state_since = d
+                        writing_bytes_since = w
+                        byte_write_history = b
+                    case _ as unreachable:
+                        assert_never(unreachable)
+
                 ctx = Context(
                     deluge=deluge,
                     other_torrents=other_torrents,
                     torrent=cur_torrent,
                     is_newly_finished=book.is_newly_finished(cur_torrent),
-                    downloading_state_since=download_stats and download_stats[0],
-                    writing_bytes_since=download_stats and download_stats[1],
-                    byte_write_history=download_stats and download_stats[2],
+                    downloading_state_since=downloading_state_since,
+                    writing_bytes_since=writing_bytes_since,
+                    byte_write_history=byte_write_history,
+                    is_duplicated=book.is_duplicated(cur_torrent, dup_cookie),
                 )
 
                 _bool_res: bool = args.parsed(ctx)
@@ -393,13 +502,22 @@ def start_foreach_with_deluge(foreach_args: ForeachWorkerArgs):
 
     def log_stdout(c: CancelToken):
         assert process.stdout is not None
-        while not c.is_cancelled() and (line := process.stdout.readline()):
-            logger.info("Deluge stdout: %s", line.strip())
+        try:
+            while not c.is_cancelled() and (line := process.stdout.readline()):
+                # TODO: create its own logger and make the output prettier?
+                logger.info("Deluge stdout: %s", line.strip())
+        finally:
+            c.cancel()
 
     def log_stderr(c: CancelToken):
         assert process.stderr is not None
-        while not c.is_cancelled() and (line := process.stderr.readline()):
-            logger.error("Deluge stderr: %s", line.strip())
+        try:
+            # TODO: this can hang if the process is killed, for some reason. Do a more manual
+            # read with timeout so the token is queried more often
+            while not c.is_cancelled() and (line := process.stderr.readline()):
+                logger.error("Deluge stderr: %s", line.strip())
+        finally:
+            c.cancel()
 
     def kill_me():
         logger.error("Killing deluge")
@@ -410,7 +528,7 @@ def start_foreach_with_deluge(foreach_args: ForeachWorkerArgs):
 
     try:
         with process:
-            fork(log_stdout, log_stderr, run_foreach, cancel_callback=kill_me)
+            fork(run_foreach, log_stderr, log_stdout, cancel_callback=kill_me)
     finally:
         retcode = process.returncode
         logger.info("Deluge exited with: %s", retcode)

@@ -292,10 +292,14 @@ class ParserDoc:
         lines.extend(textwrap.wrap(self.description))
         lines.append("")
 
+        lines.append("All tokens are parsed into one expression:")
+        lines.append("  EXPR = ATOM | EXPR BINOP EXPR | UNOP ATOM")
+        lines.append("")
+
         if self.unary_operators:
             lines.append("Unary operators:")
             for u in self.unary_operators:
-                lines.append(f"  {u.name}: {u.description}")
+                lines.append(f"  {u.name} ATOM: {u.description}")
             lines.append("")
 
         if self.binary_operators:
@@ -311,7 +315,7 @@ class ParserDoc:
                         )
                     else:
                         impl, impr, impd = ("", "", "")
-                    pre = f"    TOKEN {impl}{b.name}{impr} TOKEN: "
+                    pre = f"    EXPR {impl}{b.name}{impr} EXPR: "
                     lines.extend(self._append_description(pre, b.description + impd))
             lines.append("")
 
@@ -320,16 +324,17 @@ class ParserDoc:
             for a in self.atoms:
                 pre = f"  {a.name_with_args()}: "
                 lines.extend(self._append_description(pre, a.description))
-            lines.append("")
 
-        if self.parenthesis is not None:
-            lines.append("Grouping:")
-            lines.append("  " + self.parenthesis)
+            if self.parenthesis is not None:
+                lines.append(
+                    "  " + self.parenthesis + ": Grouping, turn an EXPR into an ATOM"
+                )
+
             lines.append("")
 
         deferred_lines: list[str] = []
         if self.subparsers:
-            lines.append("Subparsers:")
+            lines.append("Subparsers (atom):")
             for s in self.subparsers:
                 pre = f"  {s.name} {s.args}: "
                 lines.extend(self._append_description(pre, s.description))
@@ -351,6 +356,8 @@ class Parser[C, T]:
         name: str = "Unknown",
         description: str = "",
     ):
+        if not name:
+            raise ValueError("name must be non-empty")
         self.name = name
         self.description = description
 
@@ -369,13 +376,20 @@ class Parser[C, T]:
     def operator(
         self, name: str, assoc: Assoc, prec: int, func: BinaryCallable[C, T]
     ) -> Self:
-        assert name
-        assert prec >= MIN_PREC
+        if not name:
+            raise ValueError("name must be non-empty")
+        if prec < MIN_PREC:
+            raise ValueError("precedence is smaller than the minimum")
+        if name in self.binaries:
+            raise ValueError(f"{name} already exists")
         self.binaries[name] = (assoc, Prec(prec), func)
         return self
 
     def unary(self, name: str, func: UnaryCallable[C, T]) -> Self:
-        assert name
+        if not name:
+            raise ValueError("name must be non-empty")
+        if name in self.unaries:
+            raise ValueError(f"{name} already exists")
         self.unaries[name] = func
         return self
 
@@ -388,7 +402,8 @@ class Parser[C, T]:
         mapper: ArgMapper[*As] = arg0,
     ) -> Self:
         """Add an atom."""
-        assert name
+        if not name:
+            raise ValueError("name must be non-empty")
         sig = signature(mapper)
         match list(sig.parameters.values()):
             case [p] if p.kind == Parameter.VAR_POSITIONAL:
@@ -421,6 +436,8 @@ class Parser[C, T]:
                     f"Not a valid mapper signature in terms of number of parameters: {mapper}"
                 )
 
+        if name in self.atoms:
+            raise ValueError(f"{name} already exists")
         self.atoms[name] = (numargs, func, mapper)
         return self
 
@@ -429,8 +446,12 @@ class Parser[C, T]:
     def sub[Cp, Tp](
         self, name: str, sub_parser: "Parser[Cp, Tp]", func: SubCallable[C, Cp, T, Tp]
     ) -> Self:
-        assert name
-        assert sub_parser.parens is not None, "Sub parser must have parens set up"
+        if not name:
+            raise ValueError("name must be non-empty")
+        if sub_parser.parens is None:
+            raise ValueError("Sub parser must have parens set up")
+        if name in self.subs:
+            raise ValueError(f"{name} already exists")
         self.subs[name] = (sub_parser, func)
         return self
 
@@ -439,17 +460,18 @@ class Parser[C, T]:
         return self
 
     def set_implicit(self, name: str) -> Self:
-        assert name
-        assert self.implicit_operator is None, "Implicit operator already set"
+        if not name:
+            raise ValueError("name must be non-empty")
+        if self.implicit_operator is not None:
+            raise ValueError("Implicit operator already set")
+        if name not in self.binaries:
+            raise ValueError("Implicit operator does not exist")
         self.implicit_operator = name
-        assert (
-            self.implicit_operator in self.binaries
-        ), "Implicit operator does not exist"
         return self
 
     def set_parens(self, left: str, right: str) -> Self:
-        assert left
-        assert right
+        if not left or not right:
+            raise ValueError("Both halves must be non-empty")
         self.parens = Parens(left, right)
         return self
 
@@ -522,6 +544,7 @@ class Parser[C, T]:
                 case 0:
                     return ""
                 case 1:
+                    # TODO: use the argument names of the AtomCallable instead of ARG
                     return "ARG"
                 case 2:
                     return "ARG1 ARG2"
@@ -544,7 +567,7 @@ class Parser[C, T]:
     def _parens_doc(self) -> None | str:
         match self.parens:
             case Parens(l, r):
-                return f"{l} TOKEN ... {r}"
+                return f"{l} EXPR {r}"
             case _:
                 return None
 

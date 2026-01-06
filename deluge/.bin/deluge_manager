@@ -1,9 +1,0 @@
-#!/bin/bash
-
-set -e
-
-dotfiles=$(realpath "${BASH_SOURCE[0]}")
-
-pyfile=$(realpath -ms "$dotfiles"/../../stow_ignore/deluge_manager.py)
-
-exec hatch run "$pyfile"

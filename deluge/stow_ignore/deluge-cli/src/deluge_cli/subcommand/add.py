@@ -32,7 +32,12 @@ def argparse_add_subcommand(add_parser: Callable[..., argparse.ArgumentParser]):
         "--download-dir",
         "-d",
         type=Path,
-        help="Download location. A default directory is used if this is not specified.",
+        help=" ".join(
+            """
+            Download location relative current working directory.
+            A default directory (specified in deluge) is used if this is not specified.
+            """.split()
+        ),
     )
     modify_group.add_argument(
         "--paused", "-p", action="store_true", help="Add it paused"
@@ -64,14 +69,18 @@ def argparse_add_subcommand(add_parser: Callable[..., argparse.ArgumentParser]):
 
 
 def run(args: argparse.Namespace):
-    download_dir: Path | None = args.download_dir
+    download_dir: Path | None = (
+        None if args.download_dir is None else args.download_dir.absolute()
+    )
     paused: bool = args.paused
     queue_bottom: bool = args.queue_bottom
 
     def add(m: str):
         assert is_magnet_link(m)
         new_hash = deluge.add_magnet(
-            m, download_location=download_dir, paused=paused or queue_bottom
+            m,
+            download_location=download_dir,
+            paused=paused or queue_bottom,
         )
         if new_hash is None:
             return
