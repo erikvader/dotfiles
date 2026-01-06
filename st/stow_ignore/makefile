@@ -26,6 +26,6 @@ $(TARGET):
 	@echo 'Building...'
 	$(MAKE) -C $(BUILDDIR)
 	@echo Installing...
-	cp -v $(BUILDDIR)/st $(TARGET)
+	cp -fv $(BUILDDIR)/st $(TARGET)
 	@echo Not installing the manpage since I dont read it anyway
 

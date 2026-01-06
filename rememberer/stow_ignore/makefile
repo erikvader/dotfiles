@@ -1,3 +1,3 @@
 .PHONY: install
 install:
-	uv tool install --editable ./rememberer
+	uv tool install --editable rememberer

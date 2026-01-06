@@ -80,6 +80,7 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
     ((shift modm, xK_o), windowsLowestEmpty W.shift spaces),
 
     -- executers
+    --TODO: should all, or at least most, of these spawns use systemd-cat to get better capturing of stderr?
     ((modm, xK_e), spawn "fzf_run"),
     ((shift modm, xK_e), spawn "rofi_iconfont_paste emoji \"$HOME/.emoji\""),
     ((modm, xK_r), spawn "rofi_script_selector"),

@@ -136,6 +136,7 @@ Limit log size:
 #+BEGIN_SRC
 SystemMaxUse=500M
 #+END_SRC
+But the defaults are sensible.
 *** /etc/systemd/logind.conf
 Kill all processes in session when logging out:
 #+BEGIN_SRC
