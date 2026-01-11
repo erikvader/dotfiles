@@ -13,28 +13,31 @@ alias pg='pgrep -li'
 alias pga='pg -a'
 alias pkill='pkill -e'
 
-alias cclip="xclip -selection clipboard"
+alias cclip='xclip -selection clipboard'
 
-alias ip="ip --color=auto"
+alias dus='du -h'
+
+alias ip='ip --color=auto'
 
 alias rsd='rsync -avh --dry-run --delete'
 alias rs='rsync -avh --delete --progress'
 alias rc='rsync -avh --progress'
 
-alias pc='paccache -rv'
-alias pcu='pc -uk0'
+alias pactree='pactree --color'
+alias pc='paccache -rv' # Keep three latest package versions in cache
+alias pcu='pc -uk0' # Remove everything of uninstalled packages
+alias yc='y -Sc' # More aggressive package clean, but also cleans AUR and repos
 alias y='yay'
 alias ys='y -Sy'
-alias ysd='ys --asdeps'
-alias yc='y -Sc'
+alias ysd='ys --asdeps' # If installing an optional dependency of something
 alias yr='y -Rn'
-alias yrd='yr -s'
-alias yru='yr -c'
+alias yrd='yr -s' # Remove, including dependencies
+alias yru='yr -c' # Remove, including usages
 alias yrdu='yr -sc'
 alias yrud=yrdu
-alias yo='y -Qdt'
+alias yo='y -Qdt' # List orphans
 alias yor='yo -q | yr -'
-alias ye='y -Qet'
+alias ye='y -Qet' # List explicitly installed top-level packages, there can be hidden orphans here
 
 alias ..='cd ..'
 alias ...='cd ../..'
