@@ -1,5 +1,5 @@
 # pyright: strict
-import subprocess as S
+from .spawningpool import Spawnling, FailedToSpawnError
 import logging
 from typing import Generator, Callable
 import time
@@ -14,34 +14,14 @@ def paste() -> str:
     like an image, then the empty string is returned.
 
     """
-    logger.debug("Running xclip -out")
-    try:
-        completed = S.run(
-            ["xclip", "-selection", "clipboard", "-out"],
-            check=True,
-            stdin=S.DEVNULL,
-            stdout=S.PIPE,
-            stderr=S.PIPE,
-            # NOTE: It seems like xclip will always output as UTF-8 based on its '-noutf8'
-            # flag.
-            encoding="utf-8",
-        )
-    except OSError as e:
-        e.add_note("Is xclip installed?")
-        raise
-    except S.CalledProcessError as e:
-        logger.debug("xclip: %s", e)
-        logger.debug("xclip stdout: '%s'", e.stdout)
-        logger.debug("xclip stderr: '%s'", e.stderr)
+    corpse = Spawnling.spawn("xclip", "-selection", "clipboard", "-out").quick()
+    # NOTE: the clipboard is empty
+    if corpse.stderr == "Error: target STRING not available\n":
+        return ""
 
-        # NOTE: the clipboard is empty
-        if e.stderr == "Error: target STRING not available\n":
-            return ""
+    corpse.check()
 
-        raise
-
-    logger.debug("xclip: %s", completed)
-    return completed.stdout
+    return corpse.stdout
 
 
 # TODO: there is a small race condition in which a new thing could be copied between
@@ -50,11 +30,7 @@ def paste() -> str:
 # that clipnotify also listens on the primary clipboard, which I don't care about, and
 # that is also solved with an unreleased flag.
 def clipnotify():
-    logger.debug("Running clipnotify")
-    completed = S.run(
-        ["clipnotify"], check=True, stdin=S.DEVNULL, stdout=S.DEVNULL, stderr=S.DEVNULL
-    )
-    logger.debug("clipnotify: %s", completed)
+    Spawnling.spawn("clipnotify").quick().check()
 
 
 def pause():
@@ -71,7 +47,7 @@ def get_waiter() -> Callable[[], None]:
         if has_clipnotify:
             try:
                 clipnotify()
-            except OSError as e:
+            except FailedToSpawnError as e:
                 logger.warning(
                     "Failed to start clipnotify, is it installed? Falling back to polling..."
                 )
@@ -97,23 +73,4 @@ def clipboard_listener() -> Generator[str]:
 
 # TODO: This doesn't belong in this file
 def send_notification(summary: str, body: str = ""):
-    logger.debug("Running notify-send")
-    try:
-        completed = S.run(
-            ["notify-send", summary, body],
-            check=True,
-            stdin=S.DEVNULL,
-            stdout=S.PIPE,
-            stderr=S.PIPE,
-            text=True,
-        )
-    except OSError as e:
-        e.add_note("Is notify-send installed?")
-        raise
-    except S.CalledProcessError as e:
-        logger.debug("notify-send: %s", e)
-        logger.debug("notify-send stdout: '%s'", e.stdout)
-        logger.debug("notify-send stderr: '%s'", e.stderr)
-        raise
-
-    logger.debug("notify-send: %s", completed)
+    Spawnling.spawn("notify-send", summary, body).quick().check()

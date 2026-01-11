@@ -48,10 +48,14 @@ class CancelToken:
                     self._callback = None
                 assert self._callback is None or isinstance(self._callback, Exception)
 
-    # TODO: make this also wait on the parent(s) somehow
     def is_cancelled_wait(self, timeout: float | None = None) -> bool:
-        self._own_flag.wait(timeout)
-        return self.is_cancelled()
+        if timeout is None and self._parent is not None:
+            while not self.is_cancelled():
+                self._own_flag.wait(1)
+            return True
+        else:
+            self._own_flag.wait(timeout)
+            return self.is_cancelled()
 
     def is_cancelled(self) -> bool:
         if self._own_flag.is_set():
@@ -112,6 +116,7 @@ def _worker[T](
     cancel: CancelToken,
     work: Callable[[CancelToken], T],
     res: Result[T, Exception],
+    unison: bool,
 ):
     thread_name = threading.current_thread().name
     work_name = work.__qualname__
@@ -140,6 +145,8 @@ def _worker[T](
     else:
         state = "success"
         res.set_value(r)
+        if unison:
+            cancel.cancel()
     finally:
         logger.debug(
             "Worker in thread %s exiting, ran %s, state %s",
@@ -153,6 +160,9 @@ def fork[T](
     *fs: Callable[[CancelToken], T],
     parent: CancelToken | None = None,
     cancel_callback: Callable[[], None] | None = None,
+    unison: bool = False,
+    reuse_current_thread: bool = True,
+    thread_prefix_name: str = "fork",
 ) -> list[T]:
     """Run several functions concurrently in their own threads and return their return values.
 
@@ -176,23 +186,41 @@ def fork[T](
     also canceled, but not the other way around. Useful when a callable calls another
     fork.
 
+    If the flag unison is True, then a clean exit of a function also triggers the
+    CancelToken. This is useful when either all the functions are supposed to be running,
+    or none of them.
+
+    If the flag reuse_current_thread is false, then the first function is not longer
+    called on the current thread, but in its own thread as well. This will prevent it from
+    receiving KeyboardInterrupts.
+
     """
     if not fs:
         return []
 
     cancel = CancelToken(parent=parent, callback=cancel_callback)
-    results: list[Result[T, Exception]] = [Result()]
+    results: list[Result[T, Exception]] = []
     threads: list[threading.Thread] = []
 
-    for f in fs[1:]:
+    if reuse_current_thread:
+        results.append(Result())
+
+    for f in fs[1 if reuse_current_thread else 0 :]:
         res: Result[T, Exception] = Result()
         results.append(res)
-        t = threading.Thread(target=_worker, args=(cancel, f, res), daemon=True)
+        t = threading.Thread(
+            target=_worker,
+            args=(cancel, f, res, unison),
+            daemon=True,
+            name=f"{thread_prefix_name}.{f.__name__}",
+        )
         threads.append(t)
         t.start()
 
     try:
-        _worker(cancel, fs[0], results[0])
+        if reuse_current_thread:
+            _worker(cancel, fs[0], results[0], unison)
+
         for t in threads:
             t.join()
     # NOTE: keyboardinterrupt is only raised on the main thread, so it is fine to only
@@ -203,13 +231,20 @@ def fork[T](
         # NOTE: this logs so the user know that an interrupt has been received and we are
         # trying to exit. It is critical since all threads are canceled and their return
         # values and exceptions are thrown away, but not sure if that is the best log
-        # level to use.
+        # level to use. I also include the whole exception to make sure it can be seen
+        # in case a thread hangs. But this is technically the log and throw anti-pattern.
         logger.critical(
             "Received a %s, canceling all other threads and waiting on them",
             type(e).__name__,
+            exc_info=e,
         )
-        # TODO: try catch these again and add as many failures as possible from the
-        # results to an exceptiongroup that is the cause of the keybordinterrupt?
+        # NOTE: subprocess.run, which this function is taking inspiration from, will wait
+        # a short while on keyboardinterrupt (it assumes the subprocess also received
+        # sigint) before calling kill, which will forcibly end the process. Force killing
+        # a thread is not possible in python, so that step can't be replicated, this
+        # function is sleeping indefinitely instead. Solutions could be to use the
+        # multiprocessing module instead, because it is possible to send a sigkill there,
+        # and/or use concurrent.futures and its executors.
         cancel.cancel()
         for t in threads:
             t.join()
@@ -217,11 +252,12 @@ def fork[T](
 
     assert all(not t.is_alive() for t in threads)
 
+    if reuse_current_thread:
+        threads.insert(0, threading.current_thread())
+
     successes: list[T] = []
     failures: list[Exception] = []
-    for r, t, f in zip(
-        results, [threading.current_thread()] + threads, fs, strict=True
-    ):
+    for r, t, f in zip(results, threads, fs, strict=True):
         match r.get():
             case Success(val):
                 successes.append(val)

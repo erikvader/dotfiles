@@ -1,6 +1,8 @@
 # pyright: strict
+import sys
+from ..spawningpool import Spawnling
 from collections import deque
-import subprocess as S
+from ..spawningpool import SpawningPoolError
 from ..threadingtools import fork, CancelToken
 from .. import clipboard
 from dataclasses import dataclass
@@ -291,7 +293,7 @@ def term_parser() -> P.Parser[Context, bool]:
         """Send a notification with the given header"""
         try:
             clipboard.send_notification(header, str(ctx.torrent))
-        except (OSError, S.CalledProcessError):
+        except SpawningPoolError:
             logger.exception("Failed to send a notification")
         return True
 
@@ -490,48 +492,36 @@ def start_foreach_only(args: ForeachWorkerArgs):
 
 
 def start_foreach_with_deluge(foreach_args: ForeachWorkerArgs):
-    args = ["deluge", "--loglevel", "info"]
-    logger.info("Starting deluge with args: %s", args)
-    process = S.Popen(
-        args,
-        text=True,
-        stdin=S.DEVNULL,
-        stdout=S.PIPE,
-        stderr=S.PIPE,
+    deluge_spawnling = Spawnling.spawn("deluge", "--loglevel", "info")
+    deluged_spawnling = Spawnling.spawn(
+        "deluged", "--loglevel", "info", "--do-not-daemonize"
     )
 
-    def log_stdout(c: CancelToken):
-        assert process.stdout is not None
-        try:
-            while not c.is_cancelled() and (line := process.stdout.readline()):
-                # TODO: create its own logger and make the output prettier?
-                logger.info("Deluge stdout: %s", line.strip())
-        finally:
-            c.cancel()
+    def wait_on_deluge(_c: CancelToken):
+        deluge_spawnling.heavy()
 
-    def log_stderr(c: CancelToken):
-        assert process.stderr is not None
-        try:
-            # TODO: this can hang if the process is killed, for some reason. Do a more manual
-            # read with timeout so the token is queried more often
-            while not c.is_cancelled() and (line := process.stderr.readline()):
-                logger.error("Deluge stderr: %s", line.strip())
-        finally:
-            c.cancel()
+    def wait_on_deluged(_c: CancelToken):
+        deluged_spawnling.heavy()
 
-    def kill_me():
-        logger.error("Killing deluge")
-        process.terminate()
-
-    def run_foreach(c: CancelToken):
+    def wait_on_foreach(c: CancelToken):
         foreach_worker(c, foreach_args)
 
-    try:
-        with process:
-            fork(run_foreach, log_stderr, log_stdout, cancel_callback=kill_me)
-    finally:
-        retcode = process.returncode
-        logger.info("Deluge exited with: %s", retcode)
+    def double_damage():
+        if (exc := sys.exception()) is not None and type(exc) == KeyboardInterrupt:
+            # NOTE: assume this was a sigint that also reached deluge, so no need to send
+            # even more signals.
+            return
+        deluge_spawnling.damage()
+        deluged_spawnling.damage()
+
+    fork(
+        wait_on_foreach,
+        wait_on_deluge,
+        wait_on_deluged,
+        unison=True,
+        cancel_callback=double_damage,
+        Thread_prefix_name="foreach",
+    )
 
 
 def run(args: argparse.Namespace):
