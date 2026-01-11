@@ -520,7 +520,7 @@ def start_foreach_with_deluge(foreach_args: ForeachWorkerArgs):
         wait_on_deluged,
         unison=True,
         cancel_callback=double_damage,
-        Thread_prefix_name="foreach",
+        thread_prefix_name="foreach",
     )
 
 

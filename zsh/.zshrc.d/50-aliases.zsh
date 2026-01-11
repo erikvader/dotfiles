@@ -15,7 +15,8 @@ alias pkill='pkill -e'
 
 alias cclip='xclip -selection clipboard'
 
-alias dus='du -h'
+alias du='du -h'
+alias free='free -h'
 
 alias ip='ip --color=auto'
 
