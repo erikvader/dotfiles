@@ -82,6 +82,7 @@
     coan = coa --no-edit
     # diff [A..B {same as A B} | A...B {same as (merge-base A B) B}]
     d = diff
+    # TODO: create a version of this that uses git-foreach. This use compares more than what g sr shows
     dr = d --submodule=diff
     dm = d --submodule=log
     di = d --staged

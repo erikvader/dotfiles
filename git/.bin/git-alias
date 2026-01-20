@@ -11,3 +11,4 @@ sed -E \
     -e 's/(#.*)$/'"$(tput setaf 4 || true)"'\1'"$(tput sgr0 || true)"'/' \
     "$HOME"/.gitconfig \
     | less --quit-if-one-screen --RAW-CONTROL-CHARS --no-init
+# TODO: put less in a git-pager wrapper that tries to follow the documentaiton of core.pager
