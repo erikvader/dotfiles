@@ -1,11 +1,27 @@
 # pyright: strict
 import sys
-from typing import Callable, assert_never
+from typing import Callable, assert_never, Self
 import threading
 import logging
 from dataclasses import dataclass
+import enum
 
 logger = logging.getLogger(__name__)
+
+
+@enum.unique
+class CancelPolicy(enum.Enum):
+    """Policy for when a worker will cancel a CancelToken. This will NOT affect
+    cancellation from a parent token."""
+
+    NEVER = 1  # Never cancel
+    KBD_INT = 2  # Only on KeyboardInterrupts
+    EXCEPTIONS = 3  # Also when a worker throws an exception
+    ALWAYS = 4  # Also when a worker exits for whatever reason
+
+    def includes(self, this: Self) -> bool:
+        """Whether the argument is included in this upper bound"""
+        return this.value <= self.value
 
 
 class CancelToken:
@@ -116,7 +132,7 @@ def _worker[T](
     cancel: CancelToken,
     work: Callable[[CancelToken], T],
     res: Result[T, Exception],
-    unison: bool,
+    cancel_policy: CancelPolicy,
 ):
     thread_name = threading.current_thread().name
     work_name = work.__qualname__
@@ -134,18 +150,20 @@ def _worker[T](
         # NOTE: logging for immediate feedback, and it is not guaranteed this will get
         # re-raised. But this is technically the log and throw anti-pattern.
         logger.error("A worker failed", exc_info=e)
-        cancel.cancel()
+        if cancel_policy.includes(CancelPolicy.EXCEPTIONS):
+            cancel.cancel()
     except:
         e = sys.exception()
         assert e is not None
         state = "serious error " + type(e).__name__
         e.add_note(f"Worker {work_name} in thread {thread_name}")
-        cancel.cancel()
+        if cancel_policy.includes(CancelPolicy.EXCEPTIONS):
+            cancel.cancel()
         raise
     else:
         state = "success"
         res.set_value(r)
-        if unison:
+        if cancel_policy.includes(CancelPolicy.ALWAYS):
             cancel.cancel()
     finally:
         logger.debug(
@@ -160,11 +178,12 @@ def fork[T](
     *fs: Callable[[CancelToken], T],
     parent: CancelToken | None = None,
     cancel_callback: Callable[[], None] | None = None,
-    unison: bool = False,
+    cancel_policy: CancelPolicy = CancelPolicy.EXCEPTIONS,
     reuse_current_thread: bool = True,
     thread_prefix_name: str = "fork",
 ) -> list[T]:
-    """Run several functions concurrently in their own threads and return their return values.
+    """Run several functions concurrently in their own threads and return their return
+    values.
 
     This function runs all functions in fs in their own threads, except for the first
     which is run on the current thread, and collects all their results in a list in order.
@@ -186,9 +205,10 @@ def fork[T](
     also canceled, but not the other way around. Useful when a callable calls another
     fork.
 
-    If the flag unison is True, then a clean exit of a function also triggers the
-    CancelToken. This is useful when either all the functions are supposed to be running,
-    or none of them.
+    The flag cancel_policy decides when a thread/worker will call cancel on the token. If
+    given a value of ALWAYS, then a clean exit of a function also triggers the
+    CancelToken, which is useful when either all or none of the functions are supposed to
+    be running. The default behavior is to cancel on exceptions.
 
     If the flag reuse_current_thread is false, then the first function is not longer
     called on the current thread, but in its own thread as well. This will prevent it from
@@ -210,7 +230,7 @@ def fork[T](
         results.append(res)
         t = threading.Thread(
             target=_worker,
-            args=(cancel, f, res, unison),
+            args=(cancel, f, res, cancel_policy),
             daemon=True,
             name=f"{thread_prefix_name}.{f.__name__}",
         )
@@ -219,7 +239,7 @@ def fork[T](
 
     try:
         if reuse_current_thread:
-            _worker(cancel, fs[0], results[0], unison)
+            _worker(cancel, fs[0], results[0], cancel_policy)
 
         for t in threads:
             t.join()
@@ -245,7 +265,8 @@ def fork[T](
         # function is sleeping indefinitely instead. Solutions could be to use the
         # multiprocessing module instead, because it is possible to send a sigkill there,
         # and/or use concurrent.futures and its executors.
-        cancel.cancel()
+        if cancel_policy.includes(CancelPolicy.KBD_INT):
+            cancel.cancel()
         for t in threads:
             t.join()
         raise
