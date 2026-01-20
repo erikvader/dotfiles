@@ -3,6 +3,8 @@
 # add blah blah
 # add blah blah
 
+# TODO: fsck the disk
+
 set -e
 
 snapshots=snapshots

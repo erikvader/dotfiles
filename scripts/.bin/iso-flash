@@ -30,8 +30,7 @@ fi
 #      can have, and those are probably not flushed by dd. So a power-off from udisksctl is
 #      issued to flush those caches and power off the drive, so everything should be on
 #      persistent storage after this! This power-off is what GUI file managers use to eject
-#      drives btw. The man page for fsync(2) states that it will write through disk caches
-#      if present, so the power off is maybe not strictly needed.
+#      drives btw.
 #   3. status=progress and oflag=dsync will make sure actual progress is displayed.
 
 set -x

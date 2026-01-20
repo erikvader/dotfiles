@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# TODO: give this script some love and make it do more
+
 import xml.etree.ElementTree as ET
 import sys
 from random import choice
