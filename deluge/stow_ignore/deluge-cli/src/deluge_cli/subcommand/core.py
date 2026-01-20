@@ -49,6 +49,12 @@ def argparse_add_subcommand(add_parser: Callable[..., argparse.ArgumentParser]):
         "what", type=ListThing, choices=list(ListThing), help="The thing to list"
     )
 
+    subparsers.add_parser(
+        "shutdown",
+        description="Ask the daemon to shutdown itself",
+        help="Daemon shutdown",
+    )
+
 
 def run(args: argparse.Namespace):
     action: str = args.action
@@ -56,6 +62,8 @@ def run(args: argparse.Namespace):
     match action:
         case "list":
             list_thing(args)
+        case "shutdown":
+            shutdown(args)
         case _:
             raise ValueError("An invalid action entered somehow")
 
@@ -68,3 +76,8 @@ def list_thing(args: argparse.Namespace):
         items = deluge.get_config_value(what.deluge_config_key())
         for i in items:
             print(i, end="\0" if zero else "\n")
+
+
+def shutdown(_args: argparse.Namespace):
+    with Deluge() as deluge:
+        deluge.daemon_shutdown()

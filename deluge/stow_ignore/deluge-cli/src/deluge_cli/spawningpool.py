@@ -66,7 +66,7 @@ class Spawnling:
                 stderr=S.PIPE,
             )
         except OSError as e:
-            raise FailedToSpawnError(e) from None
+            raise FailedToSpawnError(e) from e
         else:
             return cls(proc, f"{progname}[{proc.pid}]")
 
@@ -121,7 +121,7 @@ class Spawnling:
             assert self._proc.stdout is not None
             try:
                 for line in self._proc.stdout:
-                    stdout_callback("%s stdout: %s", str(self), line)
+                    stdout_callback("%s stdout: %s", str(self), line.strip())
             finally:
                 self._proc.stdout.close()
 
@@ -129,7 +129,7 @@ class Spawnling:
             assert self._proc.stderr is not None
             try:
                 for line in self._proc.stderr:
-                    stderr_callback("%s stderr: %s", str(self), line)
+                    stderr_callback("%s stderr: %s", str(self), line.strip())
             finally:
                 self._proc.stderr.close()
 
@@ -154,13 +154,15 @@ class Spawnling:
 
     def critical_hit(self):
         """Kill immediately, no chance for cleanup"""
-        logger.error("Sending SIGKILL to %s", self)
-        self._proc.kill()
+        if self._proc.poll() is None:
+            logger.error("Sending SIGKILL to %s", self)
+            self._proc.kill()
 
     def damage(self):
         """Inflict damage, it will die on its own"""
-        logger.warning("Sending SIGTERM to %s", self)
-        self._proc.terminate()
+        if self._proc.poll() is None:
+            logger.warning("Sending SIGTERM to %s", self)
+            self._proc.terminate()
 
     def __str__(self):
         return self._name

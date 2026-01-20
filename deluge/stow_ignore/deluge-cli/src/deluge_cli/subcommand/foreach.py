@@ -1,9 +1,8 @@
 # pyright: strict
-import sys
 from ..spawningpool import Spawnling
 from collections import deque
 from ..spawningpool import SpawningPoolError
-from ..threadingtools import fork, CancelToken
+from ..threadingtools import fork, CancelToken, CancelPolicy
 from .. import clipboard
 from dataclasses import dataclass
 from functools import cache
@@ -18,10 +17,12 @@ from ..deluge import (
     Deluge,
     Torrent,
     File,
+    DelugeDisconnectedError,
     State,
     Bytes,
     BytesPerSecond,
     parse_bytes_per_second,
+    clean_torrent_files,
 )
 from ..timetools import Timestamp, Timeseries, parse_seconds, Seconds
 
@@ -235,6 +236,26 @@ def term_parser() -> P.Parser[Context, bool]:
 
     p.atom("name", name_func, P.str1)
 
+    def iname_func(ctx: Context, glob: str) -> bool:
+        """Check if a STRING_GLOB matches the name case-insensitively, i.e. the given glob
+        as is on the name case folded."""
+        return G.str_match(ctx.torrent.name.casefold(), glob)
+
+    p.atom("iname", iname_func, P.str1)
+
+    def icontains_func(ctx: Context, string: str) -> bool:
+        """Check if string is a substring of the name, case-insensitively. This is similar
+        to "iname *STR*", but without having to add and escape asterisks."""
+        return string.casefold() in ctx.torrent.name.casefold()
+
+    p.atom("icontains", icontains_func, P.str1)
+
+    def hash_func(ctx: Context, prefix: str) -> bool:
+        """Check if the hash (id) has this prefix"""
+        return ctx.torrent.hash.has_prefix(prefix)
+
+    p.atom("hash", hash_func, P.str1)
+
     def state_func(ctx: Context, state: State) -> bool:
         """Check if the torrent is in this state"""
         return ctx.torrent.state == state
@@ -263,18 +284,27 @@ def term_parser() -> P.Parser[Context, bool]:
     p.atom("queue-bottom", queue_bottom_func)
 
     def remove_func(ctx: Context) -> bool:
-        """Remove without deleting the files"""
+        """Remove the torrent from deluge without deleting any files"""
         ctx.deluge.remove_torrent(ctx.torrent.hash)
         return True
 
-    p.atom("remove", remove_func)
+    p.atom("remove-keep", remove_func)
 
     def remove_everything_func(ctx: Context) -> bool:
-        """Remove and delete the files"""
+        """Remove the torrent from deluge and delete all files"""
         ctx.deluge.remove_torrent(ctx.torrent.hash, remove_data=True)
         return True
 
-    p.atom("delete-everything", remove_everything_func)
+    p.atom("remove-everything", remove_everything_func)
+
+    def finish_torrent_func(ctx: Context) -> bool:
+        """Remove the torrent from deluge and delete skipped files/directories."""
+        ctx.deluge.remove_torrent(ctx.torrent.hash)
+        clean_torrent_files(ctx.torrent)
+
+        return True
+
+    p.atom("remove", finish_torrent_func)
 
     def confirm_func(ctx: Context) -> bool:
         """Prompt the user for confirmation"""
@@ -492,34 +522,36 @@ def start_foreach_only(args: ForeachWorkerArgs):
 
 
 def start_foreach_with_deluge(foreach_args: ForeachWorkerArgs):
-    deluge_spawnling = Spawnling.spawn("deluge", "--loglevel", "info")
+    deluge_spawnling = Spawnling.spawn("deluge", "--loglevel", "warning")
     deluged_spawnling = Spawnling.spawn(
-        "deluged", "--loglevel", "info", "--do-not-daemonize"
+        "deluged", "--loglevel", "error", "--do-not-daemonize"
     )
 
     def wait_on_deluge(_c: CancelToken):
         deluge_spawnling.heavy()
 
-    def wait_on_deluged(_c: CancelToken):
-        deluged_spawnling.heavy()
+    def wait_on_deluged(c: CancelToken):
+        try:
+            deluged_spawnling.heavy()
+        finally:
+            c.cancel()
+            deluge_spawnling.damage()
 
     def wait_on_foreach(c: CancelToken):
-        foreach_worker(c, foreach_args)
-
-    def double_damage():
-        if (exc := sys.exception()) is not None and type(exc) == KeyboardInterrupt:
-            # NOTE: assume this was a sigint that also reached deluge, so no need to send
-            # even more signals.
-            return
-        deluge_spawnling.damage()
-        deluged_spawnling.damage()
+        try:
+            foreach_worker(c, foreach_args)
+        except DelugeDisconnectedError as e:
+            logger.warning(
+                "Foreach got interrupted by losing the connection to deluge", exc_info=e
+            )
 
     fork(
         wait_on_foreach,
         wait_on_deluge,
         wait_on_deluged,
-        unison=True,
-        cancel_callback=double_damage,
+        # NOTE: if a KeyboardInterrupt is raised, then it is assumed that both deluge and
+        # deluged also received a SIGINT, so no need to send SIGTERM to them.
+        cancel_policy=CancelPolicy.KBD_INT,
         thread_prefix_name="foreach",
     )
 

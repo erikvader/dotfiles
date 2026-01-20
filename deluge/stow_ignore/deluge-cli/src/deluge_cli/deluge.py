@@ -1,4 +1,5 @@
 # pyright: strict
+import ssl
 import math
 import re
 import logging
@@ -7,7 +8,7 @@ from .inspecttools import base_type
 from .loggingtools import Ellipses
 from enum import Enum, auto
 from pathlib import Path, PurePath
-from typing import Self, Any, Type, cast, NewType
+from typing import Self, Any, Type, cast, NewType, Iterable
 from deluge_client import LocalDelugeRPCClient  # type: ignore
 from deluge_client.client import RemoteException  # type: ignore
 from dataclasses import dataclass, field
@@ -52,12 +53,23 @@ class Priority(Enum):
     SKIP = 0
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Hash:
-    inner: str
+    _full: str
+
+    @property
+    def full(self) -> str:
+        return self._full
+
+    @property
+    def short(self) -> str:
+        return self.full[:7]
+
+    def has_prefix(self, prefix: str) -> bool:
+        return self.full.startswith(prefix)
 
     def __str__(self) -> str:
-        return f"{self.inner:.7}"
+        return self.short
 
 
 @dataclass(frozen=True)
@@ -65,6 +77,10 @@ class File:
     path: PurePath  # relative to the download location
     progress: float
     priority: Priority
+
+    def __post_init__(self):
+        if self.path.is_absolute():
+            raise ValueError(f"Path is not allowed to be absolute: {self.path}")
 
     def __str__(self) -> str:
         return f"{self.path}"
@@ -85,11 +101,33 @@ class Torrent:
     total_uploaded: Bytes = field(compare=False)
     queue: int | None = field(compare=False)
 
+    def __post_init__(self):
+        if not self.download_location.is_absolute():
+            raise ValueError(
+                f"Download location must be absolute: {self.download_location}"
+            )
+
     def __str__(self) -> str:
         return f"{self.hash} {self.name}"
 
+    def directory_roots(self) -> Iterable[PurePath]:
+        """Return all top-level directories relative the download location."""
+        return {
+            PurePath(file.path.parts[0])
+            for file in self.files
+            if len(file.path.parts) > 1
+        }
+
 
 class DelugeError(Exception):
+    pass
+
+
+class DelugeDisconnectedError(DelugeError):
+    pass
+
+
+class DelugeRemoveTorrentError(DelugeError):
     pass
 
 
@@ -133,7 +171,12 @@ class Deluge:
 
     def _call[T](self, cmd: str, expect: Type[T], *args: Any) -> T:
         logger.debug("RPC call: %s %s", cmd, args)
-        res = cast(Any, self.client.call(cmd, *args))  # type: ignore
+        try:
+            res = cast(Any, self.client.call(cmd, *args))  # type: ignore
+        except (ssl.SSLZeroReturnError, ssl.SSLEOFError, ConnectionError) as e:
+            raise DelugeDisconnectedError(
+                f"Disconnected from deluge while calling {cmd}"
+            ) from e
         logger.debug("RPC done: %s %s", cmd, Ellipses(res, 100))
         # NOTE: this only checks that the 'container' type is correct, not the type
         # parameters.
@@ -229,12 +272,14 @@ class Deluge:
     def get_method_list(self) -> list[str]:
         return self._call("daemon.get_method_list", list[str])
 
+    # NOTE: it looks like, from the source of deluge, that this will return when the
+    # torrent has actually been removed, no weird deferred background tasks and such.
     def remove_torrent(self, torrent: Hash, *, remove_data: bool = False):
         remove_data_str = "deleting" if remove_data else "keeping"
         logger.info("Removing %s and %s data", torrent, remove_data_str)
-        ret = self._call("core.remove_torrent", bool, torrent.inner, remove_data)
+        ret = self._call("core.remove_torrent", bool, torrent.full, remove_data)
         if not ret:
-            raise DelugeError(
+            raise DelugeRemoveTorrentError(
                 f"Failed to remove torrent {torrent} while {remove_data_str} data"
             )
 
@@ -244,11 +289,11 @@ class Deluge:
             raise ValueError(f"Can only move to an absolute path: {new_dir}")
         if not new_dir.is_dir() and new_dir.exists():
             raise ValueError(f"Can't move to an existing non-dir: {new_dir}")
-        self._call("core.move_storage", type(None), [torrent.inner], str(new_dir))
+        self._call("core.move_storage", type(None), [torrent.full], str(new_dir))
 
     def queue_bottom(self, torrent: Hash):
         logger.info("Queuing to bottom: %s", torrent)
-        self._call("core.queue_bottom", type(None), [torrent.inner])
+        self._call("core.queue_bottom", type(None), [torrent.full])
 
     def add_magnet(
         self,
@@ -289,16 +334,20 @@ class Deluge:
 
     def resume(self, torrent: Hash):
         logger.info("Resuming %s", torrent)
-        self._call("core.resume_torrent", type(None), torrent.inner)
+        self._call("core.resume_torrent", type(None), torrent.full)
 
     def pause(self, torrent: Hash):
         logger.info("Pausing %s", torrent)
-        self._call("core.pause_torrent", type(None), torrent.inner)
+        self._call("core.pause_torrent", type(None), torrent.full)
 
     def get_config_value(self, key: str) -> Any:
         ret = self._call("core.get_config_value", object, key)
         logger.debug("Got config '%s' = '%s'", key, ret)
         return ret
+
+    def daemon_shutdown(self):
+        logger.info("Sending daemon shutdown")
+        self._call("daemon.shutdown", type(None))
 
     def __enter__(self) -> Self:
         return self
@@ -307,3 +356,32 @@ class Deluge:
         logger.info("Disconnecting from local deluge client")
         self.client.disconnect()
         return False
+
+
+def clean_torrent_files(torrent: Torrent):
+    """Remove unnecessary files from torrent.
+
+    This should only be called on torrents that have been removed from deluge to avoid
+    conflicts. Files marked as skipped and empty directories are removed, as well as
+    temporary files deluge needed when the torrent was active.
+
+    """
+    parts_file = torrent.download_location / f".{torrent.hash.full}.parts"
+    if parts_file.is_file(follow_symlinks=False):
+        logger.debug("Removing .parts file: %s", parts_file)
+        parts_file.unlink()
+
+    for tor_file in torrent.files:
+        full_path = torrent.download_location / tor_file.path
+        if tor_file.priority is Priority.SKIP and full_path.is_file(
+            follow_symlinks=False
+        ):
+            logger.debug("Removing skipped file: %s", full_path)
+            full_path.unlink()
+
+    for topdir in torrent.directory_roots():
+        topdir_abs = torrent.download_location / topdir
+        for root, dirs, files in topdir_abs.walk(top_down=False):
+            if not dirs and not files:
+                logger.debug("Removing empty directory: %s", root)
+                root.rmdir()

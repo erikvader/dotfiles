@@ -63,6 +63,10 @@ class ExceptionLogHooks:
         value: BaseException,
         tb: TracebackType | None,
     ):
+        if typ == KeyboardInterrupt:
+            logging.debug("Got KeyboardInterrupt", exc_info=(typ, value, tb))
+            return
+
         # NOTE: critical since the program exits
         logging.critical(
             "Uncaught exception",
