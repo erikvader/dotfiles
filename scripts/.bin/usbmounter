@@ -3,8 +3,13 @@
 import subprocess as S
 import json
 import sys
-from fzf_dmenu import fzf_dmenu
-from notify_send import notify_send
+
+def notify_send(header):
+   S.run(["notify-send", header], check=True)
+
+def fzf_dmenu(choices, options):
+   cmpl = S.run(["fzf_dmenu"] + options, check=True, text=True, input="\n".join(choices), stdout=S.PIPE)
+   return cmpl.stdout.rstrip("\n")
 
 def get_drives():
    res = S.run(["lsblk", "-J", "-o", "label,tran,fstype,mountpoint,path,vendor,model", "--tree"], stdout=S.PIPE, check=True)
@@ -32,7 +37,7 @@ def run_udisks(choices, cmd):
 
    formatted_choices = ["{} {} {} {}".format(part["path"], part["label"], part["vendor"], part["model"]) for part in choices]
 
-   c = fzf_dmenu(formatted_choices, fzf_options=["--prompt", cmd+": "])
+   c = fzf_dmenu(formatted_choices, ["--prompt", cmd+": "])
    if not c:
       return
 
