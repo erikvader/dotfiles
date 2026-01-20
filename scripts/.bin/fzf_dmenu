@@ -1,13 +1,11 @@
 #!/bin/bash
 
-# Wrapper for a fzf that opens in a separate urxvt window:
+# Wrapper for a fzf that opens in a separate terminal window:
 # fzf_dmenu [fzfargs...]
-# Alternate mode to interactively enter any line:
-# fzf_dmenu -- [prompt] [readargs...]
+# Alternate mode to interactively enter any line with filename completion:
+# fzf_dmenu -- [readargs...]
 # The environment variable URXVTFZF_GEOMETRY can be set to change the
 # size of the terminal window.
-
-# TODO: return an appropriate exit status
 
 DOCAT=false
 
@@ -19,15 +17,14 @@ fi
 exec {out}>&1 {inn}<&0
 
 if $DOCAT; then
-    if [[ -n $1 && ! $1 = -* ]]; then
-        set -- -p "$1" "${@:2}"
-    elif [[ $# -eq 0 ]]; then
+    if [[ $# -eq 0 ]]; then
         set -- -p ">> "
     fi
-    cmd="read -e ${*:+$(printf "%q " "$@")} line && [ -n \"\$line\" ] && echo -E \"\$line\" 1>&$out"
+    # NOTE: the expansion is supposed to be delayed
+    # shellcheck disable=SC2016
+    cmd=(bash -c 'read -e "$@" line && printf "%s" "$line" '">&$out" '' "$@")
 else
-    cmd="fzf --reverse ${*:+$(printf "%q " "$@")} 1>&$out 0<&$inn"
+    cmd=(bash -c 'fzf --reverse "$@" '">&$out <&$inn" '' "$@")
 fi
-st -n URxvtFZF -g "${URXVTFZF_GEOMETRY:-100x24}" -e sh -c "$cmd"
 
-exec {out}>&- {inn}<&-
+exec st -n URxvtFZF -g "${URXVTFZF_GEOMETRY:-100x24}" -e "${cmd[@]}" &>/dev/null
