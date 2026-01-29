@@ -13,7 +13,6 @@ scripts["Suspend"]='systemctl suspend'
 scripts['Emacs Calc']='emacsclient -n -c -e "(progn (full-calc) (calc-trail-display t))"'
 scripts['Org quick todo']="fzf_dmenu -- -p 'Add TODO: ' | sed -E 's/^/* TODO /' >> $HOME/Documents/org/keep.org"
 scripts['Org open keep.org']="emacsclient -c -n $HOME/Documents/org/keep.org"
-scripts['Man']="rofi_man"
 scripts['Emoji selector']='rofi_iconfont emoji "$HOME/.emoji"'
 scripts['Font Awesome 4.7 selector']='rofi_iconfont awesome "$HOME/.awesome47"'
 scripts['Emotion selector']='rofi_emoticon'
