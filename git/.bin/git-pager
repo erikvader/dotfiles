@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# This script mimics what git does when it needs a pager, as described in the config
+# core.pager. Here is the actual source code
+# https://github.com/git/git/blob/ab689ea7f91ab0858e85776f31102203d3ea7b83/pager.c#L85
+
+if [[ ! -t 1 ]]; then
+    exec "$@"
+fi
+
+if [[ ! -v LESS ]]; then
+    export LESS=FRX # --quit-if-one-screen --RAW-CONTROL-CHARS --no-init
+fi
+
+pager=
+if [[ -v GIT_PAGER ]]; then
+    pager=$GIT_PAGER
+elif pager=$(git config core.pager); then
+    :
+elif [[ -v PAGER ]]; then
+    pager=$PAGER
+else
+    pager=less
+fi
+
+if [[ $pager = cat || -z $pager ]]; then
+    exec "$@"
+else
+    # NOTE: removes the ^O sequence in sgr0 that less doesn't process
+    "$@" | tr -d $'\x0F' | eval "$pager"
+fi

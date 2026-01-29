@@ -1,14 +1,7 @@
 #!/bin/sh
 
-# NOTE: this term doesn't include the ^O sequence in sgr0 that less doesn't process
-if [ "$TERM" != dumb ]; then
-    export TERM=ansi
-fi
-
-sed -E \
+git-pager sed -E \
     -e '1,/\[alias\]/d' \
     -e 's/^ +//' \
     -e 's/(#.*)$/'"$(tput setaf 4 || true)"'\1'"$(tput sgr0 || true)"'/' \
-    "$HOME"/.gitconfig \
-    | less --quit-if-one-screen --RAW-CONTROL-CHARS --no-init
-# TODO: put less in a git-pager wrapper that tries to follow the documentaiton of core.pager
+    "$HOME"/.gitconfig
