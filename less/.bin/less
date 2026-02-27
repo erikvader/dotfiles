@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# NOTE: Setting the environment variable LESS is not ideal since it overrides the defaults
+# of things like systemd and git, causing unexpected and weird behavior sometimes. So this
+# is a wrapper script that makes sure some flags always are present, reglardless of what
+# LESS is set to.
+
+exec /bin/less -Ri "$@"
