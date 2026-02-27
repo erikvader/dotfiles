@@ -87,7 +87,9 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
     ((shift modm, xK_r), spawn "open_downloaded_pdf"),
 
     -- screenshots
-    ((modm, xK_p), spawn "maim-notify -su"), -- screenshot selection
+    ((0, xK_Print), spawn "maim-notify -su"), -- screenshot selection
+    ((shiftMask, xK_Print), spawn "maim-current-window"),
+    ((modm, xK_p), spawn "maim-notify -su"),
     ((shift modm, xK_p), spawn "maim-current-window"),
 
     -- display stuff
@@ -126,6 +128,9 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
     ((modm, xK_q), kill),
     -- Resize viewed windows to the correct size
     ((shift modm, xK_q), refresh),
+
+    -- Toggle mouse following focused window
+    ((modm, xK_y), myUpdatePointerToggle),
 
      -- Rotate through the available layout algorithms
     ((modm, xK_space), sendMessage NextLayout),
