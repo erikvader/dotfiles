@@ -39,6 +39,7 @@ alias yrud=yrdu
 alias yo='y -Qdt' # List orphans
 alias yor='yo -q | yr -'
 alias ye='y -Qet' # List explicitly installed top-level packages, there can be hidden orphans here
+alias ykr='ys archlinux-keyring'
 
 alias ..='cd ..'
 alias ...='cd ../..'
