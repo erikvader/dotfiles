@@ -1,0 +1,13 @@
+[Unit]
+Description=Autorandr
+Wants=monitors-changed.target
+Before=graphical-session-pre.target monitors-changed.target
+
+[Service]
+Type=oneshot
+ExecStart=autorandr --change --default default
+RemainAfterExit=yes
+Environment=AUTORANDR_INIT=t
+
+[Install]
+WantedBy=graphical-session-pre.target

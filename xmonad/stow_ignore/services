@@ -1,1 +1,2 @@
 polkit-agent.service
+autorandr-init.service

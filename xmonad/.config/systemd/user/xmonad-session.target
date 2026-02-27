@@ -1,12 +1,26 @@
+# This is started by xmonad on start
+
 # Copied and adapted from https://github.com/alebastr/sway-systemd/blob/main/units/sway-session.target
 # TODO: I didn't copy the things to enable a clean logout, but I don't need that on single user systems.
 [Unit]
 Description=XMonad session
 Documentation=man:systemd.special(7)
 BindsTo=graphical-session.target
+
+# NOTE: graphical-session doesn't start this by itself, so it needs to be done here.
 Wants=graphical-session-pre.target
 After=graphical-session-pre.target
 
-# Not sure if I want this...
+# TODO: Not sure if I want this...
 #Wants=xdg-desktop-autostart.target
 
+# Usage:
+# To make a service get started when the graphical session starts, add:
+# [Install]
+# WantedBy=graphical-session.target
+# [Unit]
+# After=graphical-session.target
+
+# To make a service get stopped/restarted when the graphical session does, add:
+# [Unit]
+# PartOf=graphical-session.target

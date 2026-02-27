@@ -1,6 +1,7 @@
 [Unit]
 Description=Send notifications on hardware changes
 PartOf=graphical-session.target
+After=graphical-session.target
 
 [Service]
 Type=exec

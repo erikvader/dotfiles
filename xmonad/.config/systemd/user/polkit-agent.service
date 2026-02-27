@@ -1,10 +1,11 @@
 [Unit]
 Description=Graphical polkit agent
-PartOf=graphical-session.target
+PartOf=graphical-session-pre.target
+Before=graphical-session-pre.target
 
 [Service]
 Type=exec
 ExecStart=/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 
 [Install]
-WantedBy=graphical-session.target
+WantedBy=graphical-session-pre.target

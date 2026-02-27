@@ -1,0 +1,13 @@
+# This target gets restarted whenever the monitor configuration changes.
+
+[Unit]
+Description=Monitor config has changed
+
+# To make a service get restarted when the screen configuration changes (courtesy
+# of autorandr), add:
+# [Unit]
+# PartOf=monitors-changed.target
+
+# Adding this will revive a stopped service, not sure if I want this?
+# [Install]
+# WantedBy=monitors-changed.target

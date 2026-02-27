@@ -21,3 +21,6 @@ playerctl
 
 # Install some pulseaudio package for pactl
 # pipewire-pulse or pulseaudio
+
+# For automatic screen updates
+autorandr
