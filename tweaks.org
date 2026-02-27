@@ -367,7 +367,7 @@ Simply enable the systemd fstrim timer.
 timedatectl set-ntp true
 #+END_SRC
 ** Browser cache
-Qutebrowser, and other chromium ones, probably forefox as well, write video cache data to
+Qutebrowser, and other chromium ones, probably firefox as well, write video cache data to
 disk when streaming videos. I don't know why it doesn't use the RAM for that, but it can
 be forced to do that anyways as explained [[https://wiki.archlinux.org/title/Chromium#Cache_in_tmpfs][here on archwiki]].
 
