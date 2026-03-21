@@ -29,6 +29,8 @@
 [diff]
     algorithm = histogram
     colorMoved = default
+    renames = copies
+    mnemonicPrefix = true
 [pretty]
     oneline2 = format:%C(yellow)%h%Creset -%C(auto)%d%Creset %s %Cgreen(%ad) %C(bold blue)<%an>%Creset
 [log]
@@ -41,9 +43,9 @@
     clones = clone --depth=1
     # add
     a = add
-    aa = a --all
-    au = a --update
-    ai = a --intent-to-add
+    aa = a --all # {stage everything everywhere}
+    au = a --update # {stage tracked files only, everywhere}
+    ai = a --intent-to-add # {add empty file to index, enables diffing n stuff}
     # clean
     cl = clean -d
     cli = cl -x
@@ -64,7 +66,7 @@
     # restore
     re = restore # {tree <- index/HEAD, aka discard changes}
     rei = re --staged # {index <- HEAD, aka unstage}
-    reiw = rei --worktree # {tree,index <- HEAD}
+    reiw = rei --worktree # {tree,index <- HEAD, aka unstage and discard}
     # merge
     me = merge
     mec = me --no-ff
@@ -81,17 +83,20 @@
     coa = co --amend
     coan = coa --no-edit
     # diff [A..B {same as A B} | A...B {same as (merge-base A B) B}]
-    d = diff
+    d = diff # [{worktree <> index/HEAD} | HEAD {worktree/index <> HEAD}]
     # TODO: create a version of this that uses git-foreach. This use compares more than what g sr shows
+    # It should compare each submodule against its own HEAD
     dr = d --submodule=diff
     dm = d --submodule=log
-    di = d --staged
+    di = d --staged # {index <> HEAD}
+    ds = d --stat
     # ahead
     ah = !: diff && git-ahead
     # status
     s = status
     si = s --ignored
     ss = s --short --branch
+    # TODO: for each submodule, print how many commits ahead and behind the parent it is.
     sr = !git-foreach --all --no-git git-status-brief # [<branch-for-git-ahead>]
     sa = s --untracked-files=all
     # fetch {pull A without switch: origin [+]A:A, + to force fast-forward}

@@ -2,6 +2,8 @@
 GIT_COMPLETION_SHOW_ALL=1
 GIT_COMPLETION_SHOW_ALL_COMMANDS=1
 
+# TODO: this could be a custom command that accepts a fuzzy search for the submodule to
+# operate on. Perhaps integrate that in git-foreach instead?
 alias g=git
 alias gg='g -c delta.side-by-side=true'
 alias gup='cd "$(git rev-parse --show-cdup)"'
