@@ -120,15 +120,15 @@ class Torrent:
 
 
 class DelugeError(Exception):
-    pass
+    """General deluge error."""
 
 
 class DelugeDisconnectedError(DelugeError):
-    pass
+    """Deluge is no longer running, or wasn't running to begin with."""
 
 
 class DelugeRemoveTorrentError(DelugeError):
-    pass
+    """Removal of a torrent reported an error."""
 
 
 def typed_get[T](dic: dict[str, Any], key: str, typ: Type[T]) -> T:
@@ -164,7 +164,7 @@ class Deluge:
                     logger.warning("Failed to connect try %s because %s", i, e)
                     time.sleep(5)
                 else:
-                    raise
+                    raise DelugeDisconnectedError("Failed to connect to deluge") from e
             else:
                 logger.info("Connected successfully")
                 break

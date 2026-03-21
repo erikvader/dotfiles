@@ -4,6 +4,7 @@ import logging
 import argparse
 from typing import Callable
 from ..deluge import Deluge
+from ..loggingtools import UserError
 from .. import clipboard as C
 
 logger = logging.getLogger(__name__)
@@ -104,7 +105,7 @@ def run(args: argparse.Namespace):
             if is_magnet_link(link):
                 add(link)
             else:
-                raise RuntimeError(f"Not a valid magnet link in clipboard: {link}")
+                raise UserError(f"Not a valid magnet link in clipboard: {link}")
         elif magnet is not None:
             add(magnet)
         else:

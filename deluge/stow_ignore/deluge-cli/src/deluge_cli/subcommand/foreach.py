@@ -2,6 +2,7 @@
 from ..spawningpool import Spawnling
 from collections import deque
 from ..spawningpool import SpawningPoolError
+from ..loggingtools import UserError
 from ..threadingtools import fork, CancelToken, CancelPolicy
 from .. import clipboard
 from dataclasses import dataclass
@@ -521,7 +522,25 @@ def start_foreach_only(args: ForeachWorkerArgs):
     foreach_worker(cancel, args)
 
 
+def is_deluge_started() -> bool:
+    logger.info("Trying to connect to deluge to see if it is already started...")
+    try:
+        with Deluge():
+            pass
+    except DelugeDisconnectedError:
+        logger.info("...it wasn't")
+        return False
+    else:
+        logger.info("...it was")
+        return True
+
+
 def start_foreach_with_deluge(foreach_args: ForeachWorkerArgs):
+    if is_deluge_started():
+        raise UserError("Deluge is already running").with_help(
+            "Kill the existing instance first with: deluge-cli core shutdown"
+        )
+
     deluge_spawnling = Spawnling.spawn("deluge", "--loglevel", "warning")
     deluged_spawnling = Spawnling.spawn(
         "deluged", "--loglevel", "error", "--do-not-daemonize"
@@ -562,9 +581,7 @@ def run(args: argparse.Namespace):
     loop_secs: Seconds | None = args.loop
 
     if spawn_deluge and loop_secs is None:
-        raise RuntimeError(
-            "Invalid argument combination, spawning deluge requires loop"
-        )
+        raise UserError("Invalid argument combination, spawning deluge requires --loop")
 
     logger.debug("Parsing terms: %s", terms)
     parsed = term_parser().parse(P.Tokens(terms))

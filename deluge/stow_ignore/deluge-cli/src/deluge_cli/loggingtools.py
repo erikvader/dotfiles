@@ -1,5 +1,5 @@
 # pyright: strict
-from typing import TextIO, override, Type, Any
+from typing import TextIO, override, Type, Any, Self
 from types import TracebackType
 import threading
 import logging
@@ -7,6 +7,15 @@ import sys
 import os
 import io
 import traceback
+
+
+# TODO: should this really be here in this file?
+class UserError(Exception):
+    """Invalid usage of the user"""
+
+    def with_help(self, note: str) -> Self:
+        self.add_note(note)
+        return self
 
 
 def supports_color(stream: TextIO) -> bool:
@@ -63,8 +72,14 @@ class ExceptionLogHooks:
         value: BaseException,
         tb: TracebackType | None,
     ):
-        if typ == KeyboardInterrupt:
+        if issubclass(typ, KeyboardInterrupt):
             logging.debug("Got KeyboardInterrupt", exc_info=(typ, value, tb))
+            return
+
+        if issubclass(typ, UserError):
+            logging.debug("Got an UserError", exc_info=(typ, value, tb))
+            notes = "".join(f"\nHelp: {n}" for n in getattr(value, "__notes__", []))
+            logging.critical("Invalid usage: %s%s", value, notes)
             return
 
         # NOTE: critical since the program exits
