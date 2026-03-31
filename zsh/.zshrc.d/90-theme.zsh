@@ -2,18 +2,16 @@
 # ZSH Theme - Preview: http://gyazo.com/8becc8a7ed5ab54a0262a470555c3eed.png
 
 if [[ $UID -eq 0 ]]; then
-    user_host='%{$terminfo[bold]$fg[red]%}%n@%m%{$reset_color%}'
-    user_symbol='#'
+    user_host='%B%F{red}%n@%m%f%b'
+    user_symbol='%B#%b'
 else
-    user_host='%{$terminfo[bold]$fg[green]%}%n@%m%{$reset_color%}'
-    user_symbol='$'
+    user_host='%B%F{green}%n@%m%f%b'
+    user_symbol='%B$%b'
 fi
 
 if [[ $SSH_CLIENT || $SSH_CONNECTION || $SSH_TTY ]]; then
-    user_host='%{$terminfo[bold]$fg[yellow]%}%n@%m%{$reset_color%}'
+    user_host='%B%F{yellow}%n@%m%f%b'
 fi
-
-user_symbol="%(?..%{$fg[red]%})${user_symbol}%{$reset_color%}"
 
 # This is a highly condensed version of the plugin provided by oh-my-zsh
 # https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/shrink-path/README.md
@@ -48,28 +46,32 @@ function shrink_path {
     echo ${result:-/}
 }
 
-current_dir='%{$terminfo[bold]$fg[blue]%}$(shrink_path)%{$reset_color%}'
+current_dir='%B%F{blue}$(shrink_path)%f%b'
+
+function exit_code_prompt {
+    echo -n "%(?..──[%B%F{red}%?%f%b])"
+}
 
 function ranger_prompt {
     if [[ $RANGER_LEVEL ]]; then
-        echo -n "──[%{$fg[cyan]%}RANGER%{$reset_color%}]"
+        echo -n "──[%F{cyan}RANGER%f]"
     fi
 }
 
 function wine_prompt {
     if [[ $WINEPREFIX ]]; then
-        echo -n "──[%{$fg[red]%}$WINEPREFIX%{$reset_color%}]"
+        echo -n "──[%F{red}$WINEPREFIX%f]"
     fi
 }
 
 function virtualenv_prompt {
     if [[ $VIRTUAL_ENV ]]; then
-        echo -n "──[%{$fg[magenta]%}${VIRTUAL_ENV:t}%{$reset_color%}]"
+        echo -n "──[%F{magenta}${VIRTUAL_ENV:t}%f]"
     fi
 }
 
-PROMPT="┌─[${user_host}]──[${current_dir}]"'$(ranger_prompt)$(wine_prompt)$(virtualenv_prompt)'"
-└─%B${user_symbol}%b "
+PROMPT="┌─[${user_host}]──[${current_dir}]"'$(exit_code_prompt)$(ranger_prompt)$(wine_prompt)$(virtualenv_prompt)'"
+└─${user_symbol} "
 
 unset user_host
 unset user_symbol
