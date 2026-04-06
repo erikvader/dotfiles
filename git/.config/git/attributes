@@ -1,0 +1,22 @@
+# Set appropriate word diff regexes for different languages
+*.rs diff=rust
+
+*.tex diff=tex
+*.bib diff=bibtex
+
+*.c[p+][p+] diff=cpp
+*.h[p+][p+] diff=cpp
+*.c diff=cpp
+*.h diff=cpp
+
+*.sh diff=bash
+*.bash diff=bash
+
+*.css diff=css
+*.html diff=html
+
+*.java diff=java
+
+*.md diff=markdown
+
+*.py diff=python

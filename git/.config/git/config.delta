@@ -1,0 +1,10 @@
+# Use delta as a pager for more features, like syntax highlighting.
+# https://github.com/dandavison/delta
+[core]
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	diff-highlight = true
+	navigate = true
+	navigate-regex = "^@@ [-0-9,+ ]+ @@"

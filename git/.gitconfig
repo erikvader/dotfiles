@@ -1,7 +1,8 @@
 [user]
-    name = Erik Rimskog
-    email = erik.rimskog@gmail.com
+	name = Erik Rimskog
+	email = erik.rimskog@gmail.com
 [include]
-    path = .gitconfig.d/alias
-    path = .gitconfig.d/config
-    path = .gitconfig.d/delta
+	path = .config/git/config.alias
+	path = .config/git/config.config
+	#NOTE: not sure if I like this, more bloat/complexity etc.
+	# path = .config/git/config.delta
