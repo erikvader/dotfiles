@@ -1,0 +1,8 @@
+! At least emacs uses these values and highly benefit from them.
+! https://wiki.archlinux.org/title/Font_configuration#Applications_without_Fontconfig_support
+! These also, except for rgba, match fontconfig defaults in /usr/share/fontconfig/conf.default/.
+Xft.lcdfilter: lcddefault
+Xft.hintstyle: hintslight
+Xft.hinting: 1
+Xft.antialias: 1
+Xft.rgba: rgb

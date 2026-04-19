@@ -3,12 +3,13 @@
 TARGETDIR := $(HOME)/.local/share/fonts
 TARGETNAME := font-awesome-4.7.0
 TARGET := $(TARGETDIR)/$(TARGETNAME)
+SUBPIXEL := $(HOME)/.config/fontconfig/conf.d/10-sub-pixel-rgb.conf
 
 .PHONY: install
-install: $(TARGET)
+install: $(TARGET) $(SUBPIXEL)
 
 ifdef force
-.PHONY: $(TARGET)
+.PHONY: $(TARGET) $(SUBPIXEL)
 endif
 
 $(TARGET):
@@ -21,3 +22,7 @@ $(TARGET):
 	unzip -d '$(TARGETDIR)' '$(TARGET).zip'
 	@echo removing downloaded zip...
 	rm '$(TARGET).zip'
+
+$(SUBPIXEL):
+	mkdir -p $(@D)
+	ln -s /usr/share/fontconfig/conf.avail/10-sub-pixel-rgb.conf $@
