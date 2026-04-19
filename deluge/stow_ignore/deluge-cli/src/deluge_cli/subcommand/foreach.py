@@ -253,6 +253,7 @@ def term_parser() -> P.Parser[Context, bool]:
 
     def hash_func(ctx: Context, prefix: str) -> bool:
         """Check if the hash (id) has this prefix"""
+        # TODO: add check for ambiguity
         return ctx.torrent.hash.has_prefix(prefix)
 
     p.atom("hash", hash_func, P.str1)

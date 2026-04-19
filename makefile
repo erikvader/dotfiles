@@ -1,3 +1,5 @@
+#TODO: support symbolic links in the file tree so i don't have to run ln manually from
+#makefiles. I think that stow doesn't allow them, or something.
 # package manager commands
 PAC := yay
 #TODO: include the first words of pacman -Qg to support groups?
