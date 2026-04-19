@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Exits with 0 if the current repo is not detached, i.e., on a branch
+exec git symbolic-ref -q HEAD >/dev/null 2>&1

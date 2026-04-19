@@ -1,7 +1,0 @@
-#!/bin/sh
-
-git-pager sed -E \
-    -e '1,/\[alias\]/d' \
-    -e 's/^ +//' \
-    -e 's/(#.*)$/'"$(tput setaf 4 || true)"'\1'"$(tput sgr0 || true)"'/' \
-    "$HOME"/.gitconfig.d/alias

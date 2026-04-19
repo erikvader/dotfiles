@@ -1,3 +1,0 @@
-#!/bin/sh
-# Exits with 0 if the current repo is not detached
-exec git symbolic-ref -q HEAD >/dev/null 2>&1

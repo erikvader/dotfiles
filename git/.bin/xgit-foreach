@@ -1,6 +1,8 @@
 #!/bin/bash
 
-set -e
+source xgit-pager.bash
+
+set -eu
 
 # NOTE: When run as a git alias, the current working directory is changed to repo top
 # level and this env var is set to where the script was actually called from.
@@ -9,13 +11,16 @@ cd "${GIT_PREFIX:-.}"
 # NOTE: I also unset it here so further commands don't try to compensate for this too
 unset -v GIT_PREFIX
 
-TEMP=$(getopt -s bash -n git-foreach -o +bdiaGh -l not-detached,branch,is-detached,ignore-fail,all,no-git,help -- "$@")
+TEMP=$(getopt -s bash -n xgit-foreach -o +bdiaGh -l not-detached,branch,is-detached,ignore-fail,all,no-git,help,hilfe -- "$@")
 eval set -- "$TEMP"
 unset TEMP
 
+# NOTE: We don't want git to accidentally start a pager on every submodule
+export GIT_PAGER=cat
+
 print_help() {
     echo 'Usage:'
-    echo ' git-foreach [options] [--] <command>...'
+    echo ' xgit-foreach [options] [--] <command>...'
     echo
     echo 'Runs a command in all submodules and, unlike "git submodule foreach --recursive", also in the containing repo.'
     echo
@@ -25,7 +30,7 @@ print_help() {
     echo ' -i, --ignore-fail               Dont abort if the command fails'
     echo ' -a, --all                       Dont limit to only submodules in the current directory'
     echo ' -G, --no-git                    Do not prepend an implicit "git" to the command'
-    echo ' -h, --help                      Print this help message'
+    echo ' -h, --help, --hilfe             Print this help message'
 }
 
 notdetached=false
@@ -50,7 +55,7 @@ while [[ $# -gt 0 ]]; do
         --no-git|-G)
             implicitgit=false
             ;;
-        --help|-h)
+        --help|--hilfe|-h)
             print_help
             exit
             ;;
@@ -73,20 +78,20 @@ fi
 
 cmd=${*@Q}
 if $implicitgit; then
-    cmd="git-display && git $cmd"
+    cmd="xgit-foreach-print-submodule && xgit-wrapper $cmd"
 fi
 
 if $ignorestatus; then
-    cmd="$cmd || true"
+    cmd="{ $cmd; } || true"
 fi
 
 if $notdetached && $isdetached; then
     echo incompatible options given about detached head status >&2
     exit 1
 elif $notdetached; then
-    cmd="if git-not-detached; then $cmd; fi"
+    cmd="if xgit-not-detached; then $cmd; fi"
 elif $isdetached; then
-    cmd="if ! git-not-detached; then $cmd; fi"
+    cmd="if ! xgit-not-detached; then $cmd; fi"
 fi
 
 if ! $doall; then
@@ -96,10 +101,14 @@ fi
 displaypath=$(git rev-parse --show-cdup)
 displaypath=${displaypath:-.}
 export displaypath
-# TODO: also add name, sm_path, sha1 and toplevel
+# NOTE: the other variables are intentionally not set since there are no valid values for
+# them. They are not set to empty values because that could confuse the cmd. These are the
+# ones: name, sm_path, sha1 and toplevel
+# TODO: maybe that name could be the current repo name? What is the purpose of the name
+# section in .gitmodules? Can it be different than the basename of the path?
 
 (cd "$displaypath" && exec sh -c "$cmd")
 
 export -n displaypath
 
-git submodule --quiet foreach --recursive "$cmd"
+xgit-wrapper submodule --quiet foreach --recursive "$cmd"

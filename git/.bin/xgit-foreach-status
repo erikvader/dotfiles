@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# Shows the status of the current repo in short form, unless it is detached, non-dirty and
+# the parent points to HEAD.
+# Shows git ahead info if an argument is given.
+
+source xgit-assume-tty.bash
+
+set -eu
+
+arg_show_all=false
+arg_ahead=
+if (($# > 0)) && [[ $1 == --all || $1 == -a ]]; then
+    arg_show_all=true
+    shift
+fi
+
+if (($# > 0)); then
+    arg_ahead=$1
+    shift
+fi
+
+if (($# > 0)); then
+    echo "Too many arguments given" >&2
+    exit 1
+fi
+
+# TODO: don't show submodule changes at all in this status? The changes lost needs to be
+# shown on each submodule in that case.
+status=$(xgit-set-assume-tty && xgit-wrapper status --short --branch --ignore-submodules=dirty)
+num_lines=$(wc -l <<< "$status")
+readonly HEADERS=1
+
+not_detached=false
+if $arg_show_all || xgit-is-not-detached; then
+    not_detached=true
+fi
+
+parent_hash=
+head_hash=
+if [[ -v sha1 ]]; then
+    head_hash=$(git rev-parse --verify HEAD)
+    if [[ $head_hash != "$sha1" ]]; then
+        parent_hash=$(git rev-parse --short "$sha1")
+        head_hash=$(git rev-parse --short HEAD)
+    fi
+fi
+
+if (( num_lines > HEADERS )) || $not_detached || [[ -n $parent_diff ]]; then
+    xgit-foreach-print-submodule
+    head -n $HEADERS <<< "$status"
+    if [[ -n $arg_ahead ]] && $not_detached; then
+        echo -n '$$ '
+        xgit-ahead --blank "$arg_ahead"
+    fi
+    if [[ -n $parent_hash ]]; then
+        echo -n '^^ '
+        xgit-ahead "$head_hash" "$parent_hash"
+    fi
+    tail -n +$((HEADERS+1)) <<< "$status"
+fi

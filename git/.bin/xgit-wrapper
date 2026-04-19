@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# This is a wrapper around git that obeys some more environment variables.
+# See xgit-color for documentation of the meaning of all of these.
+
+source xgit-color.bash
+
+set -eu
+
+# NOTE: this assumes that color.ui is set to auto normally, i.e., using colors when able
+# is desired.
+if $xgit_color_enabled; then
+    flags='-c color.ui=always'
+else
+    flags='-c color.ui=never'
+fi
+
+exec git $flags "$@"

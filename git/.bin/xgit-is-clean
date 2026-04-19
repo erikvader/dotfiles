@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Exits with 0 if the git repo is clean, i.e., not dirty. This checks for untracked files,
+# tracked and if something is in the index. A nicer solution that doesn't check untracked
+# files is:
+# git diff --quiet || git diff --cached --quiet
+
+OUT=$(git status --porcelain 2>/dev/null) || exit 5
+test -z "$OUT"

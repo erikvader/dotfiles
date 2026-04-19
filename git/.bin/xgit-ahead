@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Prints branch status in the same way as `git status --short --branch`, but the branches
+# can be anything, not just the current and it's upstream.
+
+source xgit-color.bash
+
+set -eu
+
+# Replace the current branch name (left) with spaces
+blank=false
+if (($# > 0)) && [[ $1 == --blank ]]; then
+    blank=true
+    shift
+fi
+
+if (($# == 1)); then
+    right=$1
+    if xgit-is-not-detached; then
+        left=$(git rev-parse --abbrev-ref HEAD)
+    else
+        left='HEAD (no branch)'
+    fi
+elif (($# == 2)); then
+    left=$1
+    right=$2
+else
+    echo 'Needs two commits to compare' >&2
+    exit 1
+fi
+
+aheadcol=$(xgit-color fg green)
+behindcol=$(xgit-color fg red)
+reset=$(xgit-color reset)
+
+#TODO: show equal commits with --cherry-mark?
+read -r ahead behind < <(git rev-list --count --left-right "$left"..."$right")
+
+if $blank; then
+    left=${left//?/ }
+fi
+echo -n "${aheadcol}$left${reset}...${behindcol}$right${reset}"
+
+if ((ahead != 0 && behind != 0)); then
+    echo -n " [ahead ${aheadcol}$ahead${reset}, behind ${behindcol}$behind${reset}]"
+elif ((ahead != 0)); then
+    echo -n " [ahead ${aheadcol}$ahead${reset}]"
+elif ((behind != 0)); then
+    echo -n " [behind ${behindcol}$behind${reset}]"
+fi
+
+echo

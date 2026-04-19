@@ -1,0 +1,24 @@
+#!/bin/bash
+
+source xgit-pager.bash
+source xgit-color.bash
+
+set -eu
+
+color=$(xgit-color fg-bright blue)
+red=$(xgit-color fg-bright red bold)
+rst=$(xgit-color reset)
+
+# NOTE: use 'git config --list --show-origin' to find where the duplicates are defined
+git config --get-regexp '^alias\.' \
+    | cut -d' ' -f1 \
+    | cut -d'.' -f2 \
+    | LC_ALL=C sort \
+    | uniq -d \
+    | xargs -rn1 printf "${red}Duplicated alias: %s${rst}\\n"
+
+sed -E \
+    -e '1,/\[alias\]/d' \
+    -e 's/^\s+//' \
+    -e 's/(#.*)$/'"$color"'\1'"$rst"'/' \
+    "$HOME"/.config/git/config.alias

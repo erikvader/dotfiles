@@ -1,8 +1,8 @@
-# This comment is important because the git-alias command won't work if [alias] is on the
+# This comment is important because the xgit-alias command won't work if [alias] is on the
 # first line.
 [alias]
 	# alias
-	alias = !git-alias
+	alias = !xgit-alias
 	# clone
 	cloner = clone --recurse-submodules
 	clones = clone --depth=1
@@ -19,8 +19,13 @@
 	lst = ls-tree --abbrev HEAD # {tracked}
 	# branch
 	br = branch
+	bc = br --contains
 	brsu = br -u # {--set-upstream-to}
 	bruu = br --unset-upstream
+	# tag {the describe subcommand is also nice for tags}
+	t = tag
+	tl = t --list
+	tc = t --contains # {describe also has this flag}
 	# rebase [--onto A:-B] B [C:-HEAD] {switch to C -> take (log) B..C -> place on A}
 	rb = rebase
 	rbc = rb --continue
@@ -41,7 +46,7 @@
 	rsh = rs --hard
 	rshu = rsh @{upstream}
 	# squash
-	sq = !: branch && git-squash # <branch-ref>
+	sq = !: branch && xgit-squash # <branch-ref>
 	sqp = sq --preview # <branch-ref>
 	# commit
 	co = commit
@@ -49,19 +54,21 @@
 	coan = coa --no-edit
 	# diff [A..B {same as A B} | A...B {same as (merge-base A B) B}]
 	d = diff # [{worktree <> index/HEAD} | HEAD {worktree/index <> HEAD}]
-	# TODO: create a version of this that uses git-foreach. This use compares more than what g sr shows
-	# It should compare each submodule against its own HEAD
+	#TODO: this prints an extra newline at the end
+	#TODO: skapa egen submodule diff med gitattributes. Do a simple xgit-ahead on the
+	#before and after? Also need to show if the submodule is dirty, like the default does.
+	dr = fe diff
 	dd = d --submodule=diff
 	di = d --staged # {index <> HEAD}
 	ds = d --stat
 	dw = d --word-diff=color
 	# ahead
-	ah = !: diff && git-ahead
+	ah = !: diff && xgit-ahead
 	# status
 	s = status
 	si = s --ignored
 	ss = s --short --branch
-	sr = !git-foreach --all --no-git git-status-brief # [<branch-for-git-ahead>]
+	sr = fe --all --no-git xgit-foreach-status # [--all] [<branch-for-git-ahead>]
 	sa = s --untracked-files=all
 	# fetch {pull A without switch: origin [+]A:A, + to force fast-forward}
 	f = fetch
@@ -85,16 +92,17 @@
 	muf = mu --force
 	mur = mu --recursive
 	murf = mur --force
-	mr = !git-submodule-rm # [--force|-f] [--] <path>...
+	mr = !xgit-submodule-rm # [--force|-f] [--] <path>...
 	# foreach
-	fe = !: reset && git-foreach # [options] [--] <command>...
-	feh = !git-foreach --help
+	fe = !: reset && xgit-foreach # [options] [--] <command>...
 	# log [A..B {same as ^A B} | A...B {same as A B ^(merge-base A B)}]
 	l = log --boundary --graph --pretty=oneline2 --date=relative # [--no-graph]
 	la = l --all
-	lp = l -S # <string> {find commits that removed or added, not moved}
-	lpr = lp --pickaxe-regex % # <regex> {all of these are also available for show and diff}
-	lg = l -G # <regex> {find commits that removed or added}
+	# {These pickaxe flags can also be used to filter diff and show}
+	# {Consider using --stat and --all}
+	lp = log -S # <string> [--pickaxe-regex {string is extended POSIX regex instead}]
+				# {number of occurrences changed in a file}
+	lg = log -G # <regex> {patch text contains added/removed lines}
 	# worktree
 	wt = worktree
 	wta = wt add

@@ -2,10 +2,11 @@
 
 # A helper script that prints the current submodule
 
-set -e
+source xgit-color.bash
+
+set -eu
 
 echo -n '#'
-tput bold || true
-tput setaf 4 || true
+xgit-color bold fg blue
 echo " ${displaypath:-.}"
-tput sgr0 || true
+xgit-color reset
