@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# Shows the status of the current repo in short form, unless it is detached, non-dirty and
-# the parent points to HEAD.
-# Shows git ahead info if an argument is given.
+# Shows the status of the current repo in short form, unless there is nothing to show.
+# This can be overriden with a flag. Shows git ahead info if an argument is given.
 
 source xgit-assume-tty.bash
 
@@ -25,14 +24,12 @@ if (($# > 0)); then
     exit 1
 fi
 
-# TODO: don't show submodule changes at all in this status? The changes lost needs to be
-# shown on each submodule in that case.
 status=$(xgit-set-assume-tty && xgit-wrapper status --short --branch --ignore-submodules=dirty)
 num_lines=$(wc -l <<< "$status")
 readonly HEADERS=1
 
 not_detached=false
-if $arg_show_all || xgit-is-not-detached; then
+if xgit-is-not-detached; then
     not_detached=true
 fi
 
@@ -46,12 +43,12 @@ if [[ -v sha1 ]]; then
     fi
 fi
 
-if (( num_lines > HEADERS )) || $not_detached || [[ -n $parent_diff ]]; then
+if $arg_show_all || (( num_lines > HEADERS )) || $not_detached || [[ -n $parent_hash ]]; then
     xgit-foreach-print-submodule
     head -n $HEADERS <<< "$status"
     if [[ -n $arg_ahead ]] && $not_detached; then
         echo -n '$$ '
-        xgit-ahead --blank "$arg_ahead"
+        xgit-ahead HEAD+ "$arg_ahead"
     fi
     if [[ -n $parent_hash ]]; then
         echo -n '^^ '

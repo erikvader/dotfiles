@@ -7,46 +7,63 @@ source xgit-color.bash
 
 set -eu
 
-# Replace the current branch name (left) with spaces
-blank=false
-if (($# > 0)) && [[ $1 == --blank ]]; then
-    blank=true
-    shift
-fi
-
-if (($# == 1)); then
-    right=$1
-    if xgit-is-not-detached; then
-        left=$(git rev-parse --abbrev-ref HEAD)
-    else
-        left='HEAD (no branch)'
-    fi
-elif (($# == 2)); then
-    left=$1
-    right=$2
-else
+if (($# != 2)); then
     echo 'Needs two commits to compare' >&2
     exit 1
 fi
+
+function parse_argument {
+    local -r _arg=$1
+    local -n _rev=$2
+    local -n _disp=$3
+
+    _rev=$_arg
+    _disp=$_arg
+
+    case $_arg in
+        HEAD+|HEAD++)
+            _rev=HEAD
+            _disp=$(git rev-parse --abbrev-ref HEAD)
+            if [[ $_disp == HEAD ]]; then
+                _disp="${_disp}-detached"
+            fi
+            ;;
+        *) ;;
+    esac
+
+    case $_arg in
+        HEAD++)
+            if ! xgit-is-clean; then
+                _disp="${_disp}-dirty"
+            fi
+            ;;
+        *) ;;
+    esac
+}
+
+left_rev=
+left_disp=
+parse_argument "$1" left_rev left_disp
+
+right_rev=
+right_disp=
+parse_argument "$2" right_rev right_disp
 
 aheadcol=$(xgit-color fg green)
 behindcol=$(xgit-color fg red)
 reset=$(xgit-color reset)
 
 #TODO: show equal commits with --cherry-mark?
-read -r ahead behind < <(git rev-list --count --left-right "$left"..."$right")
+read -r ahead behind < <(git rev-list --count --left-right "$left_rev"..."$right_rev")
 
-if $blank; then
-    left=${left//?/ }
-fi
-echo -n "${aheadcol}$left${reset}...${behindcol}$right${reset}"
+echo -n "${aheadcol}${left_disp}${reset}...${behindcol}${right_disp}${reset}"
 
 if ((ahead != 0 && behind != 0)); then
-    echo -n " [ahead ${aheadcol}$ahead${reset}, behind ${behindcol}$behind${reset}]"
+    echo -n " [ahead ${aheadcol}${ahead}${reset}, behind ${behindcol}${behind}${reset}]"
 elif ((ahead != 0)); then
-    echo -n " [ahead ${aheadcol}$ahead${reset}]"
+    echo -n " [ahead ${aheadcol}${ahead}${reset}]"
 elif ((behind != 0)); then
-    echo -n " [behind ${behindcol}$behind${reset}]"
+    echo -n " [behind ${behindcol}${behind}${reset}]"
 fi
 
 echo

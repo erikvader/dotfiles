@@ -111,4 +111,4 @@ export displaypath
 
 export -n displaypath
 
-xgit-wrapper submodule --quiet foreach --recursive "$cmd"
+git submodule --quiet foreach --recursive "$cmd"

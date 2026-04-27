@@ -54,10 +54,7 @@
 	coan = coa --no-edit
 	# diff [A..B {same as A B} | A...B {same as (merge-base A B) B}]
 	d = diff # [{worktree <> index/HEAD} | HEAD {worktree/index <> HEAD}]
-	#TODO: this prints an extra newline at the end
-	#TODO: skapa egen submodule diff med gitattributes. Do a simple xgit-ahead on the
-	#before and after? Also need to show if the submodule is dirty, like the default does.
-	dr = fe diff
+	dr = fe --no-git xgit-foreach-diff
 	dd = d --submodule=diff
 	di = d --staged # {index <> HEAD}
 	ds = d --stat

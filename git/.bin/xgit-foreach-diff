@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -euo pipefail
+
+xgit-foreach-print-submodule
+
+if xgit-wrapper diff --exit-code; then
+    echo No changes
+fi
