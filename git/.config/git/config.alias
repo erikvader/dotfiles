@@ -53,7 +53,8 @@
 	coa = co --amend
 	coan = coa --no-edit
 	# diff [A..B {same as A B} | A...B {same as (merge-base A B) B}]
-	d = diff # [{worktree <> index/HEAD} | HEAD {worktree/index <> HEAD}]
+	d = diff # {worktree <> index/HEAD}
+	da = d HEAD # {worktree/index <> HEAD}
 	dr = fe --no-git xgit-foreach-diff
 	dd = d --submodule=diff
 	dl = d --submodule=log
