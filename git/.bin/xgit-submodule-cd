@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Match a search pattern on all submodules in a repo and print the path if exactly one
+# matches.
+
+set -euo pipefail
+
+if (($# == 1)); then
+    if [[ $1 == / ]]; then
+        git rev-parse --show-toplevel
+        exit
+    fi
+    if [[ $1 == .. ]]; then
+        git rev-parse --show-superproject-working-tree
+        exit
+    fi
+fi
+
+pattern=
+printf -v pattern '%s*' "$@"
+pattern="*$pattern"
+
+match=
+matches=0
+while IFS= read -rd '' line; do
+    if [[ $line == $pattern ]]; then
+        if ((matches > 0)); then
+            if ((matches == 1)); then
+                echo "Multiple matches:" >&2
+                echo "$match" >&2
+            fi
+            echo "$line" >&2
+        else
+            match=$line
+        fi
+        ((matches++)) || true
+    fi
+done < <(git submodule foreach --quiet 'printf %s\\000 "$sm_path"')
+
+if ((matches == 1)); then
+    echo "$(git rev-parse --show-toplevel)/$match"
+    exit
+elif ((matches == 0)); then
+    echo "No matches" >&2
+    exit 2
+else
+    exit 1
+fi
