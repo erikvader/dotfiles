@@ -5,4 +5,4 @@
 # is a wrapper script that makes sure some flags always are present, reglardless of what
 # LESS is set to.
 
-exec /bin/less -Ri "$@"
+exec /bin/less -MRi "$@"

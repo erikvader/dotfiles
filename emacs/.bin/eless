@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Read stdin to an emacs buffer
+
+set -euo pipefail
+
+if (($# > 0)); then
+    exec emacsclient -r "$@"
+fi
+
+# NOTE: It's really tricky to make emacs behave like less through emacsclient. This thing
+# reads everything from stdin before emacs even opens it, which is not ideal, but I can't
+# make it behave like i want with streaming data and stuff. It's probably possible
+# somehow, but it's probably good enough for the majority of cases...
+# TODO: create a custom mode for these particular files that fixes ansi coloring and
+# stuff, like https://github.com/mbriggs/emacs-pager/blob/master/emacs-pager.el
+file=$(mktemp --tmpdir 'XXXXXXX.emacs-pager')
+trap 'rm -f "$file"' EXIT
+cat > "$file"
+emacsclient -r "$file"

@@ -1,3 +1,13 @@
+if [[ $intelligence != smart ]]; then
+    unsetopt zle
+    return
+fi
+
+# Ensure that the prompt is redrawn when the terminal size changes.
+TRAPWINCH() {
+    zle && zle -R
+}
+
 # Needed to make the terminal change mode to recognize the codes from terminfo
 # https://invisible-island.net/xterm/xterm.faq.html#xterm_arrows
 if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
@@ -39,14 +49,9 @@ bindkey '^[w' backward-kill-space-word
 bindkey '^[B' vi-backward-blank-word
 bindkey '^[F' vi-forward-blank-word
 
-# up and down arrows search in history
-autoload -U up-line-or-beginning-search
-zle -N up-line-or-beginning-search
-bindkey "${terminfo[kcuu1]}" up-line-or-beginning-search
-
-autoload -U down-line-or-beginning-search
-zle -N down-line-or-beginning-search
-bindkey "${terminfo[kcud1]}" down-line-or-beginning-search
+# Switch to a history search that preserves the cursor position
+bindkey '^[p' history-beginning-search-backward
+bindkey '^[n' history-beginning-search-forward
 
 # expand alias similarly to bash
 bindkey '^[^e' _expand_alias

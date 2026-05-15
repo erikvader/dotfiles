@@ -1,16 +1,12 @@
+if [[ $intelligence == dumb ]]; then
+    return
+fi
+
 # loads the associative arrays fg, fg_bold, bg, etc.
 autoload -U colors && colors
 
 # sets LS_COLORS
 eval "$(dircolors -b)"
-
-# enable variable substitutions and stuff in the prompt
-setopt prompt_subst
-
-# Ensure that the prompt is redrawn when the terminal size changes.
-TRAPWINCH() {
-    zle && zle -R
-}
 
 alias diff='diff --color=auto'
 alias ls='ls --color=auto'

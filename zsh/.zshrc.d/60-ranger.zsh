@@ -1,3 +1,7 @@
+if [[ $intelligence != smart ]]; then
+    return
+fi
+
 function ranger-cd {
     temp="$(mktemp)"
 

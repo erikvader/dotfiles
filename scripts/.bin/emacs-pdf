@@ -1,3 +1,0 @@
-#!/bin/sh
-
-emacsclient -n -c -e "(same-buffer (find-file \"$1\"))" >/dev/null
