@@ -1,14 +1,15 @@
 # up and down arrow match against the history
-"\e[A": history-search-backward
-"\eOA": history-search-backward
-"\e[B": history-search-forward
-"\eOB": history-search-forward
+"\ep": history-search-backward
+"\en": history-search-forward
 
 # make autocomplete nicer
 TAB: menu-complete
 "\e[Z": menu-complete-backward
 set show-all-if-ambiguous on
 set menu-complete-display-prefix on
-
-# make it case insensitive
 set completion-ignore-case on
+
+# make space expand history stuff, like !!. This only works in bash?
+$if Bash
+  SPACE: magic-space
+$endif
