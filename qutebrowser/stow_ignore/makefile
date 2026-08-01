@@ -20,3 +20,4 @@ $(QUTEDIR):
 xdg:
 	xdg-settings set default-web-browser $(QUTE_DESKTOP)
 	xdg-mime default $(QUTE_DESKTOP) message/rfc822
+	xdg-mime default $(QUTE_DESKTOP) x-scheme-handler/mailto
