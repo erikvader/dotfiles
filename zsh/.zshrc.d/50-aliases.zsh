@@ -11,7 +11,7 @@ alias sssp='sss -p'
 
 alias pg='pgrep -li'
 alias pga='pg -a'
-alias pkill='pkill -e'
+alias pkill='pkill -ei'
 
 alias cclip='xclip -selection clipboard'
 
@@ -27,7 +27,7 @@ alias rc='rsync -avh --progress'
 alias pactree='pactree --color'
 alias pc='paccache -rv' # Keep three latest package versions in cache
 alias pcu='pc -uk0' # Remove everything of uninstalled packages
-alias yc='y -Sc' # More aggressive package clean, but also cleans AUR and repos
+alias yc='y -Sc' # Only keeps the latest, but also cleans AUR and repos
 alias y='yay'
 alias ys='y -Sy'
 alias ysd='ys --asdeps' # If installing an optional dependency of something
@@ -54,4 +54,5 @@ alias tvwakeup='wol 3c:97:0e:b1:53:44'
 
 alias SS='sudo systemctl'
 alias SU='systemctl --user'
-alias JU='journalctl --user --pager-end'
+# NOTE: this will show everything the current user is allowed to see
+alias J='journalctl --pager-end'
