@@ -1,3 +1,6 @@
+#NOTE: this is a replacement for the autorandr services that comes with the arch package,
+#make sure those are disabled so only this one runs on boot. The arch package also
+#installs a udev rule that runs aurorandr everytime there is a change to the displays.
 [Unit]
 Description=Autorandr
 Wants=monitors-changed.target

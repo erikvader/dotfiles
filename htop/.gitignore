@@ -1,1 +1,3 @@
+# I don't know why htop seems to follow the htoprc symlink and write its history where it
+# actually resides.
 /.config/htop/htop_history
