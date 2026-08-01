@@ -285,9 +285,28 @@ This is my =/etc/xdg/reflector/reflector.conf=:
 # Sort the mirrors by download rate (--sort).
 --sort rate
 #+END_SRC
+** Paccache
+[[https://wiki.archlinux.org/title/Pacman#Cleaning_the_package_cache][archwiki]]
+Enable a timer that will remove everything in the cache but the last three versions.
+#+BEGIN_SRC sh
+systemctl enable --now paccache.timer
+#+END_SRC
 ** systemd-boot
 [[https://wiki.archlinux.org/title/Systemd-boot][archwiki]]
 Need to create entries manually.
+** Spotify
+Spotify plays at another sample rate, at least on lossless, than what pipewire is
+configured for by default. Add the following to allow pipewire to change the sample rate.
+Add this to =~/.config/pipewire/pipewire.conf.d/10-rates.conf=
+#+BEGIN_SRC
+context.properties = {
+    default.clock.rate = 48000
+    default.clock.allowed-rates = [ 44100, 48000 ]
+}
+#+END_SRC
+
+TODO: Spotify writes a lot to the cache directory, so maybe experiment with making that a
+ramdisk?
 ** NFS
 *** server
 Add this to =/etc/exports=
