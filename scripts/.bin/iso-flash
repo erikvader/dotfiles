@@ -32,7 +32,9 @@ fi
 #      persistent storage after this! This power-off is what GUI file managers use to eject
 #      drives btw. There's also the eject command which also seems to work, except that it
 #      doesn't seem to power down the USB port, which I don't know is necessary. It will
-#      also leave a /dev/sdX with zero size.
+#      also leave a /dev/sdX with zero size. A normal umount is probably also fine to make
+#      sure the data is permanently written, but it won't power the drive down, eject will
+#      do that.
 #   3. status=progress and oflag=dsync will make sure actual progress is displayed.
 
 set -x
