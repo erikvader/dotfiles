@@ -13,6 +13,7 @@ module Erik.MyStuff (
   decoratePP,
   toggleMapStruts,
   switchScreen,
+  spawnLog,
   banish
 ) where
 
@@ -291,3 +292,8 @@ banish = cursorPosition >>= flip whenJust (uncurry f)
         f 1 1 = warpToWindow 1 0
         f 1 0 = warpToWindow 0 0
         f _ _ = warpToWindow 1 1
+
+-- Spawn a process and log its output to a file or systemd or smth. Should generally only
+-- be used on long-lived processes to reduce overhead and file cluttering.
+spawnLog :: String -> X ()
+spawnLog cmd = spawn $ "syslog " ++ cmd

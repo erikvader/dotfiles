@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Spawn a process and send its output to a log file
+
+set -eu
+
+if [[ $# -le 0 ]]; then
+    echo "no command given"
+    exit 1
+fi
+
+name=${1##*/}
+
+if command -v systemd-cat &>/dev/null; then
+    exec systemd-cat --identifier="$name" "$@" &>/dev/null
+else
+    date=$(date --iso-8601=seconds)
+    outfile=$(mktemp --tmpdir "$name"-"$date"-XXXXXX.log)
+    {
+        echo "$@"
+        echo "-----"
+    } > "$outfile"
+
+    exec "$@" &>>"$outfile"
+fi

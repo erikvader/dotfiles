@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Spawn a process as a daemon
+
+set -eu
+
+# TODO: should probably make sure the spawned process doesn't hog the current working
+# directory? Can't spawn executables with relative arguments if this is done.
+# cd /
+
+if [[ $# -le 0 ]]; then
+    echo "no command given"
+    exit 1
+fi
+
+# TODO: this will become a session leader, which means it can acquire a tty if it wants
+# to, which could be a problem?
+exec setsid --fork "$@" &>/dev/null </dev/null

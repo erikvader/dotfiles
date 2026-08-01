@@ -54,14 +54,7 @@ startSystemdSession :: X ()
 startSystemdSession = spawnOnce "systemctl --user --no-block start xmonad-session.target"
 
 runXmonadStartupOnce :: X ()
-runXmonadStartupOnce = do
-  home <- io getHomeDirectory
-  let startupFile = home </> ".xmonad_startup"
-  itExists <- io $ doesFileExist startupFile
-  when itExists $ do
-    perms <- io $ getPermissions startupFile
-    when (executable perms) $
-      spawnOnce startupFile
+runXmonadStartupOnce = spawnOnce "syslog qutebrowser" --NOTE: can't use spawnLog with spawnOnce
 
 -- like verticalScreenOrderer (the default), but sorts bottom-to-top instead
 screenOrderer :: ScreenComparator
@@ -80,8 +73,7 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
     ((shift modm, xK_o), windowsLowestEmpty W.shift spaces),
 
     -- executers
-    --TODO: should all, or at least most, of these spawns use systemd-cat to get better capturing of stderr?
-    ((modm, xK_e), spawn "fzf_run"),
+    ((modm, xK_e), spawn "fzf_run"), --NOTE: this one calls syslog itself
     ((shift modm, xK_e), spawn "rofi_iconfont_paste emoji \"$HOME/.emoji\""),
     ((modm, xK_r), spawn "rofi_script_selector"),
     ((shift modm, xK_r), spawn "open_downloaded_pdf"),
@@ -117,12 +109,12 @@ myKeys conf@XConfig {XMonad.modMask = modm, XMonad.workspaces = spaces} =
     ((0, xF86XK_AudioMute), spawn "pactl set-sink-mute @DEFAULT_SINK@ toggle"),
 
     -- launch a terminal
-    ((modm, xK_Return), spawn "st-tmux"),
-    ((shift modm, xK_Return), spawn "xterm"),
+    ((modm, xK_Return), spawnLog "st-tmux"),
+    ((shift modm, xK_Return), spawnLog "xterm"),
 
     -- launch a program
-    ((shift modm, xK_i), spawn "st-tmux-ranger"),
-    ((modm, xK_i), spawn "emacsclient -nc"),
+    ((shift modm, xK_i), spawnLog "st-tmux-ranger"),
+    ((modm, xK_i), spawnLog "emacsclient -nc"),
 
     -- close focused window
     ((modm, xK_q), kill),
