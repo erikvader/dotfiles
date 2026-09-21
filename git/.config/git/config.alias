@@ -53,6 +53,13 @@
 	coa = co --amend
 	coan = coa --no-edit
 	# diff [A..B {same as A B} | A...B {same as (merge-base A B) B}]
+	#TODO: create an alias that can be prefixed, like g ws d, or something, which will
+	#toggle how whitespace is interpreted by the following command. It should enable
+	#ignore-space-change, both for normals diffs and color moved. There are env variables
+	#like GIT_CONFIG_COUNT etc that could be used for this. Simply adding a flag to the
+	#git command will not work reliably for commands that call additional git processes.
+	#Even git's own commands don't work reliably, at least not diff --submodule=diff, the
+	#diffs for the submodules ignore the flags, but the top-most diff follows them.
 	d = diff # {worktree <> index/HEAD}
 	da = d HEAD # {worktree/index <> HEAD}
 	dr = fe --no-git xgit-foreach-diff

@@ -1,6 +1,9 @@
 #TODO: support symbolic links in the file tree so i don't have to run ln manually from
 #makefiles. I think that stow doesn't allow them, or something.
 # package manager commands
+#TODO: I only have a handful of AUR packages, handle them explicitly instead and use
+#normal pacman. Trayer and spotify are basically the only ones. All the recent AUR attacks
+#don't seems nice. 2026-08-23
 PAC := yay
 #TODO: include the first words of pacman -Qg to support groups?
 PACLIST := $(PAC) -Qq

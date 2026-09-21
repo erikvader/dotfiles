@@ -25,9 +25,9 @@ scripts['Mount NAS']='if mount /media/NAS; then notify-send NAS nice; else notif
 choice=$(printf '%s\n' "${!scripts[@]}" | sort | fzf_dmenu)
 
 if [[ "$choice" ]]; then
-    # NOTE: None of these commands are long running, so they don't
-    # really need to be in a new session (setsid). This script is only
-    # spawned from xmonad anyway, and that runs setsid. So the forked
-    # bash here has a unique session.
+    # NOTE: None of these commands are long running, so they don't really need to be in a
+    # new decoupled session (setsid --fork). This script is only run from xmonad anyway,
+    # and that already runs setsid on each spawn it does. Xmonad just doesn't double fork,
+    # so this script has xmonad as its parent, but in its own session.
     eval "${scripts[$choice]}"
 fi
