@@ -117,5 +117,7 @@
 	# rm
 	rmc = rm --cached
 	# blame
-	bl = blame
-	blh = bl -C -C -C
+	bl = blame  # [-w {ignore whitespace}] [--ignore-rev <rev>]
+				# [-M {detect moves and copies within the file}] [-C {...in the same commit}]
+				# [-C {...in the commit creating the file}] [-C {...in any commit}]
+				# [<rev>] <file> {prepend with :/ to start from the repo root}
