@@ -22,7 +22,7 @@ def hanimeScraper(
         if (key := viewkey(url)) is None:
             raise UserError("wrong page")
 
-        title = soup.select_one("h1.tv-title")
+        title = soup.select_one("#VideoDetails h1")
         if not title:
             raise ParseException("couldn't find video title")
         name = scrape_text(title)
@@ -44,7 +44,12 @@ def hanimeScraper(
                 continue
 
             name = a.get("title", "unknown")
-            things.append(Thing(name=name, key=key, jsmark=change_color_on(a, "lime")))
+            # TODO: doesn't work on current_page(), set the color attribute on all
+            # children recursively instead of finding the h3
+            mark = a.select_one("h3")
+            if mark is None:
+                continue
+            things.append(Thing(name=name, key=key, jsmark=change_color_on(mark, "lime")))
 
         return things
 
